@@ -2,11 +2,18 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getAIClient = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Safe access to process.env to avoid crashing in pure browser environments
+  const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : '';
+  return new GoogleGenAI({ apiKey: apiKey || '' });
 };
 
 export const getCareerAdvice = async (userPrompt: string): Promise<string> => {
   try {
+    const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : '';
+    if (!apiKey) {
+      return "System offline. API configuration missing. Please contact ZENTRIX at 7089935002.";
+    }
+
     const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
