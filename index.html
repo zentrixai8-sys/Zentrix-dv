@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZENTRIX | Premium IT Infrastructure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --accent: #06b6d4;
+        --accent-glow: rgba(6, 182, 212, 0.4);
+      }
+      
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #000;
+        color: #fafafa;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .mono { font-family: 'JetBrains Mono', monospace; }
+
+      /* Noise Overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      /* Advanced Reveal Animations - Optimized for Mobile & Desktop */
+      .reveal {
+        opacity: 0;
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform, opacity;
+      }
+
+      .reveal-up { transform: translateY(40px) scale(0.98); }
+      .reveal-down { transform: translateY(-40px) scale(0.98); }
+      .reveal-left { transform: translateX(-40px) scale(0.98); }
+      .reveal-right { transform: translateX(40px) scale(0.98); }
+      .reveal-scale { transform: scale(0.9); }
+
+      .reveal.active {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+
+      /* Stagger Delays - Increased for clearer sequence */
+      .stagger-1 { transition-delay: 0.1s; }
+      .stagger-2 { transition-delay: 0.2s; }
+      .stagger-3 { transition-delay: 0.3s; }
+      .stagger-4 { transition-delay: 0.4s; }
+      .stagger-5 { transition-delay: 0.5s; }
+
+      @keyframes scan-line {
+        0% { top: -10%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 110%; opacity: 0; }
+      }
+
+      .animate-scan-line {
+        animation: scan-line 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      @keyframes data-flicker {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+      }
+
+      .animate-data-flicker {
+        animation: data-flicker 0.1s ease-in-out infinite;
+      }
+
+      @keyframes pulse-soft {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.05); }
+      }
+
+      .animate-pulse-soft {
+        animation: pulse-soft 2s ease-in-out infinite;
+      }
+
+      .animate-marquee {
+        display: flex;
+        width: max-content;
+        animation: marquee 35s linear infinite;
+      }
+
+      @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+
+      .precision-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .precision-scrollbar::-webkit-scrollbar-track {
+        background: #000;
+      }
+      .precision-scrollbar::-webkit-scrollbar-thumb {
+        background: #111;
+      }
+      .precision-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
+      
+      /* Smooth Image Loading */
+      img {
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+      img.loaded {
+        opacity: 1;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+  }
+}
+</script>
+</head>
+  <body class="precision-scrollbar">
+    <div id="root"></div>
+  </body>
+</html>

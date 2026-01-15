@@ -1,0 +1,8 @@
+{
+  "name": "ZENTRIX-DV",
+  "description": "Revolutionize your enterprise with ZENTRIX. Custom AI chatbots, tailored software development, and intelligent workflow automation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
