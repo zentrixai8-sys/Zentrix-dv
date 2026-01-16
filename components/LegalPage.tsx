@@ -1,6 +1,7 @@
 
-import React from 'react';
-import { ArrowLeft, Shield, FileText, Lock, Globe } from 'lucide-react';
+import React, { useEffect } from 'react';
+/* Added Mail to lucide-react imports */
+import { ArrowLeft, Shield, FileText, Lock, Globe, Terminal, Activity, ShieldCheck, Mail } from 'lucide-react';
 import { COMPANY_NAME, EMAIL, TAGLINE } from '../constants';
 
 interface LegalPageProps {
@@ -11,80 +12,129 @@ interface LegalPageProps {
 const LegalPage: React.FC<LegalPageProps> = ({ type, onBack }) => {
   const isPrivacy = type === 'privacy';
 
-  return (
-    <div className="min-h-screen bg-[#030303] pt-32 pb-20 px-6 relative overflow-hidden">
-      {/* Background Quantum Grid */}
-      <div className="absolute inset-0 quantum-grid opacity-20 z-0"></div>
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none"></div>
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [type]);
 
-      <div className="max-w-4xl mx-auto relative z-10">
+  return (
+    <div className="min-h-screen bg-[#020202] pt-40 pb-32 px-6 relative overflow-hidden selection:bg-cyan-500/30">
+      {/* Immersive Background Effects */}
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+           style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: '60px 60px' }}>
+      </div>
+      
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-cyan-600/5 blur-[160px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/5 blur-[140px] rounded-full pointer-events-none"></div>
+
+      {/* THE SCANNING BEAM */}
+      <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden opacity-20">
+        <div className="absolute left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_0_20px_#06b6d4] animate-scan-line"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-20">
         <button 
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors text-[10px] font-black uppercase tracking-[0.3em] mb-12 group"
+          className="flex items-center gap-3 text-zinc-500 hover:text-cyan-400 transition-all text-[10px] font-black uppercase tracking-[0.5em] mb-16 group"
         >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Terminal
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-2 transition-transform" /> Return to Terminal
         </button>
 
-        <div className="glass border border-white/10 rounded-[3rem] p-8 md:p-16 shadow-3xl bg-gradient-to-br from-white/[0.02] to-transparent">
-          <div className="flex items-center gap-6 mb-12">
-            <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center border border-blue-500/20 text-blue-500">
-              {isPrivacy ? <Shield className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
-            </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase leading-none italic">
-                {isPrivacy ? 'Privacy' : 'Terms'} <span className="font-thin text-gray-500">Node.</span>
-              </h1>
-              <p className="text-[10px] text-blue-500 font-black uppercase tracking-[0.4em] mt-3">Protocol Version 2.5.0</p>
-            </div>
-          </div>
-
-          <div className="space-y-10 text-gray-400 text-sm md:text-base leading-relaxed font-medium">
-            <section className="space-y-4">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3">
-                <Globe className="w-4 h-4 text-blue-500" /> Executive Summary
-              </h3>
-              <p className="border-l-2 border-blue-500 pl-6 py-2 bg-blue-500/5 italic">
-                This document defines the operational parameters of the {COMPANY_NAME} ecosystem. By engaging with our nodes, you agree to the protocols outlined herein.
-              </p>
-            </section>
-
-            <section className="space-y-4">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3">
-                <Lock className="w-4 h-4 text-blue-500" /> Data Integrity & Privacy
-              </h3>
-              <p>
-                {isPrivacy 
-                  ? "Your enterprise data is encrypted using AES-256 protocols. ZENTRIX does not commercialize user data. All system links and AI training data are localized to your secure business environment." 
-                  : "Usage of ZENTRIX services requires adherence to our fair-use policy. Systems are monitored for optimal uptime and security compliance to prevent unauthorized node access."}
-              </p>
-            </section>
-
-            <section className="space-y-4">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3">
-                <FileText className="w-4 h-4 text-blue-500" /> Engagement Protocols
-              </h3>
-              <p>
-                Services provided by ZENTRIX (Custom Software, AI Automation, Cloud Nodes) are governed by specific project-level Master Service Agreements. This global protocol serves as the base layer for all interactions.
-              </p>
-              <ul className="list-disc pl-6 space-y-2 opacity-80">
-                <li>Secure API endpoint management.</li>
-                <li>Zero-knowledge architecture for sensitive credentials.</li>
-                <li>Automated threat detection and resolution.</li>
-              </ul>
-            </section>
-
-            <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div>
-                <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mb-1">Direct Contact Node:</p>
-                <a href={`mailto:${EMAIL}`} className="text-blue-500 font-black tracking-widest text-sm uppercase hover:text-blue-400 transition-colors">
-                  {EMAIL}
-                </a>
+        <div className="relative p-1 md:p-1.5 bg-gradient-to-br from-white/10 to-transparent rounded-[4rem] shadow-3xl">
+          <div className="relative bg-[#050505]/90 backdrop-blur-3xl rounded-[3.8rem] p-10 md:p-20 overflow-hidden border border-white/5">
+            
+            {/* HUD HEADER */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 mb-20">
+              <div className="flex items-center gap-8">
+                <div className="w-20 h-20 bg-cyan-600/10 rounded-3xl flex items-center justify-center border border-cyan-500/20 text-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+                  {isPrivacy ? <Shield className="w-10 h-10" /> : <FileText className="w-10 h-10" />}
+                </div>
+                <div>
+                  <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none italic">
+                    {isPrivacy ? 'Privacy' : 'Terms'} <span className="text-zinc-800">Protocol.</span>
+                  </h1>
+                  <div className="flex items-center gap-4 mt-4">
+                    <span className="text-[10px] text-cyan-500 font-black uppercase tracking-[0.4em]">Node ID: ZEN-LGL-001</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                  </div>
+                </div>
               </div>
-              <div className="text-[10px] text-gray-700 font-black uppercase tracking-widest text-right">
-                © {new Date().getFullYear()} {COMPANY_NAME} CORE.<br />
-                All Nodes Secured.
+              
+              <div className="flex flex-col items-end opacity-50">
+                 <div className="mono text-[8px] text-zinc-500 uppercase tracking-widest font-black mb-1">Last Update</div>
+                 <div className="mono text-xs text-white font-black uppercase tracking-widest italic">OCT_2025_REV</div>
               </div>
             </div>
+
+            {/* CONTENT STREAM */}
+            <div className="space-y-16 text-zinc-400 text-sm md:text-base leading-relaxed font-medium">
+              
+              <section className="relative group">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-1 h-6 bg-cyan-500"></div>
+                  <h3 className="text-white font-black text-xs uppercase tracking-[0.4em] flex items-center gap-3">
+                    <Globe className="w-4 h-4 text-cyan-500" /> Operational Overview
+                  </h3>
+                </div>
+                <div className="bg-[#0A0A0A] border border-white/5 p-8 rounded-3xl italic text-zinc-500 border-l-cyan-500/50 border-l-4">
+                  "This legal interface defines the mandatory engagement parameters of the {COMPANY_NAME} Hyper-Automation Ecosystem. Engagement with any node signifies complete compliance with documented protocols."
+                </div>
+              </section>
+
+              <section className="grid md:grid-cols-2 gap-12">
+                <div className="space-y-6 p-8 bg-white/[0.02] rounded-3xl border border-white/5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Lock className="w-4 h-4 text-cyan-500" />
+                    <h4 className="text-white font-black text-[10px] uppercase tracking-widest">Data Encryption</h4>
+                  </div>
+                  <p className="text-xs leading-relaxed uppercase tracking-tight">
+                    {isPrivacy 
+                      ? "ZENTRIX employs AES-256 end-to-end encryption for all business logic and customer metadata. Your terminal logs are never exposed to external neural networks without explicit authentication." 
+                      : "User access is strictly bound to authorized terminal IDs. Any unauthorized attempt to breach the core architecture will result in immediate node disconnection."}
+                  </p>
+                </div>
+                
+                <div className="space-y-6 p-8 bg-white/[0.02] rounded-3xl border border-white/5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Terminal className="w-4 h-4 text-cyan-500" />
+                    <h4 className="text-white font-black text-[10px] uppercase tracking-widest">System Integrity</h4>
+                  </div>
+                  <p className="text-xs leading-relaxed uppercase tracking-tight">
+                    All automation scripts (WhatsApp, Custom Software, Cloud Infrastructure) are audited for performance leaks. ZENTRIX maintains zero-knowledge logs of proprietary client algorithms.
+                  </p>
+                </div>
+              </section>
+
+              <section className="space-y-8">
+                <h3 className="text-white font-black text-xs uppercase tracking-[0.4em] flex items-center gap-3">
+                  <Activity className="w-4 h-4 text-cyan-500" /> Protocol Directives
+                </h3>
+                <div className="grid gap-4">
+                   {['Identity Verification Protocols', 'Hyper-Automation Usage Rights', 'Global API Rate Limits', 'Intellectual Asset Protection'].map((item, idx) => (
+                     <div key={idx} className="flex items-center justify-between p-6 bg-[#080808] border border-white/5 rounded-2xl group hover:border-cyan-500/30 transition-all">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-white transition-colors">{item}</span>
+                        <ShieldCheck className="w-4 h-4 text-zinc-800 group-hover:text-cyan-500 transition-colors" />
+                     </div>
+                   ))}
+                </div>
+              </section>
+
+              {/* FOOTER INFO */}
+              <div className="pt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                <div>
+                  <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.4em] mb-3">Direct Inquiries:</p>
+                  <a href={`mailto:${EMAIL}`} className="text-cyan-500 font-black tracking-[0.2em] text-sm uppercase hover:text-white transition-colors flex items-center gap-2">
+                    <Mail className="w-4 h-4" /> {EMAIL}
+                  </a>
+                </div>
+                <div className="text-right">
+                  <div className="text-[9px] text-zinc-700 font-black uppercase tracking-[0.3em]">
+                    © {new Date().getFullYear()} ZENTRIX CORE INFRASTRUCTURE.<br />
+                    SECURED IN RAIPUR, INDIA.
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Linkedin, Twitter, Mail, Phone, Instagram, Facebook, ArrowRight, Globe } from 'lucide-react';
+import { Linkedin, Twitter, Mail, Phone, Instagram, Facebook, ArrowRight, Globe, Shield, FileText } from 'lucide-react';
 import { COMPANY_NAME, TAGLINE, PHONE_NUMBER, SECOND_PHONE_NUMBER, EMAIL, LOGO_URL } from '../constants';
 import { fetchSettingsFromSheet } from '../services/sheetService';
 
@@ -34,11 +34,16 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   }, []);
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    if (onNavigate) {
+       onNavigate('landing');
+       // Small timeout to allow landing page to mount before scrolling
+       setTimeout(() => {
+         const element = document.getElementById(id);
+         if (element) element.scrollIntoView({ behavior: 'smooth' });
+       }, 100);
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+       const element = document.getElementById(id);
+       if (element) element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -110,16 +115,26 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
 
           <div>
-            <h4 className="text-white font-black text-xs mb-10 tracking-[0.3em] uppercase opacity-50">Solutions</h4>
+            <h4 className="text-white font-black text-xs mb-10 tracking-[0.3em] uppercase opacity-50">Legal Protocols</h4>
             <ul className="space-y-5">
-              {['Custom Software', 'AI Chatbots', 'FMS & IMS', 'Task Delegation'].map((item) => (
-                <li key={item}>
-                  <button className="text-gray-500 hover:text-white text-sm font-black transition-all hover:translate-x-2 flex items-center gap-2 group uppercase tracking-widest">
-                    <ArrowRight className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-all" />
-                    {item}
-                  </button>
-                </li>
-              ))}
+              <li>
+                <button 
+                  onClick={() => onNavigate?.('privacy')}
+                  className="text-gray-500 hover:text-cyan-400 text-sm font-black transition-all hover:translate-x-2 flex items-center gap-3 group uppercase tracking-widest"
+                >
+                  <Shield className="w-4 h-4 text-cyan-500" />
+                  Privacy Node
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate?.('terms')}
+                  className="text-gray-500 hover:text-cyan-400 text-sm font-black transition-all hover:translate-x-2 flex items-center gap-3 group uppercase tracking-widest"
+                >
+                  <FileText className="w-4 h-4 text-cyan-500" />
+                  Terms Protocol
+                </button>
+              </li>
             </ul>
           </div>
 
