@@ -5,7 +5,7 @@ export const COMPANY_NAME = "ZENTRIX";
 export const TAGLINE = "AUTOMATION OS";
 export const PHONE_NUMBER = "7089935002";
 export const SECOND_PHONE_NUMBER = "7999206708";
-export const EMAIL = "solutions@zentrix.ai";
+export const EMAIL = "zentrix.ai8@gmail.com";
 export const ADDRESS = "Raipur, Chhattisgarh, India";
 export const LOGO_URL = "https://i.ibb.co/vCP2fg5R/Zentrix-Logo-with-Interlocking-Monogram.png";
 
