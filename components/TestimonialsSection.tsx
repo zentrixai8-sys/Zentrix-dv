@@ -1,42 +1,31 @@
 
 import React, { useState, useEffect } from 'react';
-import { Quote, ChevronLeft, ChevronRight, Star, Loader2, Globe, Activity } from 'lucide-react';
+import { Quote, ChevronLeft, ChevronRight, Star, Loader2, Globe, ShieldCheck } from 'lucide-react';
 import { TESTIMONIALS as DEFAULT_TESTIMONIALS } from '../constants';
 import { fetchTestimonialsFromSheet } from '../services/sheetService';
 
 const ImageWithFallback = ({ src, alt, className }: { src: string | null, alt: string, className: string }) => {
   const [error, setError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const initial = alt ? alt.charAt(0).toUpperCase() : 'Z';
+  const [isLoaded, setIsLoaded] = useState(false);
+  const initial = alt.charAt(0).toUpperCase();
 
-  // Return a typographic fallback if image is missing or errors
   if (error || !src) {
     return (
-      <div className={`${className} bg-zinc-50 flex flex-col items-center justify-center border border-zinc-100`}>
-        <span className="text-blue-600 font-black text-2xl italic tracking-tighter leading-none">{initial}</span>
-        <span className="text-[6px] text-zinc-400 font-black uppercase tracking-[0.4em] mt-2 opacity-60">NODE_AUTH</span>
+      <div className={`${className} bg-zinc-900 flex items-center justify-center border border-white/10 text-cyan-500 font-black text-xl uppercase`}>
+        {initial}
       </div>
     );
   }
 
   return (
-    <div className={`${className} relative overflow-hidden bg-white flex items-center justify-center`}>
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 z-10">
-          <Loader2 className="w-5 h-5 text-zinc-300 animate-spin" />
-        </div>
-      )}
-      <img 
-        src={src} 
-        alt={alt} 
-        className="max-w-[85%] max-h-[85%] w-auto h-auto transition-opacity duration-700 object-contain"
-        style={{ opacity: isLoading ? 0 : 1 }}
-        onError={() => setError(true)}
-        onLoad={() => setIsLoading(false)}
-        loading="lazy"
-      />
-    </div>
+    <img 
+      src={src} 
+      alt={alt} 
+      className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`} 
+      onLoad={() => setIsLoaded(true)}
+      onError={() => setError(true)}
+      loading="lazy"
+    />
   );
 };
 
@@ -47,11 +36,18 @@ const TestimonialsSection: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const sheetData = await fetchTestimonialsFromSheet();
-      if (sheetData && sheetData.length > 0) {
-        setTestimonials(sheetData);
+      try {
+        const sheetData = await fetchTestimonialsFromSheet();
+        if (sheetData && sheetData.length > 0) {
+          setTestimonials(sheetData);
+        } else {
+          setTestimonials(DEFAULT_TESTIMONIALS);
+        }
+      } catch (e) {
+        setTestimonials(DEFAULT_TESTIMONIALS);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadData();
   }, []);
@@ -65,114 +61,123 @@ const TestimonialsSection: React.FC = () => {
   };
 
   const getVisibleTestimonials = () => {
-    const visible = [];
     if (testimonials.length === 0) return [];
-    for (let i = 0; i < 3; i++) {
+    const visible = [];
+    const displayCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 3;
+    const count = Math.min(testimonials.length, displayCount);
+    for (let i = 0; i < count; i++) {
       visible.push(testimonials[(startIndex + i) % testimonials.length]);
     }
     return visible;
   };
 
   return (
-    <section id="why" className="py-32 bg-[#020202] relative overflow-hidden">
-      {/* Background accents */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-600/5 rounded-full blur-[150px] pointer-events-none"></div>
-      
+    <section id="why" className="py-24 bg-[#020202] relative overflow-hidden border-y border-white/[0.03]">
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none opacity-20"></div>
+
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         
-        {/* PREMIUM CLIENT LOGO MARQUEE */}
-        <div className="mb-48 reveal">
-          <div className="flex flex-col items-center mb-16 text-center px-4">
-             <div className="flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/5 bg-white/[0.02] mb-6">
-                <Globe className="w-3 h-3 text-cyan-500" />
-                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.5em]">Global Enterprise Network</span>
+        {/* LOGO MARQUEE */}
+        <div className="mb-32 reveal reveal-up active">
+          <div className="flex flex-col items-center mb-12">
+             <div className="flex items-center gap-3 px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-4">
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-500" />
+                <span className="text-[9px] font-black text-cyan-500 uppercase tracking-[0.4em]">ENTERPRISE PARTNERS</span>
              </div>
-             <p className="text-zinc-400 text-[11px] font-black uppercase tracking-[0.3em] mb-4 italic">Strategic Business Alliance</p>
-             <div className="w-12 h-px bg-cyan-500/30"></div>
           </div>
 
           <div className="relative overflow-hidden group">
-            {/* Fade Overlays */}
-            <div className="absolute left-0 top-0 bottom-0 w-32 md:w-64 bg-gradient-to-r from-[#020202] to-transparent z-10"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-32 md:w-64 bg-gradient-to-l from-[#020202] to-transparent z-10"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-48 bg-gradient-to-r from-[#020202] via-[#020202]/80 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-48 bg-gradient-to-l from-[#020202] via-[#020202]/80 to-transparent z-10 pointer-events-none"></div>
             
-            <div className="animate-marquee flex items-center gap-16 md:gap-24 py-12">
-              {[...testimonials, ...testimonials, ...testimonials, ...testimonials].map((t, i) => (
-                <div key={i} className="flex flex-col items-center gap-4 group/logo">
-                  <div className="w-36 h-20 md:w-48 md:h-24 bg-white rounded-2xl flex items-center justify-center shadow-[0_10px_40px_-15px_rgba(255,255,255,0.1)] transition-all hover:scale-105 duration-500 border border-white/10 overflow-hidden">
-                    <ImageWithFallback src={t.logo} alt={t.company} className="w-full h-full" />
+            <div className="animate-marquee flex items-center gap-12 py-8">
+              {[...testimonials, ...testimonials, ...testimonials].map((t, i) => (
+                <div key={i} className="flex items-center gap-6 group/logo transition-all duration-500">
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] overflow-hidden bg-zinc-900/40 border border-white/10 p-6 flex items-center justify-center group-hover/logo:border-cyan-500/60 group-hover/logo:bg-cyan-500/10 transition-all relative">
+                    <ImageWithFallback 
+                      src={t.logo} 
+                      alt={t.company} 
+                      className="w-full h-full object-contain filter contrast-110 brightness-110 group-hover/logo:scale-110 transition-transform duration-500" 
+                    />
                   </div>
-                  <span className="text-[10px] text-zinc-600 group-hover/logo:text-cyan-500 transition-colors font-black uppercase tracking-[0.3em] opacity-40 group-hover/logo:opacity-100">
-                    {t.company}
-                  </span>
+                  <div className="hidden lg:block">
+                    <span className="text-zinc-500 font-black text-[12px] uppercase tracking-[0.3em] whitespace-nowrap group-hover/logo:text-white transition-colors">
+                      {t.company}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Testimonials Header */}
-        <div className="text-center mb-24 reveal">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-cyan-500/5 border border-cyan-500/10 mb-8">
-             <Activity className="w-3 h-3 text-cyan-500" />
-             <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Client Success Matrix</span>
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tighter uppercase italic leading-none">
-            Node <span className="text-cyan-500">Verification.</span>
+        {/* Heading & Controls */}
+        <div className="text-center mb-16 reveal reveal-up active">
+          <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter uppercase leading-none italic">
+            Client <span className="text-cyan-500">Feedback</span>
           </h2>
-          <p className="text-zinc-500 text-sm md:text-base max-w-xl mx-auto font-medium leading-relaxed uppercase tracking-wider px-4">
-            Encrypted reports from our global <span className="text-white">partnership network</span>.
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] max-w-xl mx-auto border-t border-white/5 pt-6 mb-12">
+            Verification protocols from our global operational network.
           </p>
           
-          <div className="flex justify-center items-center gap-6 mt-12">
+          <div className="flex justify-center items-center gap-6">
             <button 
               onClick={prev} 
-              className="w-14 h-14 rounded-full border border-white/5 bg-white/[0.01] hover:bg-cyan-600/10 hover:border-cyan-500/30 transition-all text-zinc-600 hover:text-white flex items-center justify-center"
+              className="p-4 rounded-2xl border border-white/5 bg-zinc-900/40 hover:bg-cyan-600/10 hover:border-cyan-500/40 transition-all text-zinc-500 hover:text-white group"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             </button>
             <button 
               onClick={next} 
-              className="w-14 h-14 rounded-full border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-600 hover:border-cyan-500 transition-all text-cyan-500 hover:text-white flex items-center justify-center"
+              className="p-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 hover:bg-cyan-600 hover:border-cyan-500 transition-all text-cyan-500 hover:text-white group"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="h-[400px] flex items-center justify-center">
+          <div className="h-[300px] flex items-center justify-center">
             <Loader2 className="w-10 h-10 text-cyan-500 animate-spin opacity-40" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 reveal">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {getVisibleTestimonials().map((t, i) => (
               <div 
                 key={`${startIndex}-${i}`} 
-                className="bg-[#050505] border border-white/5 p-10 md:p-12 rounded-3xl flex flex-col h-full transition-all duration-500 hover:border-cyan-500/30 group animate-fade-in relative overflow-hidden shadow-2xl"
+                className="bg-[#050505] border border-white/10 p-8 rounded-[2.5rem] flex flex-col h-full transition-all duration-500 hover:border-cyan-500/50 hover:-translate-y-2 group relative overflow-hidden shadow-2xl animate-fade-in"
               >
-                <div className="absolute top-0 right-0 w-12 h-12 border-t border-r border-white/5 group-hover:border-cyan-500/40 transition-colors"></div>
-
-                <div className="flex justify-between items-start mb-14">
+                {/* Visual Grid Background */}
+                <div className="absolute inset-0 opacity-[0.01] pointer-events-none group-hover:opacity-[0.04] transition-opacity" 
+                     style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: '30px 30px' }}>
+                </div>
+                
+                <div className="flex justify-between items-start mb-8 relative z-10">
                   <div className="flex gap-1.5">
                     {[...Array(5)].map((_, starI) => (
-                      <Star key={starI} className="w-3 h-3 fill-cyan-500/40 text-cyan-500/40" />
+                      <Star key={starI} className="w-4 h-4 fill-yellow-500 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
                     ))}
                   </div>
-                  <Quote className="w-8 h-8 text-zinc-800 rotate-180 group-hover:text-cyan-500/20 transition-colors" />
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-900/80 border border-white/10 flex items-center justify-center group-hover:bg-cyan-600/20 group-hover:border-cyan-500/60 transition-all">
+                    <Quote className="w-6 h-6 text-cyan-500 rotate-180 transition-transform group-hover:scale-110" />
+                  </div>
                 </div>
 
-                <p className="text-zinc-400 text-sm leading-relaxed mb-14 font-medium uppercase tracking-tight italic">
+                {/* Reduced Text Size */}
+                <p className="text-zinc-300 text-base md:text-lg leading-[1.6] mb-12 font-bold uppercase tracking-tight italic relative z-10 group-hover:text-white transition-colors">
                   "{t.text}"
                 </p>
 
-                <div className="flex items-center gap-5 pt-10 border-t border-white/5 mt-auto">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shrink-0 bg-white shadow-xl flex items-center justify-center">
-                    <ImageWithFallback src={t.logo} alt={t.name} className="w-full h-full" />
+                <div className="flex items-center gap-4 pt-8 border-t border-white/[0.08] mt-auto relative z-10 group-hover:border-cyan-500/30 transition-all">
+                  {/* Smaller Logo Container */}
+                  <div className="w-14 h-14 rounded-[1.5rem] overflow-hidden border-2 border-white/10 shrink-0 bg-zinc-950 group-hover:border-cyan-500/60 transition-all p-1">
+                    <ImageWithFallback src={t.logo} alt={t.name} className="w-full h-full object-cover rounded-[1.2rem]" />
                   </div>
                   <div>
-                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest leading-none mb-2">{t.name}</h4>
-                    <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.2em]">
+                    <h4 className="text-[13px] font-black text-white uppercase tracking-widest leading-none mb-1.5 group-hover:text-cyan-400 transition-colors">
+                      {t.name}
+                    </h4>
+                    <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] group-hover:text-zinc-300 transition-colors">
                       {t.company}
                     </p>
                   </div>
@@ -182,12 +187,13 @@ const TestimonialsSection: React.FC = () => {
           </div>
         )}
 
-        <div className="flex justify-center gap-3 mt-20">
-          {testimonials.slice(0, 8).map((_, i) => (
+        {/* Progress Bar Indicators */}
+        <div className="flex justify-center items-center gap-2 mt-16">
+          {testimonials.map((_, i) => (
             <button 
               key={i} 
               onClick={() => setStartIndex(i)}
-              className={`h-1 rounded-full transition-all duration-500 ${i === startIndex ? 'w-12 bg-cyan-600' : 'w-3 bg-white/5 hover:bg-white/10'}`}
+              className={`h-1 rounded-full transition-all duration-700 ${i === startIndex ? 'w-16 bg-cyan-500 shadow-[0_0_15px_#06b6d4]' : 'w-3 bg-zinc-800 hover:bg-zinc-700'}`}
             />
           ))}
         </div>
