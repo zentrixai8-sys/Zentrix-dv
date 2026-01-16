@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Linkedin, Twitter, Mail, Phone, Instagram, Facebook, ArrowRight, Globe } from 'lucide-react';
-import { COMPANY_NAME, TAGLINE, PHONE_NUMBER, EMAIL, LOGO_URL } from '../constants';
+import { COMPANY_NAME, TAGLINE, PHONE_NUMBER, SECOND_PHONE_NUMBER, EMAIL, LOGO_URL } from '../constants';
 import { fetchSettingsFromSheet } from '../services/sheetService';
 
 interface FooterProps {
@@ -123,12 +123,16 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          <div className="space-y-10">
+          <div className="space-y-6">
             <h4 className="text-white font-black text-xs mb-10 tracking-[0.3em] uppercase opacity-50">Access Point</h4>
-            <div className="space-y-6">
+            <div className="space-y-4">
               <a href={`tel:${PHONE_NUMBER}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-blue-500/50 transition-all">
                 <Phone className="w-5 h-5 text-blue-500" />
                 <span className="text-sm font-black text-white tracking-widest uppercase">{PHONE_NUMBER}</span>
+              </a>
+              <a href={`tel:${SECOND_PHONE_NUMBER}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-cyan-500/50 transition-all">
+                <Phone className="w-5 h-5 text-cyan-500" />
+                <span className="text-sm font-black text-white tracking-widest uppercase">{SECOND_PHONE_NUMBER}</span>
               </a>
               <a href={`mailto:${EMAIL}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-violet-500/50 transition-all">
                 <Mail className="w-5 h-5 text-violet-500" />
@@ -141,7 +145,6 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         <div className="pt-12 border-t border-white/[0.05] flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] text-center md:text-left">
             <p>© {new Date().getFullYear()} <span className="text-white">ZENTRIX CORE</span>. SECURED PROTOCOL.</p>
-            <p className="mt-2 opacity-50 tracking-[0.3em]">DESIGNED & DEVELOPED BY <span className="text-blue-500">DEEPAK SAHU</span></p>
           </div>
           <div className="flex items-center gap-3">
              <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>

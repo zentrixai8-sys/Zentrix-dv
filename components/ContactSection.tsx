@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { PHONE_NUMBER, EMAIL, ADDRESS } from '../constants';
+import { PHONE_NUMBER, SECOND_PHONE_NUMBER, EMAIL, ADDRESS } from '../constants';
 
 const ContactSection: React.FC = () => {
   const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' });
@@ -44,17 +44,27 @@ const ContactSection: React.FC = () => {
           <div>
             <h2 className="text-4xl font-extrabold text-white mb-8">Ready to Build the Future?</h2>
             <p className="text-xl text-gray-400 mb-12">
-              Book your free 15-minute discovery call to see how AI can transform your specific business workflows.
+              Book your free discovery call to see how AI can transform your specific business workflows.
             </p>
 
-            <div className="space-y-10">
+            <div className="space-y-8">
               <div className="flex items-center gap-6 group cursor-pointer" onClick={() => window.open(`tel:${PHONE_NUMBER}`)}>
                 <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all">
                   <Phone className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Call Us</h4>
+                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Support Line 1</h4>
                   <p className="text-2xl font-bold text-white">{PHONE_NUMBER}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 group cursor-pointer" onClick={() => window.open(`tel:${SECOND_PHONE_NUMBER}`)}>
+                <div className="bg-cyan-600/10 p-4 rounded-2xl text-cyan-500 group-hover:bg-cyan-600 group-hover:text-white transition-all">
+                  <Phone className="w-8 h-8" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Support Line 2</h4>
+                  <p className="text-2xl font-bold text-white">{SECOND_PHONE_NUMBER}</p>
                 </div>
               </div>
 

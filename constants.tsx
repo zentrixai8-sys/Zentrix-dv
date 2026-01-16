@@ -4,6 +4,7 @@ import { Service, NavItem } from './types';
 export const COMPANY_NAME = "ZENTRIX";
 export const TAGLINE = "AUTOMATION OS";
 export const PHONE_NUMBER = "7089935002";
+export const SECOND_PHONE_NUMBER = "7999206708";
 export const EMAIL = "solutions@zentrix.ai";
 export const ADDRESS = "Raipur, Chhattisgarh, India";
 export const LOGO_URL = "https://i.ibb.co/vCP2fg5R/Zentrix-Logo-with-Interlocking-Monogram.png";
@@ -17,19 +18,35 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const TESTIMONIALS = [
   {
-    name: "Akshay Bardia",
-    role: "Director",
-    company: "Bardia Enterprises",
-    logo: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=100&h=100&fit=crop",
-    text: "ZENTRIX changed our business completely. Everything is now automatic and fast.",
+    name: "Dilip Kodwani",
+    role: "MD",
+    company: "MD DILIP KODWANI",
+    logo: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=200&h=200&fit=crop",
+    text: "GOOD SERVICE AND SUPPORT. THE TEAM IS VERY HELPFUL AND PROFESSIONAL.",
     rating: 5
   },
   {
-    name: "Dilip Kodwani",
-    role: "Manager",
-    company: "Acemark Solutions",
-    logo: "https://images.unsplash.com/photo-1599305090598-fe179d501227?w=100&h=100&fit=crop",
-    text: "Best automation service in Raipur. Their WhatsApp bot saves us hours every day.",
+    name: "Popular Paints",
+    role: "Partner",
+    company: "POPULAR PAINTS",
+    logo: "https://images.unsplash.com/photo-1599305090598-fe179d501227?w=200&h=200&fit=crop",
+    text: "THE SERVICE WAS SMOOTH, EFFICIENT, AND EXCEEDED OUR EXPECTATIONS. HIGHLY PROFESSIONAL APPROACH.",
+    rating: 5
+  },
+  {
+    name: "Avinash Group",
+    role: "Director",
+    company: "AVINASH GROUP",
+    logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=200&fit=crop",
+    text: "VERY SATISFIED WITH THE SERVICE AND SUPPORT. THE TEAM GOES ABOVE AND BEYOND TO HELP.",
+    rating: 5
+  },
+  {
+    name: "Veer Hair Solution",
+    role: "Owner",
+    company: "VEER HAIR SOLUTION",
+    logo: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=200&h=200&fit=crop",
+    text: "SMOOTH PROCESS FROM START TO FINISH. QUICK RESPONSE AND PROBLEM SOLVING ATTITUDE.",
     rating: 5
   }
 ];
