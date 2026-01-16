@@ -20,21 +20,28 @@ function App() {
   const [adminUser, setAdminUser] = useState('');
   const [view, setView] = useState<'landing' | 'dashboard' | 'privacy' | 'terms'>('landing');
 
+  // Sync internal state with URL params if possible, but handle environments where window.location is restricted
   useEffect(() => {
     const handleLocationChange = () => {
-      const params = new URLSearchParams(window.location.search);
-      const v = params.get('protocol') || params.get('view');
-      
-      if (v === 'privacy') setView('privacy');
-      else if (v === 'terms') setView('terms');
-      else if (v === 'dashboard') setView('dashboard');
-      else setView('landing');
-      
-      window.scrollTo(0, 0);
+      try {
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+        const v = params.get('protocol') || params.get('view');
+        
+        if (v === 'privacy') setView('privacy');
+        else if (v === 'terms') setView('terms');
+        else if (v === 'dashboard') setView('dashboard');
+        else setView('landing');
+        
+        window.scrollTo(0, 0);
+      } catch (e) {
+        // Fallback if URL parsing fails in weird environments
+        console.debug("Navigation sync bypass");
+      }
     };
     
     window.addEventListener('popstate', handleLocationChange);
-    handleLocationChange(); // Initial load check
+    handleLocationChange();
     
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
@@ -79,20 +86,33 @@ function App() {
     setView(to);
     window.scrollTo(0, 0);
     
-    const searchParams = new URLSearchParams(window.location.search);
-    if (to === 'landing') {
-      searchParams.delete('protocol');
-      searchParams.delete('view');
-    } else if (to === 'privacy' || to === 'terms') {
-      searchParams.set('protocol', to);
-      searchParams.delete('view');
-    } else {
-      searchParams.set('view', to);
-      searchParams.delete('protocol');
+    // Attempt URL update only in standard environments to avoid SecurityError in sandboxed/blob origins
+    try {
+      const isStandardEnv = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+      const isBlobEnv = window.location.protocol === 'blob:';
+
+      if (isStandardEnv && !isBlobEnv) {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (to === 'landing') {
+          searchParams.delete('protocol');
+          searchParams.delete('view');
+        } else if (to === 'privacy' || to === 'terms') {
+          searchParams.set('protocol', to);
+          searchParams.delete('view');
+        } else {
+          searchParams.set('view', to);
+          searchParams.delete('protocol');
+        }
+        
+        const queryString = searchParams.toString();
+        const newUrl = queryString ? '?' + queryString : window.location.pathname;
+        
+        // Final sanity check on origin to avoid cross-origin History push attempts
+        window.history.pushState({}, '', newUrl);
+      }
+    } catch (e) {
+      // Silently consume. The app state is correctly managed via 'setView' above.
     }
-    
-    const newUrl = searchParams.toString() ? '?' + searchParams.toString() : window.location.pathname;
-    window.history.pushState({}, '', newUrl);
   };
 
   const handleLoginSuccess = (user: string) => {

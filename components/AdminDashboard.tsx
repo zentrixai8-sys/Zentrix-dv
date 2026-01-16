@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter } from 'lucide-react';
+import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { addTestimonialToSheet, fetchTestimonialsFromSheet, fetchSettingsFromSheet, updateSettingsInSheet } from '../services/sheetService';
 
 interface AdminDashboardProps {
@@ -96,30 +96,81 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         <div className="grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
             <h2 className="text-2xl font-black text-white uppercase italic mb-10 tracking-tighter">Append Client Node</h2>
+            
             <form onSubmit={handleSubmitClient} className="space-y-8">
-              <input 
-                type="text" placeholder="CLIENT NAME" required
-                value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase"
-              />
-              <input 
-                type="text" placeholder="LOGO URL (IMGBB/HOSTED)" required
-                value={formData.logo} onChange={e => setFormData({...formData, logo: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none"
-              />
-              <textarea 
-                placeholder="CLIENT FEEDBACK..." required rows={4}
-                value={formData.feedback} onChange={e => setFormData({...formData, feedback: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase resize-none"
-              />
+              <div className="space-y-2">
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-4">Client Identification</label>
+                <input 
+                  type="text" placeholder="CLIENT NAME" required
+                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                  className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center ml-4">
+                  <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Logo Configuration</label>
+                  {formData.logo && (
+                    <span className="text-[9px] text-blue-500 font-black uppercase tracking-widest animate-pulse">Preview Active</span>
+                  )}
+                </div>
+                
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="flex-grow w-full space-y-4">
+                    <input 
+                      type="text" placeholder="LOGO URL (IMGBB/HOSTED)" required
+                      value={formData.logo} onChange={e => setFormData({...formData, logo: e.target.value})}
+                      className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none"
+                    />
+                    
+                    {/* Instructions Note */}
+                    <div className="flex items-start gap-3 bg-blue-500/5 border border-blue-500/10 p-4 rounded-2xl">
+                      <AlertCircle className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight leading-relaxed">
+                        <span className="text-blue-500">NOTE:</span> Please use the <span className="text-white">ImgBB Direct Link</span> (ending in .png or .jpg). Copy the "Full Link" from the viewer for optimal node synchronization.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Logo Preview Section */}
+                  <div className="w-32 h-32 shrink-0 bg-[#121212] border border-white/5 rounded-[2rem] flex items-center justify-center overflow-hidden group/prev relative">
+                    {formData.logo ? (
+                      <img 
+                        src={formData.logo} 
+                        alt="Preview" 
+                        className="w-full h-full object-contain p-4 animate-fade-in"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <ImageIcon className="w-8 h-8 text-zinc-800" />
+                    )}
+                    <div className="absolute inset-0 border border-white/5 rounded-[2rem] pointer-events-none group-hover/prev:border-blue-500/20 transition-colors"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-4">Data Feedback</label>
+                <textarea 
+                  placeholder="CLIENT FEEDBACK..." required rows={4}
+                  value={formData.feedback} onChange={e => setFormData({...formData, feedback: e.target.value})}
+                  className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase resize-none"
+                />
+              </div>
+
               <button 
                 type="submit" disabled={loading}
-                className={`w-full py-6 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase transition-all ${success ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-500'}`}
+                className={`w-full py-6 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase transition-all flex items-center justify-center gap-4 ${success ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-500 shadow-xl active:scale-95'}`}
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Synchronize Data'}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  success ? <><CheckCircle2 className="w-5 h-5" /> Node Synchronized</> : 'Synchronize Data'
+                )}
               </button>
             </form>
           </div>
+
           <div className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12">
             <h3 className="text-xl font-black text-white uppercase italic mb-6">Database Health</h3>
             <div className="space-y-6">
@@ -128,7 +179,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                 <span className="text-white">{clientCount}</span>
               </div>
               <div className="pt-6 border-t border-white/5">
-                <RefreshCw onClick={loadData} className={`w-5 h-5 text-blue-500 cursor-pointer ${fetching ? 'animate-spin' : ''}`} />
+                <button 
+                  onClick={loadData}
+                  className="flex items-center gap-3 text-blue-500 hover:text-white transition-colors group"
+                >
+                  <RefreshCw className={`w-5 h-5 ${fetching ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Refresh Registry</span>
+                </button>
               </div>
             </div>
           </div>
