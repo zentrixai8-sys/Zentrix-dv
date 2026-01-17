@@ -2,41 +2,131 @@
 const SHEET_ID = '1wGMehA9CpOkdGqe_QXM0WkkkVdRl61-PDj3br33y1ME';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNj9ezmbafz8oD2fVy-EcimT4Cw7nntid3dL2FjRaJaAb2Qjo-MnLwNP_6L9Pqv8T7/exec'; 
 
+// Permissive resolver to ensure logos from ImgBB and other hosts load
 const resolveImageUrl = (url: any) => {
   if (!url || typeof url !== 'string') return null;
   let cleanUrl = url.trim();
+  
+  // Handle HTML image tags if present
   if (cleanUrl.includes('<img')) {
     const srcMatch = cleanUrl.match(/src=["']([^"']+)["']/i);
     if (srcMatch && srcMatch[1]) cleanUrl = srcMatch[1];
   }
+  
+  // Handle Google Drive links
   if (cleanUrl.includes('drive.google.com/file/d/')) {
     const id = cleanUrl.split('/d/')[1]?.split('/')[0];
     if (id) return `https://docs.google.com/uc?export=view&id=${id}`;
   }
+  
+  // ImgBB / Standard Direct Links
   if (cleanUrl.startsWith('http')) return cleanUrl;
+  
   return null;
+};
+
+// Helper to get value from object regardless of header casing (logo_url vs LOGO URL)
+const getDynamicValue = (obj: any, possibleKeys: string[]) => {
+  const keys = Object.keys(obj);
+  for (const pKey of possibleKeys) {
+    // Try exact match
+    if (obj[pKey] !== undefined) return obj[pKey];
+    
+    // Try Case-Insensitive / Spaced match
+    const normalizedPKey = pKey.toLowerCase().replace(/_/g, ' ').trim();
+    const foundKey = keys.find(k => {
+      const normalizedK = k.toLowerCase().replace(/_/g, ' ').trim();
+      return normalizedK === normalizedPKey;
+    });
+    
+    if (foundKey) return obj[foundKey];
+  }
+  return null;
+};
+
+export const checkConnectivity = async (): Promise<boolean> => {
+  try {
+    if (!APPS_SCRIPT_URL) return false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=settings`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    console.error("Connectivity Ping Failed:", error);
+    return false;
+  }
 };
 
 export const fetchBannersFromSheet = async () => {
   try {
-    if (!APPS_SCRIPT_URL) return [];
+    if (!APPS_SCRIPT_URL) return null;
     const response = await fetch(`${APPS_SCRIPT_URL}?sheet=ADS`);
-    if (!response.ok) return [];
+    if (!response.ok) return null;
     const data = await response.json();
     if (Array.isArray(data)) {
       return data
-        .filter(item => (item.CONTENT || item.image_url || item['IMAGE URL']))
+        .filter(item => getDynamicValue(item, ['CONTENT', 'title']) || getDynamicValue(item, ['IMAGE URL', 'image_url']))
         .map((item: any) => ({
           id: item.id || Math.random().toString(),
-          imageUrl: resolveImageUrl(item['IMAGE URL'] || item.image_url || item.IMAGE_URL),
-          link: item.link || item.LINK || '#',
-          title: item.CONTENT || item.title || 'PROMOTION'
+          imageUrl: resolveImageUrl(getDynamicValue(item, ['IMAGE URL', 'image_url'])),
+          link: getDynamicValue(item, ['link', 'LINK']) || '#',
+          title: getDynamicValue(item, ['CONTENT', 'title']) || 'PROMOTION'
         }));
     }
     return [];
   } catch (error) {
-    console.warn("Banner Fetch Error:", error);
+    return null;
+  }
+};
+
+export const fetchTestimonialsFromSheet = async () => {
+  try {
+    if (!APPS_SCRIPT_URL) return null;
+    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=admin`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return data
+        .filter(item => getDynamicValue(item, ['client_name', 'name', 'company', 'feedback']))
+        .map((item: any) => {
+          const name = getDynamicValue(item, ['client_name', 'name']) || 'Enterprise Partner';
+          const logoRaw = getDynamicValue(item, ['logo_url', 'logo', 'client_logo', 'image', 'brand_logo', 'image_url']);
+          const logo = resolveImageUrl(logoRaw);
+          return {
+            name: name,
+            logo: logo,
+            text: getDynamicValue(item, ['feedback', 'text', 'testimonial']) || 'Quality service.',
+            role: 'Strategic Partner',
+            company: getDynamicValue(item, ['company', 'designation']) || name,
+            rating: 5
+          };
+        });
+    }
     return [];
+  } catch (error) {
+    return null;
+  }
+};
+
+export const addTestimonialToSheet = async (data: { name: string, logo: string, feedback: string }) => {
+  try {
+    if (!APPS_SCRIPT_URL) return { success: false };
+    const payload = {
+      sheet: 'admin',
+      client_name: data.name,
+      logo_url: data.logo,
+      feedback: data.feedback
+    };
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return { success: true }; 
+  } catch (error) {
+    return { success: false };
   }
 };
 
@@ -71,7 +161,6 @@ export const addDemoBookingToSheet = async (data: { name: string, phone: string,
       'BUSINESS EMAIL': data.email,
       NOTES: data.message
     };
-    // The Apps Script now only handles sheet storage (email notifications removed)
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors', 
@@ -80,39 +169,7 @@ export const addDemoBookingToSheet = async (data: { name: string, phone: string,
     });
     return { success: true }; 
   } catch (error) {
-    console.error("Demo Booking Error:", error);
     return { success: false };
-  }
-};
-
-export const fetchTestimonialsFromSheet = async () => {
-  try {
-    if (APPS_SCRIPT_URL) {
-      const response = await fetch(`${APPS_SCRIPT_URL}?sheet=admin`);
-      if (!response.ok) throw new Error('Bridge failed');
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        return data
-          .filter(item => (item.client_name || item.name || item.company))
-          .map((item: any) => {
-            const name = item.client_name || item.name || item.company || 'Enterprise Partner';
-            const logoRaw = item.logo_url || item.logo || item.client_logo || item.image || item.brand_logo || item.image_url;
-            const logo = resolveImageUrl(logoRaw);
-            return {
-              name: name,
-              logo: logo,
-              text: item.feedback || item.text || item.testimonial || 'Quality service and professional execution.',
-              role: 'Strategic Partner',
-              company: item.company || item.designation || name,
-              rating: 5
-            };
-          });
-      }
-    }
-    return null;
-  } catch (error) {
-    console.warn("Sheet Fetch Error:", error);
-    return null;
   }
 };
 
@@ -125,7 +182,9 @@ export const fetchSettingsFromSheet = async () => {
     if (Array.isArray(data)) {
       const settings: Record<string, string> = {};
       data.forEach(item => {
-        if (item.setting_key) settings[item.setting_key] = item.setting_value;
+        const key = getDynamicValue(item, ['setting_key', 'key']);
+        const value = getDynamicValue(item, ['setting_value', 'value']);
+        if (key) settings[key] = value;
       });
       return settings;
     }
@@ -177,26 +236,5 @@ export const validateLogin = async (username: string, id: string, pass: string) 
     return found ? { success: true, user: found.userName } : { success: false, error: "Access Denied." };
   } catch (error) {
     return { success: false, error: "Authentication Failed." };
-  }
-};
-
-export const addTestimonialToSheet = async (data: { name: string, logo: string, feedback: string }) => {
-  try {
-    if (!APPS_SCRIPT_URL) return { success: false };
-    const payload = {
-      sheet: 'admin',
-      client_name: data.name,
-      logo_url: data.logo,
-      feedback: data.feedback
-    };
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors', 
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    return { success: true }; 
-  } catch (error) {
-    return { success: false };
   }
 };

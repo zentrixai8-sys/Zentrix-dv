@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter, Sparkles, Zap } from 'lucide-react';
-import { addTestimonialToSheet, fetchTestimonialsFromSheet, fetchSettingsFromSheet, updateSettingsInSheet, addBannerToSheet, fetchBannersFromSheet } from '../services/sheetService';
+import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter, Sparkles, Zap, ShieldCheck, ShieldAlert, Activity } from 'lucide-react';
+import { addTestimonialToSheet, fetchTestimonialsFromSheet, fetchSettingsFromSheet, updateSettingsInSheet, addBannerToSheet, fetchBannersFromSheet, checkConnectivity } from '../services/sheetService';
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -24,27 +24,40 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [success, setSuccess] = useState(false);
   const [clientCount, setClientCount] = useState(0);
   const [bannerCount, setBannerCount] = useState(0);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
 
   const loadData = async () => {
     setFetching(true);
-    const [clients, settings, banners] = await Promise.all([
-      fetchTestimonialsFromSheet(),
-      fetchSettingsFromSheet(),
-      fetchBannersFromSheet()
-    ]);
-    
-    if (clients) setClientCount(clients.length);
-    if (banners) setBannerCount(banners.length);
-    if (settings) {
-      setSocialData({
-        facebook: settings.facebook || '',
-        instagram: settings.instagram || '',
-        linkedin: settings.linkedin || '',
-        twitter: settings.twitter || '',
-        whatsapp: settings.whatsapp || ''
-      });
+    try {
+      const [clients, settings, banners, ping] = await Promise.all([
+        fetchTestimonialsFromSheet(),
+        fetchSettingsFromSheet(),
+        fetchBannersFromSheet(),
+        checkConnectivity()
+      ]);
+      
+      // If we got ANY data, or the ping was successful, we are connected
+      const dataSuccess = clients !== null || banners !== null || settings !== null;
+      setIsConnected(dataSuccess || ping);
+
+      if (clients) setClientCount(clients.length);
+      if (banners) setBannerCount(banners.length);
+      if (settings) {
+        setSocialData({
+          facebook: settings.facebook || '',
+          instagram: settings.instagram || '',
+          linkedin: settings.linkedin || '',
+          twitter: settings.twitter || '',
+          whatsapp: settings.whatsapp || ''
+        });
+      }
+    } catch (err) {
+      console.error("Dashboard Sync Failed:", err);
+      // Fallback: If we already have clients displayed, we are functionally connected
+      setIsConnected(clientCount > 0);
+    } finally {
+      setFetching(false);
     }
-    setFetching(false);
   };
 
   useEffect(() => {
@@ -89,10 +102,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
 
   return (
     <div className="max-w-7xl mx-auto pb-20 px-4 animate-fade-in">
+      {/* Top Bar with Connection Status */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
-        <button onClick={onClose} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.3em]">
-          <ArrowLeft className="w-4 h-4" /> Exit Terminal
-        </button>
+        <div className="flex items-center gap-6">
+          <button onClick={onClose} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.3em]">
+            <ArrowLeft className="w-4 h-4" /> Exit Terminal
+          </button>
+          
+          <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border ${isConnected === true ? 'bg-green-500/5 border-green-500/20 text-green-500' : isConnected === false ? 'bg-red-500/5 border-red-500/20 text-red-500' : 'bg-zinc-500/5 border-zinc-500/20 text-zinc-500'}`}>
+            {isConnected === true ? <ShieldCheck className="w-4 h-4" /> : isConnected === false ? <ShieldAlert className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              System Link: {isConnected === true ? 'Connected' : isConnected === false ? 'Disconnected' : 'Pinging...'}
+            </span>
+            {isConnected === true && <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse ml-1"></div>}
+          </div>
+        </div>
         
         <div className="flex bg-[#0A0A0A] p-1.5 rounded-2xl border border-white/5">
           <button 
@@ -145,15 +169,45 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             </form>
           </div>
           <div className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12">
-            <h3 className="text-xl font-black text-white uppercase italic mb-6">Database Health</h3>
-            <div className="space-y-6">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                <span>Active Nodes:</span>
-                <span className="text-white">{clientCount}</span>
+            <div className="flex items-center justify-between mb-10">
+              <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Database Health</h3>
+              <Activity className={`w-5 h-5 ${isConnected ? 'text-green-500' : 'text-zinc-700'}`} />
+            </div>
+            
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-[#121212] p-6 rounded-2xl border border-white/5">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Active Nodes</p>
+                  <p className="text-3xl font-black text-white">{clientCount}</p>
+                </div>
+                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
+                  <Database className="w-6 h-6" />
+                </div>
               </div>
-              <div className="pt-6 border-t border-white/5">
-                <RefreshCw onClick={loadData} className={`w-5 h-5 text-blue-500 cursor-pointer ${fetching ? 'animate-spin' : ''}`} />
+
+              <div className="p-6 rounded-2xl border border-white/5 bg-[#121212]">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Data Sync</span>
+                  <RefreshCw 
+                    onClick={loadData} 
+                    className={`w-4 h-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all ${fetching ? 'animate-spin' : ''}`} 
+                  />
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                   <div className={`h-full bg-blue-500 transition-all duration-1000 ${fetching ? 'w-full animate-pulse' : 'w-full'}`}></div>
+                </div>
+                <p className="text-[8px] text-zinc-700 font-bold uppercase tracking-widest mt-3">
+                  {fetching ? 'Syncing core datasets...' : 'All nodes current and stable.'}
+                </p>
               </div>
+
+              {isConnected === false && !fetching && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-[9px] text-red-500 font-black uppercase tracking-widest leading-relaxed">
+                    Bridge to Google Sheet failed. Check Apps Script deployment and permissions.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
