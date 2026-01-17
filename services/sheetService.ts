@@ -1,6 +1,6 @@
 
 const SHEET_ID = '1wGMehA9CpOkdGqe_QXM0WkkkVdRl61-PDj3br33y1ME';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlYOtGVYCOTndgcpeTxWC_Deu7XJjRanX_aJ4v5jm_YSaEa5VhusVXQy63e7CaBBI7/exec'; 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNj9ezmbafz8oD2fVy-EcimT4Cw7nntid3dL2FjRaJaAb2Qjo-MnLwNP_6L9Pqv8T7/exec'; 
 
 const resolveImageUrl = (url: any) => {
   if (!url || typeof url !== 'string') return null;

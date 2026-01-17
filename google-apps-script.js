@@ -1,10 +1,10 @@
 
 /**
- * ZENTRIX SYSTEM BACKEND SCRIPT (V3 - Sheet Recording Only)
+ * ZENTRIX DATA LOGGING SCRIPT (Storage Only - No Emails)
  * 1. Log in to zentrix.ai8@gmail.com
  * 2. Go to script.google.com -> New Project
  * 3. Paste this code and Deploy as Web App (Access: Anyone)
- * 4. IMPORTANT: When deploying, grant permissions for Sheets.
+ * 4. Ensure you grant "Sheets" permissions during deployment.
  */
 
 function doPost(e) {
@@ -13,6 +13,7 @@ function doPost(e) {
     var sheetId = '1wGMehA9CpOkdGqe_QXM0WkkkVdRl61-PDj3br33y1ME';
     var ss = SpreadsheetApp.openById(sheetId);
     
+    // Determine target sheet
     var sheetName = data.sheet || 'demo book';
     var sheet = ss.getSheetByName(sheetName);
     
@@ -24,8 +25,7 @@ function doPost(e) {
     var timestamp = new Date();
 
     if (sheetName === 'demo book') {
-      // 1. Record in Sheet
-      // Expected Columns: NAME, NUMNER, BUSINESS EMAIL, NOTES, TIMESTAMP
+      // Record Form Data: [NAME, NUMBER, EMAIL, NOTES, TIMESTAMP]
       sheet.appendRow([
         data.NAME, 
         data.NUMNER, 
@@ -35,7 +35,7 @@ function doPost(e) {
       ]);
     } 
     else if (sheetName === 'ADS') {
-      // Data Mapping for Ads: [CONTENT, IMAGE URL, LINK, TIMESTAMP]
+      // Record Ad Data: [CONTENT, IMAGE URL, LINK, TIMESTAMP]
       sheet.appendRow([
         data.CONTENT, 
         data['IMAGE URL'], 
@@ -44,13 +44,14 @@ function doPost(e) {
       ]);
     }
     else {
-      // Generic fallback for other sheets like 'admin' or 'settings'
+      // Generic row append for other sheets
       var keys = Object.keys(data).filter(function(k) { return k !== 'sheet'; });
       var row = keys.map(function(k) { return data[k]; });
       row.push(timestamp);
       sheet.appendRow(row);
     }
 
+    // Success response to frontend
     return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
       .setMimeType(ContentService.MimeType.JSON);
 
@@ -60,6 +61,9 @@ function doPost(e) {
   }
 }
 
+/**
+ * Handle GET requests to fetch data (Banners, Testimonials, Settings)
+ */
 function doGet(e) {
   try {
     var sheetName = e.parameter.sheet || 'ADS';
