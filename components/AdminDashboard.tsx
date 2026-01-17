@@ -1,15 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { addTestimonialToSheet, fetchTestimonialsFromSheet, fetchSettingsFromSheet, updateSettingsInSheet } from '../services/sheetService';
+import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter, Sparkles, Zap } from 'lucide-react';
+import { addTestimonialToSheet, fetchTestimonialsFromSheet, fetchSettingsFromSheet, updateSettingsInSheet, addBannerToSheet, fetchBannersFromSheet } from '../services/sheetService';
 
 interface AdminDashboardProps {
   onClose: () => void;
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'clients' | 'social'>('clients');
+  const [activeTab, setActiveTab] = useState<'clients' | 'social' | 'promo'>('clients');
   const [formData, setFormData] = useState({ name: '', logo: '', feedback: '' });
+  const [bannerData, setBannerData] = useState({ title: '', imageUrl: '', link: '' });
   const [socialData, setSocialData] = useState({
     facebook: '',
     instagram: '',
@@ -21,15 +22,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
   const [clientCount, setClientCount] = useState(0);
+  const [bannerCount, setBannerCount] = useState(0);
 
   const loadData = async () => {
     setFetching(true);
-    const clients = await fetchTestimonialsFromSheet();
-    const settings = await fetchSettingsFromSheet();
+    const [clients, settings, banners] = await Promise.all([
+      fetchTestimonialsFromSheet(),
+      fetchSettingsFromSheet(),
+      fetchBannersFromSheet()
+    ]);
     
     if (clients) setClientCount(clients.length);
+    if (banners) setBannerCount(banners.length);
     if (settings) {
       setSocialData({
         facebook: settings.facebook || '',
@@ -59,6 +64,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     setLoading(false);
   };
 
+  const handleSubmitBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const result = await addBannerToSheet(bannerData);
+    if (result.success) {
+      setSuccess(true);
+      setBannerData({ title: '', imageUrl: '', link: '' });
+      await loadData();
+      setTimeout(() => setSuccess(false), 3000);
+    }
+    setLoading(false);
+  };
+
   const handleSaveSocial = async () => {
     setLoading(true);
     const result = await updateSettingsInSheet(socialData as any);
@@ -81,96 +99,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             onClick={() => setActiveTab('clients')}
             className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
-            Client Management
+            Clients
+          </button>
+          <button 
+            onClick={() => setActiveTab('promo')}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'promo' ? 'bg-amber-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            Promotions
           </button>
           <button 
             onClick={() => setActiveTab('social')}
             className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'social' ? 'bg-cyan-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
-            Social Protocol
+            Social
           </button>
         </div>
       </div>
 
-      {activeTab === 'clients' ? (
+      {activeTab === 'clients' && (
         <div className="grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
             <h2 className="text-2xl font-black text-white uppercase italic mb-10 tracking-tighter">Append Client Node</h2>
-            
             <form onSubmit={handleSubmitClient} className="space-y-8">
-              <div className="space-y-2">
-                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-4">Client Identification</label>
-                <input 
-                  type="text" placeholder="CLIENT NAME" required
-                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase"
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between items-center ml-4">
-                  <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Logo Configuration</label>
-                  {formData.logo && (
-                    <span className="text-[9px] text-blue-500 font-black uppercase tracking-widest animate-pulse">Preview Active</span>
-                  )}
-                </div>
-                
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  <div className="flex-grow w-full space-y-4">
-                    <input 
-                      type="text" placeholder="LOGO URL (IMGBB/HOSTED)" required
-                      value={formData.logo} onChange={e => setFormData({...formData, logo: e.target.value})}
-                      className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none"
-                    />
-                    
-                    {/* Instructions Note */}
-                    <div className="flex items-start gap-3 bg-blue-500/5 border border-blue-500/10 p-4 rounded-2xl">
-                      <AlertCircle className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight leading-relaxed">
-                        <span className="text-blue-500">NOTE:</span> Please use the <span className="text-white">ImgBB Direct Link</span> (ending in .png or .jpg). Copy the "Full Link" from the viewer for optimal node synchronization.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Logo Preview Section */}
-                  <div className="w-32 h-32 shrink-0 bg-[#121212] border border-white/5 rounded-[2rem] flex items-center justify-center overflow-hidden group/prev relative">
-                    {formData.logo ? (
-                      <img 
-                        src={formData.logo} 
-                        alt="Preview" 
-                        className="w-full h-full object-contain p-4 animate-fade-in"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <ImageIcon className="w-8 h-8 text-zinc-800" />
-                    )}
-                    <div className="absolute inset-0 border border-white/5 rounded-[2rem] pointer-events-none group-hover/prev:border-blue-500/20 transition-colors"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest ml-4">Data Feedback</label>
-                <textarea 
-                  placeholder="CLIENT FEEDBACK..." required rows={4}
-                  value={formData.feedback} onChange={e => setFormData({...formData, feedback: e.target.value})}
-                  className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase resize-none"
-                />
-              </div>
-
+              <input 
+                type="text" placeholder="CLIENT NAME" required
+                value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase"
+              />
+              <input 
+                type="text" placeholder="LOGO URL (IMGBB/HOSTED)" required
+                value={formData.logo} onChange={e => setFormData({...formData, logo: e.target.value})}
+                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none"
+              />
+              <textarea 
+                placeholder="CLIENT FEEDBACK..." required rows={4}
+                value={formData.feedback} onChange={e => setFormData({...formData, feedback: e.target.value})}
+                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase resize-none"
+              />
               <button 
                 type="submit" disabled={loading}
-                className={`w-full py-6 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase transition-all flex items-center justify-center gap-4 ${success ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-500 shadow-xl active:scale-95'}`}
+                className={`w-full py-6 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase transition-all ${success ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-500'}`}
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                  success ? <><CheckCircle2 className="w-5 h-5" /> Node Synchronized</> : 'Synchronize Data'
-                )}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Synchronize Data'}
               </button>
             </form>
           </div>
-
           <div className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12">
             <h3 className="text-xl font-black text-white uppercase italic mb-6">Database Health</h3>
             <div className="space-y-6">
@@ -179,18 +152,60 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                 <span className="text-white">{clientCount}</span>
               </div>
               <div className="pt-6 border-t border-white/5">
-                <button 
-                  onClick={loadData}
-                  className="flex items-center gap-3 text-blue-500 hover:text-white transition-colors group"
-                >
-                  <RefreshCw className={`w-5 h-5 ${fetching ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Refresh Registry</span>
-                </button>
+                <RefreshCw onClick={loadData} className={`w-5 h-5 text-blue-500 cursor-pointer ${fetching ? 'animate-spin' : ''}`} />
               </div>
             </div>
           </div>
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'promo' && (
+        <div className="grid lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-8 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
+            <div className="flex items-center gap-4 mb-10">
+               <Zap className="w-6 h-6 text-amber-500" />
+               <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Broadcast Hub</h2>
+            </div>
+            <form onSubmit={handleSubmitBanner} className="space-y-8">
+              <input 
+                type="text" placeholder="PROMOTION TITLE" required
+                value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})}
+                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-amber-500/30 outline-none uppercase"
+              />
+              <input 
+                type="text" placeholder="BANNER IMAGE URL" required
+                value={bannerData.imageUrl} onChange={e => setBannerData({...bannerData, imageUrl: e.target.value})}
+                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-amber-500/30 outline-none"
+              />
+              <input 
+                type="text" placeholder="ACTION LINK (OPTIONAL)"
+                value={bannerData.link} onChange={e => setBannerData({...bannerData, link: e.target.value})}
+                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-amber-500/30 outline-none"
+              />
+              <button 
+                type="submit" disabled={loading}
+                className={`w-full py-6 rounded-2xl font-black text-[10px] tracking-[0.4em] uppercase transition-all ${success ? 'bg-green-600' : 'bg-amber-600 hover:bg-amber-500 shadow-xl'}`}
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Deploy Broadcast'}
+              </button>
+            </form>
+          </div>
+          <div className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12">
+            <h3 className="text-xl font-black text-white uppercase italic mb-6">Campaign Status</h3>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                <span>Active Banners:</span>
+                <span className="text-white">{bannerCount}</span>
+              </div>
+              <div className="pt-6 border-t border-white/5">
+                <p className="text-[8px] text-zinc-600 font-black uppercase tracking-[0.3em]">Nodes broadcasted to site frontend in real-time.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'social' && (
         <div className="max-w-4xl mx-auto bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
           <div className="flex items-center gap-6 mb-12">
             <div className="w-16 h-16 bg-cyan-600/10 rounded-2xl flex items-center justify-center text-cyan-500 border border-cyan-500/20 shadow-inner">

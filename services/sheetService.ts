@@ -2,23 +2,99 @@
 const SHEET_ID = '1wGMehA9CpOkdGqe_QXM0WkkkVdRl61-PDj3br33y1ME';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlYOtGVYCOTndgcpeTxWC_Deu7XJjRanX_aJ4v5jm_YSaEa5VhusVXQy63e7CaBBI7/exec'; 
 
-// Helper to extract direct image URL and handle malformed data
+// Enhanced URL resolver to handle messy sheet data
 const resolveImageUrl = (url: any) => {
   if (!url || typeof url !== 'string') return null;
   
   let cleanUrl = url.trim();
   
-  // Handle HTML strings from sheets
+  // 1. Handle HTML tags (common in Google Sheet 'Publish to Web' outputs)
   if (cleanUrl.includes('<img')) {
     const srcMatch = cleanUrl.match(/src=["']([^"']+)["']/i);
-    if (srcMatch && srcMatch[1]) return srcMatch[1];
+    if (srcMatch && srcMatch[1]) cleanUrl = srcMatch[1];
   }
   
-  // Basic check for common URL patterns
+  // 2. Handle Google Drive direct link conversion
+  if (cleanUrl.includes('drive.google.com/file/d/')) {
+    const id = cleanUrl.split('/d/')[1]?.split('/')[0];
+    if (id) return `https://docs.google.com/uc?export=view&id=${id}`;
+  }
+
+  // 3. Return if it looks like a valid URL
   if (cleanUrl.startsWith('http')) return cleanUrl;
   
-  // If it's a relative path or something else, return null
   return null;
+};
+
+// ADS Sheet - Advertisement/Promotions
+export const fetchBannersFromSheet = async () => {
+  try {
+    if (!APPS_SCRIPT_URL) return [];
+    // Updated to query 'ADS' sheet
+    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=ADS`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return data
+        .filter(item => (item.CONTENT || item.image_url || item['IMAGE URL']))
+        .map((item: any) => ({
+          id: item.id || Math.random().toString(),
+          // Mapping columns: CONTENT to title, IMAGE URL to imageUrl
+          imageUrl: resolveImageUrl(item['IMAGE URL'] || item.image_url || item.IMAGE_URL),
+          link: item.link || item.LINK || '#',
+          title: item.CONTENT || item.title || 'PROMOTION'
+        }));
+    }
+    return [];
+  } catch (error) {
+    console.warn("Banner Fetch Error:", error);
+    return [];
+  }
+};
+
+export const addBannerToSheet = async (data: { title: string, imageUrl: string, link: string }) => {
+  try {
+    if (!APPS_SCRIPT_URL) return { success: false };
+    const payload = {
+      sheet: 'ADS',
+      CONTENT: data.title,
+      'IMAGE URL': data.imageUrl,
+      link: data.link
+    };
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return { success: true }; 
+  } catch (error) {
+    return { success: false };
+  }
+};
+
+// demo book Sheet - Form submissions
+export const addDemoBookingToSheet = async (data: { name: string, phone: string, email: string, message: string }) => {
+  try {
+    if (!APPS_SCRIPT_URL) return { success: false };
+    const payload = {
+      sheet: 'demo book',
+      NAME: data.name,
+      NUMNER: data.phone,
+      'BUSINESS EMAIL': data.email,
+      NOTES: data.message
+    };
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return { success: true }; 
+  } catch (error) {
+    console.error("Demo Booking Error:", error);
+    return { success: false };
+  }
 };
 
 export const fetchTestimonialsFromSheet = async () => {
@@ -29,17 +105,20 @@ export const fetchTestimonialsFromSheet = async () => {
       const data = await response.json();
       if (Array.isArray(data)) {
         return data
-          .filter(item => (item.client_name || item.name))
+          .filter(item => (item.client_name || item.name || item.company))
           .map((item: any) => {
-            const name = item.client_name || item.name || 'Enterprise Partner';
-            const logo = resolveImageUrl(item.logo_url || item.logo);
+            const name = item.client_name || item.name || item.company || 'Enterprise Partner';
+            
+            // AGGRESSIVE LOGO DETECTION - Look for any field that might contain a logo
+            const logoRaw = item.logo_url || item.logo || item.client_logo || item.image || item.brand_logo || item.image_url;
+            const logo = resolveImageUrl(logoRaw);
             
             return {
               name: name,
               logo: logo,
-              text: item.feedback || item.text || 'Process efficiency optimized.',
+              text: item.feedback || item.text || item.testimonial || 'Quality service and professional execution.',
               role: 'Strategic Partner',
-              company: name,
+              company: item.company || item.designation || name,
               rating: 5
             };
           });
