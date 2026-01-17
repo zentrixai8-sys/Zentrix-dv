@@ -1,6 +1,6 @@
 
 const SHEET_ID = '1wGMehA9CpOkdGqe_QXM0WkkkVdRl61-PDj3br33y1ME';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxha5Ga1oW_TRdHyqwgpshkegUDS-5iOsCpqKVJEevduSA1NfFgyHW2F1VuCvqai5C9/exec'; 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlYOtGVYCOTndgcpeTxWC_Deu7XJjRanX_aJ4v5jm_YSaEa5VhusVXQy63e7CaBBI7/exec'; 
 
 const resolveImageUrl = (url: any) => {
   if (!url || typeof url !== 'string') return null;
@@ -71,7 +71,7 @@ export const addDemoBookingToSheet = async (data: { name: string, phone: string,
       'BUSINESS EMAIL': data.email,
       NOTES: data.message
     };
-    // The Apps Script handles both sheet storage and dual email sending (Client & Admin)
+    // The Apps Script now only handles sheet storage (email notifications removed)
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors', 
