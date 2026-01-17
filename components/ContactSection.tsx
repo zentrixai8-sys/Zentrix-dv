@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { PHONE_NUMBER, EMAIL, ADDRESS } from '../constants';
+import { PHONE_NUMBER, PHONE_NUMBER_2, EMAIL, ADDRESS } from '../constants';
 import { addDemoBookingToSheet } from '../services/sheetService';
 
 const ContactSection: React.FC = () => {
@@ -56,13 +56,26 @@ const ContactSection: React.FC = () => {
             </p>
 
             <div className="space-y-10">
-              <div className="flex items-center gap-6 group cursor-pointer" onClick={() => window.open(`tel:${PHONE_NUMBER}`)}>
+              <div className="flex items-start gap-6 group">
                 <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all">
                   <Phone className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Call Us</h4>
-                  <p className="text-2xl font-bold text-white">{PHONE_NUMBER}</p>
+                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Call Us</h4>
+                  <div className="space-y-2">
+                    <p 
+                      className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
+                      onClick={() => window.open(`tel:${PHONE_NUMBER}`)}
+                    >
+                      {PHONE_NUMBER}
+                    </p>
+                    <p 
+                      className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
+                      onClick={() => window.open(`tel:${PHONE_NUMBER_2}`)}
+                    >
+                      {PHONE_NUMBER_2}
+                    </p>
+                  </div>
                 </div>
               </div>
 

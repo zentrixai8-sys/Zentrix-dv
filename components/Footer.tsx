@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Linkedin, Twitter, Mail, Phone, Instagram, Facebook, ArrowRight, Globe } from 'lucide-react';
-import { COMPANY_NAME, TAGLINE, PHONE_NUMBER, EMAIL, LOGO_URL } from '../constants';
+import { COMPANY_NAME, TAGLINE, PHONE_NUMBER, PHONE_NUMBER_2, EMAIL, LOGO_URL } from '../constants';
 import { fetchSettingsFromSheet } from '../services/sheetService';
 
 interface FooterProps {
@@ -135,6 +135,10 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <a href={`tel:${PHONE_NUMBER}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-blue-500/50 transition-all">
                 <Phone className="w-5 h-5 text-blue-500" />
                 <span className="text-sm font-black text-white tracking-widest uppercase">{PHONE_NUMBER}</span>
+              </a>
+              <a href={`tel:${PHONE_NUMBER_2}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-blue-500/50 transition-all">
+                <Phone className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-black text-white tracking-widest uppercase">{PHONE_NUMBER_2}</span>
               </a>
               <a href={`mailto:${EMAIL}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-violet-500/50 transition-all">
                 <Mail className="w-5 h-5 text-violet-500" />
