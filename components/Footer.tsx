@@ -67,7 +67,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-600 blur-lg opacity-20"></div>
                 <div className="relative w-14 h-14 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 flex items-center justify-center">
-                  <img src={LOGO_URL} alt={COMPANY_NAME} className="w-10 h-10 object-contain" />
+                  <img 
+                    src={LOGO_URL} 
+                    alt={COMPANY_NAME} 
+                    className="w-10 h-10 object-contain transition-opacity duration-500" 
+                    onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
+                    onError={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
+                  />
                 </div>
               </div>
               <div>

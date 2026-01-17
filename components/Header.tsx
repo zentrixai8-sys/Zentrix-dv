@@ -41,8 +41,17 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
-                <div className="relative w-12 h-12 overflow-hidden rounded-xl border border-white/10 group-hover:scale-105 transition-transform bg-zinc-900">
-                  <img src={LOGO_URL} alt={COMPANY_NAME} className="w-full h-full object-contain p-2" />
+                <div className="relative w-12 h-12 overflow-hidden rounded-xl border border-white/10 group-hover:scale-105 transition-transform bg-zinc-900 flex items-center justify-center">
+                  <img 
+                    src={LOGO_URL} 
+                    alt={COMPANY_NAME} 
+                    className="w-full h-full object-contain p-2 transition-opacity duration-500" 
+                    onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).classList.add('loaded');
+                      (e.target as HTMLImageElement).src = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d47353039331e11a6839.svg";
+                    }}
+                  />
                 </div>
               </div>
               <div className="flex flex-col">
