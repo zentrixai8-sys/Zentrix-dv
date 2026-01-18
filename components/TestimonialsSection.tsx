@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Quote, ChevronLeft, ChevronRight, Star, Loader2, Globe, Activity, User } from 'lucide-react';
-import { LOGO_URL } from '../constants';
+import { Quote, ChevronLeft, ChevronRight, Star, Loader2, Globe, Activity, User, Building2 } from 'lucide-react';
 import { fetchTestimonialsFromSheet } from '../services/sheetService';
 
 const ClientLogoSlot = ({ src, name }: { src: string | null, name: string }) => {
@@ -13,25 +12,32 @@ const ClientLogoSlot = ({ src, name }: { src: string | null, name: string }) => 
       {/* 3D Depth Highlight */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none"></div>
       
-      {/* Visibility Glow - Ensuring dark logos pop on dark background */}
+      {/* Visibility Glow */}
       <div className="absolute w-28 h-28 bg-white/[0.04] blur-2xl rounded-full pointer-events-none group-hover:bg-cyan-500/[0.06] transition-colors"></div>
 
-      {isLoading && !error && (
+      {isLoading && !error && src && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <Loader2 className="w-5 h-5 text-cyan-500 animate-spin" />
         </div>
       )}
       
-      <img 
-        src={error || !src ? LOGO_URL : src} 
-        alt={name} 
-        className={`w-full h-full object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.1)] ${isLoading ? 'opacity-0' : 'opacity-100 loaded'}`}
-        onLoad={(e) => {
-          setIsLoading(false);
-          (e.target as HTMLImageElement).classList.add('loaded');
-        }}
-        onError={() => setError(true)}
-      />
+      {src && !error ? (
+        <img 
+          src={src} 
+          alt={name} 
+          className={`w-full h-full object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.1)] ${isLoading ? 'opacity-0' : 'opacity-100 loaded'}`}
+          onLoad={(e) => {
+            setIsLoading(false);
+            (e.target as HTMLImageElement).classList.add('loaded');
+          }}
+          onError={() => setError(true)}
+        />
+      ) : (
+        <div className="flex flex-col items-center gap-2 opacity-20 group-hover:opacity-40 transition-opacity">
+          <Building2 className="w-8 h-8 text-zinc-500" />
+          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">{name || 'PARTNER'}</span>
+        </div>
+      )}
       
       <div className="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/5 transition-colors pointer-events-none"></div>
     </div>
@@ -110,7 +116,7 @@ const TestimonialsSection: React.FC = () => {
                 <div className="animate-marquee flex items-center gap-14">
                   {marqueeItems.map((t, i) => (
                       <div key={i} className="shrink-0 group">
-                        <ClientLogoSlot src={t.logo} name={t.company} />
+                        <ClientLogoSlot src={t.logo} name={t.company || t.name} />
                       </div>
                   ))}
                 </div>
@@ -174,10 +180,9 @@ const TestimonialsSection: React.FC = () => {
                   "{t.text}"
                 </p>
 
-                {/* Footer Section - REFINED DARK 3D LOGO CONTAINER */}
+                {/* Footer Section */}
                 <div className="flex items-center gap-5 mt-auto pt-10 border-t border-white/5">
                   <div className="w-16 h-16 rounded-full overflow-hidden border border-white/5 shrink-0 bg-[#080808] shadow-[0_5px_25px_rgba(0,0,0,0.8)] flex items-center justify-center p-3.5 transition-all duration-500 group-hover:scale-110 relative group-hover:border-cyan-500/40">
-                    {/* Inner glow for visibility of dark logos */}
                     <div className="absolute inset-0 bg-white/[0.04] rounded-full pointer-events-none"></div>
                     <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/[0.05] to-transparent pointer-events-none"></div>
                     
@@ -190,7 +195,6 @@ const TestimonialsSection: React.FC = () => {
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
-                          target.parentElement!.classList.add('bg-zinc-900');
                         }}
                       />
                     ) : (
