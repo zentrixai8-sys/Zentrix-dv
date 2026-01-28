@@ -1,27 +1,27 @@
 
 const SHEET_ID = '1wGMehA9CpOkdGqe_QXM0WkkkVdRl61-PDj3br33y1ME';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNj9ezmbafz8oD2fVy-EcimT4Cw7nntid3dL2FjRaJaAb2Qjo-MnLwNP_6L9Pqv8T7/exec'; 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNj9ezmbafz8oD2fVy-EcimT4Cw7nntid3dL2FjRaJaAb2Qjo-MnLwNP_6L9Pqv8T7/exec';
 
 // Permissive resolver to ensure logos from ImgBB and other hosts load
 const resolveImageUrl = (url: any) => {
   if (!url || typeof url !== 'string') return null;
   let cleanUrl = url.trim();
-  
+
   // Handle HTML image tags if present
   if (cleanUrl.includes('<img')) {
     const srcMatch = cleanUrl.match(/src=["']([^"']+)["']/i);
     if (srcMatch && srcMatch[1]) cleanUrl = srcMatch[1];
   }
-  
+
   // Handle Google Drive links
   if (cleanUrl.includes('drive.google.com/file/d/')) {
     const id = cleanUrl.split('/d/')[1]?.split('/')[0];
     if (id) return `https://docs.google.com/uc?export=view&id=${id}`;
   }
-  
+
   // ImgBB / Standard Direct Links
   if (cleanUrl.startsWith('http')) return cleanUrl;
-  
+
   return null;
 };
 
@@ -31,14 +31,14 @@ const getDynamicValue = (obj: any, possibleKeys: string[]) => {
   for (const pKey of possibleKeys) {
     // Try exact match
     if (obj[pKey] !== undefined) return obj[pKey];
-    
+
     // Try Case-Insensitive / Spaced match
     const normalizedPKey = pKey.toLowerCase().replace(/_/g, ' ').trim();
     const foundKey = keys.find(k => {
       const normalizedK = k.toLowerCase().replace(/_/g, ' ').trim();
       return normalizedK === normalizedPKey;
     });
-    
+
     if (foundKey) return obj[foundKey];
   }
   return null;
@@ -60,11 +60,11 @@ export const checkConnectivity = async (): Promise<boolean> => {
 
 export const fetchBannersFromSheet = async () => {
   try {
-    if (!APPS_SCRIPT_URL) return null;
+    if (!APPS_SCRIPT_URL) throw new Error("No URL");
     const response = await fetch(`${APPS_SCRIPT_URL}?sheet=ADS`);
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error("Fetch failed");
     const data = await response.json();
-    if (Array.isArray(data)) {
+    if (Array.isArray(data) && data.length > 0) {
       return data
         .filter(item => getDynamicValue(item, ['CONTENT', 'title']) || getDynamicValue(item, ['IMAGE URL', 'image_url']))
         .map((item: any) => ({
@@ -74,9 +74,15 @@ export const fetchBannersFromSheet = async () => {
           title: getDynamicValue(item, ['CONTENT', 'title']) || 'PROMOTION'
         }));
     }
-    return [];
+    throw new Error("Empty data");
   } catch (error) {
-    return null;
+    // Return Default Banner if fetch fails
+    return [{
+      id: 'default-1',
+      imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80',
+      link: '#contact',
+      title: 'System Architecture'
+    }];
   }
 };
 
@@ -120,11 +126,11 @@ export const addTestimonialToSheet = async (data: { name: string, logo: string, 
     };
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', 
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    return { success: true }; 
+    return { success: true };
   } catch (error) {
     return { success: false };
   }
@@ -141,11 +147,11 @@ export const addBannerToSheet = async (data: { title: string, imageUrl: string, 
     };
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', 
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    return { success: true }; 
+    return { success: true };
   } catch (error) {
     return { success: false };
   }
@@ -163,12 +169,14 @@ export const addDemoBookingToSheet = async (data: { name: string, phone: string,
     };
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', 
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    return { success: true }; 
+    return { success: true };
   } catch (error) {
+    // If it's a network error (like completely offline), we return false.
+    // CORS errors usually don't throw in no-cors mode, they just finish opaquely.
     return { success: false };
   }
 };
@@ -190,6 +198,7 @@ export const fetchSettingsFromSheet = async () => {
     }
     return null;
   } catch (error) {
+    // Suppress CORS errors for settings, just return null so defaults are used
     return null;
   }
 };
@@ -228,9 +237,9 @@ export const validateLogin = async (username: string, id: string, pass: string) 
       userId: (row.c[1]?.v || '').toString().trim(),
       userPassword: (row.c[2]?.v || '').toString().trim()
     }));
-    const found = users.find((u: any) => 
-      u.userName.toLowerCase() === username.toLowerCase().trim() && 
-      u.userId.toString() === id.toString().trim() && 
+    const found = users.find((u: any) =>
+      u.userName.toLowerCase() === username.toLowerCase().trim() &&
+      u.userId.toString() === id.toString().trim() &&
       u.userPassword.toString() === pass.toString().trim()
     );
     return found ? { success: true, user: found.userName } : { success: false, error: "Access Denied." };

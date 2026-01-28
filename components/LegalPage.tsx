@@ -1,14 +1,15 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield, FileText, Lock, Globe } from 'lucide-react';
 import { COMPANY_NAME, EMAIL, TAGLINE } from '../constants';
 
 interface LegalPageProps {
   type: 'privacy' | 'terms';
-  onBack: () => void;
 }
 
-const LegalPage: React.FC<LegalPageProps> = ({ type, onBack }) => {
+const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
+  const navigate = useNavigate();
   const isPrivacy = type === 'privacy';
 
   return (
@@ -18,8 +19,8 @@ const LegalPage: React.FC<LegalPageProps> = ({ type, onBack }) => {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none"></div>
 
       <div className="max-w-4xl mx-auto relative z-10">
-        <button 
-          onClick={onBack}
+        <button
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors text-[10px] font-black uppercase tracking-[0.3em] mb-12 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Terminal
@@ -53,8 +54,8 @@ const LegalPage: React.FC<LegalPageProps> = ({ type, onBack }) => {
                 <Lock className="w-4 h-4 text-blue-500" /> Data Integrity & Privacy
               </h3>
               <p>
-                {isPrivacy 
-                  ? "Your enterprise data is encrypted using AES-256 protocols. ZENTRIX does not commercialize user data. All system links and AI training data are localized to your secure business environment." 
+                {isPrivacy
+                  ? "Your enterprise data is encrypted using AES-256 protocols. ZENTRIX does not commercialize user data. All system links and AI training data are localized to your secure business environment."
                   : "Usage of ZENTRIX services requires adherence to our fair-use policy. Systems are monitored for optimal uptime and security compliance to prevent unauthorized node access."}
               </p>
             </section>

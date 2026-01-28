@@ -10,10 +10,14 @@ interface HeaderProps {
   onLoginSuccess: (user: string) => void;
 }
 
+import { useNavigate, useLocation } from 'react-router-dom';
+
 const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -22,6 +26,26 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
   }, []);
 
   const scrollToSection = (id: string) => {
+    if (id === 'home') {
+      if (location.pathname !== '/') {
+        navigate('/');
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      setIsOpen(false);
+      return;
+    }
+
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) element.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      setIsOpen(false);
+      return;
+    }
+
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -35,17 +59,17 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {/* Logo Section */}
-            <div 
-              className="flex items-center gap-4 cursor-pointer group" 
-              onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
+            <div
+              className="flex items-center gap-4 cursor-pointer group"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
                 <div className="relative w-12 h-12 overflow-hidden rounded-xl border border-white/10 group-hover:scale-105 transition-transform bg-zinc-900 flex items-center justify-center">
-                  <img 
-                    src={LOGO_URL} 
-                    alt={COMPANY_NAME} 
-                    className="w-full h-full object-contain p-2 transition-opacity duration-500" 
+                  <img
+                    src={LOGO_URL}
+                    alt={COMPANY_NAME}
+                    className="w-full h-full object-contain p-2 transition-opacity duration-500"
                     onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
                     onError={(e) => {
                       (e.target as HTMLImageElement).classList.add('loaded');
@@ -73,17 +97,17 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
                   {item.label}
                 </button>
               ))}
-              
+
               <div className="flex items-center gap-6 border-l border-white/10 pl-12">
                 {isAdmin ? (
-                  <button 
+                  <button
                     onClick={onLogout}
                     className="flex items-center gap-3 text-red-500 hover:text-red-400 text-[10px] font-black tracking-widest uppercase"
                   >
                     <LogOut className="w-4 h-4" /> Disconnect
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => setShowLogin(true)}
                     className="p-3 glass rounded-xl text-blue-500 hover:text-white hover:bg-blue-600 transition-all border-white/10"
                     title="System Login"
@@ -91,12 +115,12 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
                     <Lock className="w-4 h-4" />
                   </button>
                 )}
-                
-                <button 
+
+                <button
                   onClick={() => scrollToSection('contact')}
                   className="px-8 py-3 rounded-xl text-xs font-black tracking-widest text-white bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:scale-105 active:scale-95 uppercase"
                 >
-                  Initialize Demo
+                  Book Demo
                 </button>
               </div>
             </div>
@@ -119,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
                 {item.label}
               </button>
             ))}
-            <button 
+            <button
               onClick={() => {
                 setShowLogin(true);
                 setIsOpen(false);
@@ -128,7 +152,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
             >
               Admin Login
             </button>
-            <button 
+            <button
               onClick={() => scrollToSection('contact')}
               className="w-full py-6 bg-blue-600 text-white rounded-2xl font-black text-xl tracking-widest uppercase shadow-2xl"
             >
@@ -139,12 +163,12 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
       </nav>
 
       {showLogin && (
-        <LoginModal 
-          onClose={() => setShowLogin(false)} 
+        <LoginModal
+          onClose={() => setShowLogin(false)}
           onSuccess={(user) => {
             onLoginSuccess(user);
             setShowLogin(false);
-          }} 
+          }}
         />
       )}
     </>

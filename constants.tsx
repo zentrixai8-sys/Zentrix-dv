@@ -10,9 +10,10 @@ export const ADDRESS = "Raipur, Chhattisgarh, India";
 export const LOGO_URL = "https://i.ibb.co/vCP2fg5R/Zentrix-Logo-with-Interlocking-Monogram.png";
 
 export const NAV_ITEMS: NavItem[] = [
+  { label: 'HOME', href: 'home' },
   { label: 'SERVICES', href: 'services' },
-  { label: 'DIRECTIVES', href: 'directives' },
-  { label: 'ECOSYSTEM', href: 'ecosystem' },
+  { label: 'PROCESS', href: 'directives' },
+  { label: 'FEATURES', href: 'ecosystem' },
   { label: 'CONTACT', href: 'contact' },
 ];
 
@@ -61,3 +62,5 @@ export const SERVICES: Service[] = [
     implementation: 'Moved an old server system to a new cloud setup, making it 5x faster.'
   }
 ];
+
+export const GEMINI_API_KEY = "AIzaSyDTeQw-0dKGEXpD4I2V9Of1yfEWUUV1-CM";

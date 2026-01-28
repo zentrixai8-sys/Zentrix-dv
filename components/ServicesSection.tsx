@@ -11,7 +11,7 @@ interface ServiceModalProps {
 
 const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose }) => {
   const IconComponent = (Icons as any)[service.icon] || Icons.Zap;
-  
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl animate-fade-in" onClick={onClose}></div>
@@ -30,7 +30,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose }) => {
           <p className="text-gray-400 text-lg leading-relaxed mb-10 font-medium">
             {service.details}
           </p>
-          
+
           <div className="grid grid-cols-2 gap-6 mb-10">
             {service.specs.map((spec, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-gray-500 font-bold uppercase tracking-widest">
@@ -40,7 +40,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose }) => {
             ))}
           </div>
 
-          <button 
+          <button
             onClick={() => {
               onClose();
               document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
@@ -59,15 +59,16 @@ const ServicesSection: React.FC = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
-    <section id="services" className="py-32 bg-[#020202] relative">
+    <section id="services" className="py-32 bg-zinc-950 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[500px] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none"></div>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex flex-col items-center text-center mb-24 reveal reveal-up">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/20 mb-6">
             <Icons.Cpu className="w-3 h-3 text-blue-500" />
-            <span className="text-blue-500 font-black tracking-[0.4em] text-[9px] uppercase">Service Architecture</span>
+            <span className="text-blue-500 font-black tracking-[0.4em] text-[9px] uppercase">Our Services</span>
           </div>
           <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 italic uppercase">
-            Deploy <span className="text-zinc-800">Nodes.</span>
+            What <span className="text-zinc-800">We Do.</span>
           </h2>
         </div>
 
@@ -75,7 +76,7 @@ const ServicesSection: React.FC = () => {
           {SERVICES.map((service, index) => {
             const IconComponent = (Icons as any)[service.icon] || Icons.Zap;
             return (
-              <div 
+              <div
                 key={index}
                 onClick={() => setSelectedService(service)}
                 className={`reveal reveal-up stagger-${(index % 3) + 1} bg-[#080808] p-10 rounded-[3rem] border border-white/5 transition-all duration-500 cursor-pointer group flex flex-col h-full hover:border-blue-500/20 shadow-2xl relative overflow-hidden`}
@@ -84,7 +85,7 @@ const ServicesSection: React.FC = () => {
                 <div className="bg-[#0f0f0f] w-20 h-20 rounded-[1.8rem] flex items-center justify-center mb-16 border border-white/5 group-hover:bg-[#151515] transition-colors">
                   <IconComponent className="w-8 h-8 text-zinc-600 group-hover:text-blue-500 transition-colors" />
                 </div>
-                
+
                 <div className="flex-grow">
                   <h4 className="text-3xl font-black text-white mb-10 tracking-tighter uppercase italic leading-[1.1] max-w-[200px]">
                     {service.title}
@@ -93,11 +94,11 @@ const ServicesSection: React.FC = () => {
                     {service.description}
                   </p>
                 </div>
-                
+
                 <div className="pt-8 border-t border-white/[0.05] flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.6)] animate-pulse"></div>
-                    <span className="text-[10px] font-black text-zinc-500 tracking-[0.3em] uppercase group-hover:text-blue-400 transition-colors">EXPAND NODE</span>
+                    <span className="text-[10px] font-black text-zinc-500 tracking-[0.3em] uppercase group-hover:text-blue-400 transition-colors">Learn More</span>
                   </div>
                   <Icons.Plus className="w-5 h-5 text-zinc-700 group-hover:text-blue-500 transition-colors" />
                 </div>
@@ -108,9 +109,9 @@ const ServicesSection: React.FC = () => {
       </div>
 
       {selectedService && (
-        <ServiceModal 
-          service={selectedService} 
-          onClose={() => setSelectedService(null)} 
+        <ServiceModal
+          service={selectedService}
+          onClose={() => setSelectedService(null)}
         />
       )}
     </section>
