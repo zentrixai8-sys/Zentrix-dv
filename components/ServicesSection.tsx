@@ -65,10 +65,10 @@ const ServicesSection: React.FC = () => {
         <div className="flex flex-col items-center text-center mb-24 reveal reveal-up">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/20 mb-6">
             <Icons.Cpu className="w-3 h-3 text-blue-500" />
-            <span className="text-blue-500 font-black tracking-[0.4em] text-[9px] uppercase">Our Services</span>
+            <span className="text-blue-500 font-bold tracking-widest text-xs uppercase">Our Services</span>
           </div>
-          <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6 italic uppercase">
-            What <span className="text-zinc-800">We Do.</span>
+          <h2 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6">
+            What <span className="text-blue-500">We Do.</span>
           </h2>
         </div>
 
@@ -87,10 +87,10 @@ const ServicesSection: React.FC = () => {
                 </div>
 
                 <div className="flex-grow">
-                  <h4 className="text-3xl font-black text-white mb-10 tracking-tighter uppercase italic leading-[1.1] max-w-[200px]">
+                  <h4 className="text-2xl font-bold text-white mb-6 leading-tight">
                     {service.title}
                   </h4>
-                  <p className="text-zinc-600 text-[11px] leading-relaxed font-bold uppercase tracking-[0.15em] mb-10">
+                  <p className="text-zinc-400 text-sm leading-relaxed font-medium mb-10">
                     {service.description}
                   </p>
                 </div>
@@ -98,7 +98,7 @@ const ServicesSection: React.FC = () => {
                 <div className="pt-8 border-t border-white/[0.05] flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.6)] animate-pulse"></div>
-                    <span className="text-[10px] font-black text-zinc-500 tracking-[0.3em] uppercase group-hover:text-blue-400 transition-colors">Learn More</span>
+                    <span className="text-xs font-bold text-zinc-500 tracking-wider uppercase group-hover:text-blue-400 transition-colors">Learn More</span>
                   </div>
                   <Icons.Plus className="w-5 h-5 text-zinc-700 group-hover:text-blue-500 transition-colors" />
                 </div>

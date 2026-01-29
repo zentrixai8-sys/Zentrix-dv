@@ -28,7 +28,7 @@ const ContactSection: React.FC = () => {
 
     setLoading(true);
     setError('');
-    
+
     try {
       const result = await addDemoBookingToSheet(form);
       if (result.success) {
@@ -49,7 +49,7 @@ const ContactSection: React.FC = () => {
     <section id="contact" className="py-32 bg-zinc-950 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-20">
-          <div>
+          <div className="reveal reveal-left">
             <h2 className="text-4xl font-extrabold text-white mb-8">Ready to Build the Future?</h2>
             <p className="text-xl text-gray-400 mb-12">
               Book your free 15-minute discovery call to see how AI can transform your specific business workflows.
@@ -63,13 +63,13 @@ const ContactSection: React.FC = () => {
                 <div>
                   <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Call Us</h4>
                   <div className="space-y-2">
-                    <p 
+                    <p
                       className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
                       onClick={() => window.open(`tel:${PHONE_NUMBER}`)}
                     >
                       {PHONE_NUMBER}
                     </p>
-                    <p 
+                    <p
                       className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
                       onClick={() => window.open(`tel:${PHONE_NUMBER_2}`)}
                     >
@@ -89,22 +89,39 @@ const ContactSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-6">
-                <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500">
-                  <MapPin className="w-8 h-8" />
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-6">
+                  <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500">
+                    <MapPin className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Office Location</h4>
+                    <p className="text-2xl font-bold text-white mb-2">{ADDRESS}</p>
+                    <span className="inline-block px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-md text-[10px] font-black uppercase tracking-widest text-green-500">
+                      Raipur Based Company
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Location</h4>
-                  <p className="text-2xl font-bold text-white">{ADDRESS}</p>
+
+                <div className="w-full h-48 rounded-[2rem] overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d118983.37699926868!2d81.54714457723907!3d21.262051677322987!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a28dda23be2a041%3A0x111b6d321390432!2sRaipur%2C%20Chhattisgarh!5e0!3m2!1sen!2sin!4v1709210000000!5m2!1sen!2sin"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="glass p-12 rounded-[2.5rem] border border-white/5 relative">
+          <div className="reveal reveal-right glass p-12 rounded-[2.5rem] border border-white/5 relative">
             <div className="absolute top-[-20px] left-[-20px] w-20 h-20 bg-blue-600/20 blur-2xl rounded-full"></div>
             <h3 className="text-2xl font-bold text-white mb-8">Secure Your AI Consultation</h3>
-            
+
             {success ? (
               <div className="h-full flex flex-col items-center justify-center text-center animate-fade-in py-12">
                 <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center text-green-500 mb-6 border border-green-500/30">
@@ -112,7 +129,7 @@ const ContactSection: React.FC = () => {
                 </div>
                 <h4 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Protocol Initialized</h4>
                 <p className="text-gray-400 text-sm uppercase tracking-widest">Our engineers will contact you shortly.</p>
-                <button 
+                <button
                   onClick={() => setSuccess(false)}
                   className="mt-8 text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] hover:text-white transition-colors"
                 >
@@ -122,43 +139,43 @@ const ContactSection: React.FC = () => {
             ) : (
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={form.name}
-                    onChange={e => setForm({...form, name: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all" 
-                    placeholder="Your Name" 
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Your Name"
                   />
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     value={form.phone}
-                    onChange={e => setForm({...form, phone: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all" 
-                    placeholder="Phone Number" 
+                    onChange={e => setForm({ ...form, phone: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Phone Number"
                   />
                 </div>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={form.email}
-                  onChange={e => setForm({...form, email: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all" 
-                  placeholder="Business Email" 
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all"
+                  placeholder="Business Email"
                 />
-                <textarea 
-                  rows={4} 
+                <textarea
+                  rows={4}
                   value={form.message}
-                  onChange={e => setForm({...form, message: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all resize-none" 
+                  onChange={e => setForm({ ...form, message: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all resize-none"
                   placeholder="What part of your business would you like to automate?"
                 ></textarea>
-                
+
                 {error && (
                   <div className="flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-500/5 p-3 rounded-xl border border-red-500/20">
                     <AlertCircle className="w-3 h-3" /> {error}
                   </div>
                 )}
 
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-2xl font-bold text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"

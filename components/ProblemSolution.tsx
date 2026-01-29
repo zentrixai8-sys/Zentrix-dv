@@ -89,17 +89,22 @@ const ProblemSolution: React.FC = () => {
         </div>
 
         {/* STATISTICS */}
-        <div className="grid md:grid-cols-3 gap-8">
+        {/* BUSINESS USE CASES */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { value: "92%", label: "Faster Work", color: "from-emerald-400 to-cyan-400" },
-            { value: "4.5x", label: "Business Growth", color: "from-blue-400 to-emerald-400" },
-            { value: "100%", label: "Error Free", color: "from-purple-400 to-emerald-400" }
-          ].map((stat, i) => (
-            <div key={i} className="reveal reveal-up stagger-2 bg-[#080808] border border-white/5 p-16 rounded-[4rem] text-center shadow-3xl">
-              <div className={`text-7xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r ${stat.color} italic tracking-tighter`}>
-                {stat.value}
+            { label: "Leads Auto Capture", desc: "Never miss a customer inquiry from any source.", icon: Users },
+            { label: "Automatic Follow-ups", desc: "AI agents chase leads until they convert.", icon: Zap },
+            { label: "Billing Automation", desc: "Generate invoices and track payments instantly.", icon: TrendingUp },
+            { label: "Inventory Control", desc: "Real-time stock tracking and low-stock alerts.", icon: CheckCircle },
+            { label: "Customer Database", desc: "Securely store and organize all client data.", icon: Rocket },
+            { label: "Sales Reports", desc: "Daily analytics to measure your business growth.", icon: Smartphone }
+          ].map((item, i) => (
+            <div key={i} className="reveal reveal-up stagger-2 bg-[#080808] border border-white/5 p-10 rounded-[2.5rem] hover:border-blue-500/30 transition-all group">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white text-blue-500 transition-colors">
+                <item.icon className="w-6 h-6" />
               </div>
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.5em]">{stat.label}</p>
+              <h4 className="text-xl font-black text-white mb-4 uppercase italic tracking-tighter">{item.label}</h4>
+              <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{item.desc}</p>
             </div>
           ))}
         </div>

@@ -38,29 +38,84 @@ export const TESTIMONIALS = [
 
 export const SERVICES: Service[] = [
   {
-    title: 'Custom Software Development',
-    description: 'Bespoke enterprise platforms engineered for high performance and seamless business logic execution.',
-    icon: 'Terminal',
-    details: 'We build fast software for your business. Easy to use, secure, and made specifically for your needs.',
-    specs: ['Fast Loading', 'Secure Data', 'Easy Mobile Access', 'Custom Features'],
-    implementation: 'Made a complete management system for a big logistics company in Raipur.'
+    title: 'Business Website Development',
+    description: 'High-conversion websites designed to establish authority and capture leads effectively.',
+    icon: 'Globe',
+    details: 'Professional websites that look premium and work fast. Show off your products and services to the world.',
+    specs: ['Responsive Design', 'SEO Optimized', 'Fast Loading', 'Lead Forms'],
+    implementation: 'Built a portfolio site for a leading Raipur consultancy, increasing inquiries by 40%.'
   },
   {
-    title: 'AI WhatsApp Automation',
-    description: 'Advanced LLM-powered agents that handle customer support and sales queries 24/7 on WhatsApp.',
-    icon: 'Cpu',
-    details: 'Auto-reply to your customers on WhatsApp. Our AI handles sales, support, and bookings 24/7.',
-    specs: ['24/7 Response', 'Smart Chatting', 'Multi-language', 'Instant Setup'],
-    implementation: 'Helped a local shop handle 500+ customer chats daily without staff.'
+    title: 'CRM + Lead Management',
+    description: 'Centralized systems to track, manage, and convert customer leads automatically.',
+    icon: 'Users',
+    details: 'Never lose a customer lead again. Track every call and message in one place.',
+    specs: ['Auto Data Capture', 'Follow-up Reminders', 'Customer History', 'Team Access'],
+    implementation: 'Deployed CRM for a real estate firm to manage 1000+ monthly leads.'
   },
   {
-    title: 'Cloud Infrastructure',
-    description: 'High-speed cloud nodes and server management for robust, zero-downtime business operations.',
-    icon: 'Network',
-    details: 'Fast and reliable servers. We keep your business online 24/7 with 100% security.',
-    specs: ['No Downtime', 'Auto Backup', 'Super Fast', 'Encrypted'],
-    implementation: 'Moved an old server system to a new cloud setup, making it 5x faster.'
+    title: 'Billing & Inventory Software',
+    description: 'Streamlined billing and stock management for retail and wholesale businesses.',
+    icon: 'FileText',
+    details: 'Create invoices in seconds and track your stock automatically. No more manual errors.',
+    specs: ['GST Invoicing', 'Stock Alerts', 'Daily Reports', 'Barcode Support'],
+    implementation: 'Automated billing for a retail chain, reducing checkout time by 60%.'
+  },
+  {
+    title: 'WhatsApp Automation',
+    description: 'Advanced automated messaging to engage customers 24/7 on their favorite app.',
+    icon: 'MessageCircle',
+    details: 'Auto-reply to sales inquiries and support questions on WhatsApp instantly.',
+    specs: ['Auto-Replies', 'Bulk Messages', 'Chatbot Integration', 'Order Updates'],
+    implementation: 'Implemented for a clinic to handle appointment bookings via WhatsApp.'
+  },
+  {
+    title: 'AI Business Chatbot',
+    description: 'Intelligent AI agents that handle customer support and sales queries around the clock.',
+    icon: 'Bot',
+    details: 'An AI staff member that never sleeps. Answers questions and sells your services 24/7.',
+    specs: ['24/7 Availability', 'Human-like Chat', 'Multi-language', 'Instant Answers'],
+    implementation: 'Reduced support tickets by 80% for an e-commerce brand.'
   }
 ];
 
-export const GEMINI_API_KEY = "AIzaSyDTeQw-0dKGEXpD4I2V9Of1yfEWUUV1-CM";
+export const PRICING_PLANS = [
+  {
+    name: "Starter",
+    price: "₹9,999",
+    features: [
+      "Business Website",
+      "WhatsApp Integration",
+      "Lead Capture Form",
+      "Basic SEO",
+      "1 Year Hosting" // Added implied value
+    ],
+    recommended: false
+  },
+  {
+    name: "Automation",
+    price: "₹24,999",
+    features: [
+      "Everything in Starter",
+      "Custom CRM Panel",
+      "Billing Software",
+      "WhatsApp Automation",
+      "Inventory Management"
+    ],
+    recommended: true
+  },
+  {
+    name: "AI Pro",
+    price: "₹49,999",
+    features: [
+      "Everything in Automation",
+      "AI Business Chatbot",
+      "Advanced Analytics",
+      "Priority Support",
+      "Custom AI Training"
+    ],
+    recommended: false
+  }
+];
+
+export const GEMINI_API_KEY = "AIzaSyBW0IahVQkst5CU3Jsr6Xkp-gTE2_avW7Q";

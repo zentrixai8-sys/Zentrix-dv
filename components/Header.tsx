@@ -167,6 +167,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
           onClose={() => setShowLogin(false)}
           onSuccess={(user) => {
             onLoginSuccess(user);
+            navigate('/dashboard');
             setShowLogin(false);
           }}
         />

@@ -32,7 +32,7 @@ const AIConsultant: React.FC = () => {
     <section id="ai" className="py-32 relative bg-gradient-to-b from-black to-zinc-900">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-16">
-          <div className="md:w-1/3 reveal">
+          <div className="md:w-1/3 reveal reveal-left">
             <span className="text-blue-500 font-black tracking-[0.4em] text-[10px] uppercase mb-6 block">AI Assistant</span>
             <h3 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8 italic">
               Ask <span className="text-blue-500">ZENTRIX</span> <span className="font-thin text-gray-500">Expert.</span>
@@ -49,7 +49,7 @@ const AIConsultant: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:w-2/3 glass rounded-[3rem] overflow-hidden border border-white/10 shadow-3xl reveal stagger-1">
+          <div className="md:w-2/3 glass rounded-[3rem] overflow-hidden border border-white/10 shadow-3xl reveal reveal-right stagger-1">
             <div className="bg-black/50 p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-600/20 border border-blue-500/30 rounded-2xl flex items-center justify-center">

@@ -40,13 +40,12 @@ const Hero: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 w-full">
         <div className="grid lg:grid-cols-12 gap-16 items-center">
 
-          {/* CONTENT BLOCK */}
-          <div className="lg:col-span-7 flex flex-col items-start reveal reveal-left active">
-            <div className="flex items-center gap-4 mb-10">
-              <div className="flex items-center gap-2 px-3 py-1 rounded-sm border border-cyan-500/30 bg-cyan-500/5">
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></div>
-                <span className="mono text-[8px] text-cyan-500 font-black uppercase tracking-[0.4em]">
-                  OS_CORE: OPERATIONAL
+          <div className="lg:col-span-7 flex flex-col items-start">
+            <div className="flex items-center gap-4 mb-10 reveal reveal-left">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-sm border border-blue-500/30 bg-blue-500/5">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                <span className="mono text-[8px] text-blue-500 font-black uppercase tracking-[0.4em]">
+                  ZENTRIX: AUTOMATION OS
                 </span>
               </div>
               <div className="h-[1px] w-12 bg-zinc-800"></div>
@@ -55,37 +54,41 @@ const Hero: React.FC = () => {
               </div>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-8 tracking-tighter uppercase italic">
-              Enterprise <br />
-              <span className="text-cyan-500">Data</span> <span className="text-zinc-600 opacity-80">Orchestration.</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-8 tracking-tighter italic uppercase reveal reveal-left stagger-1">
+              Grow Your <span className="text-blue-500">Business</span> <br />
+              <span className="text-zinc-600 opacity-80">With Smart Automation.</span>
             </h1>
 
-            <p className="text-zinc-500 text-sm font-medium leading-relaxed max-w-xl mb-12 border-l-2 border-cyan-500/30 pl-8">
-              ZENTRIX engineers high-performance <span className="text-zinc-300">data nodes</span> designed to automate complex logic.
-              Deploying military-grade infrastructure for real-time business intelligence and workflow scaling.
-            </p>
+            <div className="mb-12 border-l-2 border-blue-500/30 pl-8 reveal reveal-left stagger-2">
+              <p className="text-zinc-300 text-sm font-bold uppercase tracking-widest mb-4">
+                Websites • CRM • Billing • WhatsApp Automation • AI Agents
+              </p>
+              <p className="text-zinc-500 text-sm font-medium leading-relaxed max-w-xl">
+                Helping Raipur Businesses Save Time, Increase Sales & Automate Operations.
+              </p>
+            </div>
 
-            <div className="flex flex-wrap gap-5 items-center">
+            <div className="flex flex-wrap gap-5 items-center reveal reveal-up stagger-3">
               <button
                 onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group relative px-10 py-5 bg-white text-black rounded-sm font-black text-[9px] tracking-[0.4em] uppercase transition-all hover:bg-cyan-500 hover:text-white flex items-center gap-4 shadow-2xl overflow-hidden"
+                className="group relative px-10 py-5 bg-white text-black rounded-sm font-black text-[9px] tracking-[0.4em] uppercase transition-all hover:bg-blue-600 hover:text-white flex items-center gap-4 shadow-2xl overflow-hidden"
               >
-                <div className="absolute inset-0 bg-cyan-500 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                <span className="relative z-10">Get Started</span>
+                <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                <span className="relative z-10">Get Free Demo</span>
                 <ArrowRight className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
-                onClick={() => window.open(`tel:${PHONE_NUMBER}`)}
-                className="px-10 py-5 border border-zinc-800 rounded-sm font-black text-[9px] tracking-[0.4em] uppercase text-zinc-500 hover:text-white hover:border-cyan-500/50 transition-all flex items-center gap-3 bg-white/[0.02] backdrop-blur-md"
+                onClick={() => window.open(`https://wa.me/91${PHONE_NUMBER}`, '_blank')}
+                className="px-10 py-5 border border-zinc-800 rounded-sm font-black text-[9px] tracking-[0.4em] uppercase text-zinc-500 hover:text-white hover:border-green-500/50 transition-all flex items-center gap-3 bg-white/[0.02] backdrop-blur-md"
               >
-                <Terminal className="w-3.5 h-3.5 text-cyan-500" /> Call Now
+                <Terminal className="w-3.5 h-3.5 text-green-500" /> WhatsApp Now
               </button>
             </div>
           </div>
 
           {/* NEURAL DATA SCAN CARD */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end reveal reveal-right active stagger-1">
+          <div className="lg:col-span-5 flex justify-center lg:justify-end reveal reveal-right stagger-1">
             <div className="relative group w-full">
               {/* Visual Glow Layer */}
               <div className="absolute -inset-1.5 bg-cyan-500/20 rounded-[3rem] blur-3xl opacity-30 group-hover:opacity-80 transition duration-1000"></div>
