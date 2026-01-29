@@ -37,7 +37,7 @@ const LandingPage = () => {
         if (entry.isIntersecting) entry.target.classList.add('active');
       });
     };
-    const observer = new IntersectionObserver(revealCallback, { root: null, threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    const observer = new IntersectionObserver(revealCallback, { root: null, threshold: 0.05 });
 
     const reveals = document.querySelectorAll('.reveal');
     reveals.forEach(el => observer.observe(el));
