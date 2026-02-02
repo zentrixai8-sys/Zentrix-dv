@@ -96,7 +96,7 @@ const TestimonialsSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
 
         {testimonials.length > 0 && (
-          <div className="mb-32 reveal reveal-up">
+          <div className="mb-32 reveal reveal-up active">
             <div className="flex flex-col items-center mb-16 text-center">
               <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
                 <Globe className="w-3.5 h-3.5 text-cyan-500" />
@@ -124,7 +124,7 @@ const TestimonialsSection: React.FC = () => {
         )}
 
         {/* FEEDBACK CARDS */}
-        <div className="text-center mb-14 reveal reveal-up">
+        <div className="text-center mb-14 reveal reveal-up active">
           <h2 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight italic uppercase leading-none">
             Client <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Feedback</span>
           </h2>
@@ -158,7 +158,7 @@ const TestimonialsSection: React.FC = () => {
             <p className="text-zinc-600 text-xs font-black uppercase tracking-[0.4em]">Awaiting Data Input from Sheet Admin...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 reveal">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 reveal active">
             {getVisibleTestimonials().map((t, i) => (
               <div
                 key={`${startIndex}-${i}`}
