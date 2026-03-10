@@ -45,7 +45,7 @@ const Hero: React.FC = () => {
               <div className="flex items-center gap-2 px-3 py-1 rounded-sm border border-blue-500/30 bg-blue-500/5">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
                 <span className="mono text-[8px] text-blue-500 font-black uppercase tracking-[0.4em]">
-                  ZENTRIX: AUTOMATION OS
+                  ZENTRIXS: AUTOMATION OS
                 </span>
               </div>
               <div className="h-[1px] w-12 bg-zinc-800"></div>

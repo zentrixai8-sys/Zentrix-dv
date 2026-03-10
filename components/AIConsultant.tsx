@@ -35,7 +35,7 @@ const AIConsultant: React.FC = () => {
           <div className="md:w-1/3 reveal reveal-left">
             <span className="text-blue-500 font-black tracking-[0.4em] text-[10px] uppercase mb-6 block">AI Assistant</span>
             <h3 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8 italic">
-              Ask <span className="text-blue-500">ZENTRIX</span> <span className="font-thin text-gray-500">Expert.</span>
+              Ask <span className="text-blue-500">ZENTRIXS</span> <span className="font-thin text-gray-500">Expert.</span>
             </h3>
             <p className="text-gray-500 text-sm leading-relaxed mb-10 uppercase tracking-widest font-medium">
               Have questions? Tell our AI about your business problems, and it will suggest the best solutions for you.

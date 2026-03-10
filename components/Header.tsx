@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-black tracking-[0.3em] text-white uppercase group-hover:text-blue-400 transition-colors">
-                  ZEN<span className="font-extralight text-blue-500">TRIX</span>
+                  ZEN<span className="font-extralight text-blue-500">TRIXS</span>
                 </span>
                 <span className="text-[8px] text-gray-500 font-bold uppercase tracking-[0.5em] mt-[-2px] group-hover:text-gray-300 transition-colors">Automation OS</span>
               </div>

@@ -55,8 +55,8 @@ const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
               </h3>
               <p>
                 {isPrivacy
-                  ? "Your enterprise data is encrypted using AES-256 protocols. ZENTRIX does not commercialize user data. All system links and AI training data are localized to your secure business environment."
-                  : "Usage of ZENTRIX services requires adherence to our fair-use policy. Systems are monitored for optimal uptime and security compliance to prevent unauthorized node access."}
+                  ? "Your enterprise data is encrypted using AES-256 protocols. ZENTRIXS does not commercialize user data. All system links and AI training data are localized to your secure business environment."
+                  : "Usage of ZENTRIXS services requires adherence to our fair-use policy. Systems are monitored for optimal uptime and security compliance to prevent unauthorized node access."}
               </p>
             </section>
 
@@ -65,7 +65,7 @@ const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
                 <FileText className="w-4 h-4 text-blue-500" /> Engagement Protocols
               </h3>
               <p>
-                Services provided by ZENTRIX (Custom Software, AI Automation, Cloud Nodes) are governed by specific project-level Master Service Agreements. This global protocol serves as the base layer for all interactions.
+                Services provided by ZENTRIXS (Custom Software, AI Automation, Cloud Nodes) are governed by specific project-level Master Service Agreements. This global protocol serves as the base layer for all interactions.
               </p>
               <ul className="list-disc pl-6 space-y-2 opacity-80">
                 <li>Secure API endpoint management.</li>

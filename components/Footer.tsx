@@ -77,7 +77,7 @@ const Footer: React.FC = () => {
                 </div>
               </div>
               <div>
-                <span className="text-3xl font-black tracking-[0.2em] block leading-none text-white uppercase italic">ZEN<span className="text-blue-500">TRIX</span></span>
+                <span className="text-3xl font-black tracking-[0.2em] block leading-none text-white uppercase italic">ZEN<span className="text-blue-500">TRIXS</span></span>
                 <span className="text-[9px] text-blue-500/60 uppercase tracking-[0.4em] font-black mt-2 block">{TAGLINE}</span>
               </div>
             </div>
@@ -160,7 +160,7 @@ const Footer: React.FC = () => {
 
         <div className="pt-12 border-t border-white/[0.05] flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] text-center md:text-left">
-            <p>© {new Date().getFullYear()} <span className="text-white">ZENTRIX CORE</span>. SECURED PROTOCOL.</p>
+            <p>© {new Date().getFullYear()} <span className="text-white">ZENTRIXS CORE</span>. SECURED PROTOCOL.</p>
             <p className="mt-2 opacity-50 tracking-[0.3em]">DESIGNED & DEVELOPED BY <span className="text-blue-500">DEEPAK SAHU</span></p>
           </div>
           <div className="flex items-center gap-3">

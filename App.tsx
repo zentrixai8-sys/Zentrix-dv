@@ -78,7 +78,7 @@ const LandingPage = () => {
             <div className="max-w-2xl">
               <div className="flex items-center gap-3 mb-6">
                 <Fingerprint className="w-4 h-4 text-blue-500" />
-                <span className="text-sm text-blue-500 font-bold uppercase tracking-widest">Why Choose Zentrix?</span>
+                <span className="text-sm text-blue-500 font-bold uppercase tracking-widest">Why Choose Zentrixs?</span>
               </div>
               <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight">
                 Everything Your Business Needs <span className="text-blue-500">To Grow.</span>
@@ -137,7 +137,7 @@ const LandingPage = () => {
       <ContactSection />
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-[9999]">
-        <button onClick={() => window.open(`https://wa.me/91${PHONE_NUMBER}?text=Hi,%20I%20want%20to%20see%20Zentrix%20Business%20Automation%20Demo`, '_blank')} className="w-12 h-12 md:w-14 md:h-14 bg-[#25D366] text-white rounded-2xl shadow-2xl flex items-center justify-center border border-white/10 hover:scale-110 transition-transform">
+        <button onClick={() => window.open(`https://wa.me/91${PHONE_NUMBER}?text=Hi,%20I%20want%20to%20see%20Zentrixs%20Business%20Automation%20Demo`, '_blank')} className="w-12 h-12 md:w-14 md:h-14 bg-[#25D366] text-white rounded-2xl shadow-2xl flex items-center justify-center border border-white/10 hover:scale-110 transition-transform">
           <MessageCircle className="h-6 w-6 md:h-7 md:w-7" />
         </button>
         <a href={`tel:${PHONE_NUMBER}`} className="w-12 h-12 md:w-14 md:h-14 bg-white text-black rounded-2xl shadow-2xl flex items-center justify-center border border-gray-100 hover:scale-110 transition-transform">

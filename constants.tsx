@@ -1,7 +1,7 @@
 
 import { Service, NavItem } from './types';
 
-export const COMPANY_NAME = "ZENTRIX";
+export const COMPANY_NAME = "ZENTRIXS";
 export const TAGLINE = "AUTOMATION OS";
 export const PHONE_NUMBER = "7089935002";
 export const PHONE_NUMBER_2 = "7999206708";
@@ -23,7 +23,7 @@ export const TESTIMONIALS = [
     role: "Director",
     company: "Bardia Enterprises",
     logo: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=100&h=100&fit=crop",
-    text: "ZENTRIX changed our business completely. Everything is now automatic and fast.",
+    text: "ZENTRIXS changed our business completely. Everything is now automatic and fast.",
     rating: 5
   },
   {

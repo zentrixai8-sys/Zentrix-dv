@@ -1,6 +1,6 @@
 
 /**
- * ZENTRIX DATA LOGGING SCRIPT (Storage Only - No Emails)
+ * ZENTRIXS DATA LOGGING SCRIPT (Storage Only - No Emails)
  * 1. Log in to zentrix.ai8@gmail.com
  * 2. Go to script.google.com -> New Project
  * 3. Paste this code and Deploy as Web App (Access: Anyone)
