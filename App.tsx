@@ -15,7 +15,6 @@ import AdminDashboard from './components/AdminDashboard';
 import LegalPage from './components/LegalPage';
 import { PHONE_NUMBER } from './constants';
 import { MessageCircle, Zap, Shield, Rocket, Layers, Database, Ticket, Phone, ChevronUp, Activity, BarChart3, Fingerprint, Cpu } from 'lucide-react';
-import IntroSequence from './components/IntroSequence';
 
 // Wrapper to handle scroll-to-top on route change
 const ScrollToTop = () => {
@@ -66,7 +65,6 @@ const LandingPage = () => {
 
   return (
     <>
-      <IntroSequence />
       <Hero />
       <OffersSection />
       <ProblemSolution />

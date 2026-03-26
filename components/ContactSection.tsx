@@ -105,7 +105,7 @@ const ContactSection: React.FC = () => {
 
                 <div className="w-full h-48 rounded-[2rem] overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d118983.37699926868!2d81.54714457723907!3d21.262051677322987!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a28dda23be2a041%3A0x111b6d321390432!2sRaipur%2C%20Chhattisgarh!5e0!3m2!1sen!2sin!4v1709210000000!5m2!1sen!2sin"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3718.5384498260837!2d81.6270545!3d21.2501435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a28dd003cbd1439%3A0xe4c576c353116fd6!2sAkanksha%20Parisar!5e0!3m2!1sen!2sin!4v1774506452677!5m2!1sen!2sin"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
