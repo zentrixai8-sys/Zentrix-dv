@@ -68,7 +68,6 @@ const LandingPage = () => {
   return (
     <>
       <Hero />
-      <CEOMessage />
       <OffersSection />
       <ProblemSolution />
       <MissionVision />
