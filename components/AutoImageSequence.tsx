@@ -23,40 +23,50 @@ const AutoImageSequence: React.FC<AutoImageSequenceProps> = ({
     const lastDrawTimeRef = useRef(0);
     const animationRef = useRef<number>();
 
+    // URL for the very first frame to act as an instant poster/backdrop
+    const posterSrc = `${src}${startFrame.toString().padStart(5, '0')}.jpg`;
+
     // Preload images
     useEffect(() => {
         let loaded = 0;
         const imgArray: HTMLImageElement[] = [];
+        let isMounted = true;
 
         for (let i = 0; i < frameCount; i++) {
             const img = new Image();
             const frameNumber = (startFrame + i).toString().padStart(5, '0');
             img.src = `${src}${frameNumber}.jpg`;
             img.onload = () => {
-                loaded++;
-                setLoadedCount(loaded);
-            };
-            img.onerror = (e) => {
-                console.error(`Failed to load image: ${img.src}`, e);
+                if (isMounted) {
+                    loaded++;
+                    setLoadedCount(loaded);
+                }
             };
             imgArray.push(img);
         }
         setImages(imgArray);
+
+        return () => {
+            isMounted = false;
+        };
     }, [src, frameCount, startFrame]);
 
     // Draw frame
     const drawFrame = (index: number) => {
+        if (!images || images.length === 0) return;
+        
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         const img = images[index];
 
-        if (canvas && ctx && img && img.complete) {
+        // ONLY clear and draw if the image is actually fully loaded
+        // This prevents the canvas from stuttering/flashing black!
+        if (canvas && ctx && img && img.complete && img.naturalWidth > 0) {
             const cw = canvas.width;
             const ch = canvas.height;
             const iw = img.width;
             const ih = img.height;
 
-            // Crop or Scale logic
             const r = Math.max(cw / iw, ch / ih);
             const nw = iw * r;
             const nh = ih * r;
@@ -64,36 +74,36 @@ const AutoImageSequence: React.FC<AutoImageSequenceProps> = ({
             const cy = (ch - nh) / 2;
 
             ctx.clearRect(0, 0, cw, ch);
-            if (img.naturalWidth > 0) {
-                try {
-                    ctx.drawImage(img, cx, cy, nw, nh);
-                } catch (err) {
-                    console.error("Error drawing image frame:", err);
-                }
-            }
+            ctx.drawImage(img, cx, cy, nw, nh);
         }
     };
 
     // Auto-play loop
     useEffect(() => {
+        if (images.length === 0) return;
+        
         const frameInterval = 1000 / fps;
 
         const loop = (timestamp: number) => {
             if (!lastDrawTimeRef.current) lastDrawTimeRef.current = timestamp;
             const elapsed = timestamp - lastDrawTimeRef.current;
 
-            if (elapsed > frameInterval && images.length > 0) {
-                currentFrameRef.current = (currentFrameRef.current + 1) % images.length;
-                drawFrame(currentFrameRef.current);
+            if (elapsed > frameInterval) {
+                const nextFrame = (currentFrameRef.current + 1) % images.length;
+                
+                // Smart "Buffering": Only advance the animation if the next frame has finished downloading.
+                if (images[nextFrame] && images[nextFrame].complete) {
+                    currentFrameRef.current = nextFrame;
+                    drawFrame(currentFrameRef.current);
+                }
+                
                 lastDrawTimeRef.current = timestamp - (elapsed % frameInterval);
             }
 
             animationRef.current = requestAnimationFrame(loop);
         };
 
-        if (images.length > 0) {
-            animationRef.current = requestAnimationFrame(loop);
-        }
+        animationRef.current = requestAnimationFrame(loop);
 
         return () => {
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -115,17 +125,21 @@ const AutoImageSequence: React.FC<AutoImageSequenceProps> = ({
     }, [images]);
 
     return (
-        <div ref={containerRef} className={`w-full h-full relative ${className}`}>
+        <div ref={containerRef} className={`w-full h-full relative bg-[#020202] ${className}`}>
+            {/* 1. Instant Poster Image: The browser native <img> tag loads the first frame instantly on DOM load */}
+            <img 
+                src={posterSrc} 
+                alt="Robot Sequence Start" 
+                className="absolute inset-0 block w-full h-full object-cover"
+                // @ts-ignore
+                fetchpriority="high"
+            />
+            
+            {/* 2. Animation Canvas: Sits on top of the static poster and smoothly begins playing when ready */}
             <canvas
                 ref={canvasRef}
-                className={`block w-full h-full object-cover transition-opacity duration-1000 ${loadedCount > 0 ? 'opacity-100' : 'opacity-0'}`}
+                className="absolute inset-0 block w-full h-full object-cover"
             />
-            {/* Loading Skeleton */}
-            {loadedCount === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#020202]">
-                    <div className="w-8 h-8 rounded-full border-t-2 border-b-2 border-blue-500 animate-spin"></div>
-                </div>
-            )}
         </div>
     );
 };
