@@ -132,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
         </div>
 
         {/* Mobile Nav */}
-        <div className={`md:hidden absolute top-full left-0 w-full bg-black/98 backdrop-blur-3xl border-b border-white/5 transition-all duration-500 overflow-hidden ${isOpen ? 'max-h-[500px] opacity-100 py-10' : 'max-h-0 opacity-0'}`}>
+        <div className={`md:hidden absolute top-full left-0 w-full bg-black z-[100] border-b border-white/5 transition-all duration-500 overflow-hidden shadow-2xl ${isOpen ? 'max-h-[100vh] opacity-100 py-10' : 'max-h-0 opacity-0'}`}>
           <div className="px-8 space-y-8">
             {NAV_ITEMS.map((item) => (
               <button
