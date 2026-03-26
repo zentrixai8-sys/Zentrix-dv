@@ -16,6 +16,8 @@ import LegalPage from './components/LegalPage';
 import { PHONE_NUMBER } from './constants';
 import { MessageCircle, Zap, Shield, Rocket, Layers, Database, Ticket, Phone, ChevronUp, Activity, BarChart3, Fingerprint, Cpu } from 'lucide-react';
 
+import CEOMessage from './components/CEOMessage';
+
 // Wrapper to handle scroll-to-top on route change
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -66,6 +68,7 @@ const LandingPage = () => {
   return (
     <>
       <Hero />
+      <CEOMessage />
       <OffersSection />
       <ProblemSolution />
       <MissionVision />
@@ -132,6 +135,7 @@ const LandingPage = () => {
       <ServicesSection />
       <AIConsultant />
       <TestimonialsSection />
+      <CEOMessage />
       <ContactSection />
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-[9999]">

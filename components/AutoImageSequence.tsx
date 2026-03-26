@@ -118,11 +118,11 @@ const AutoImageSequence: React.FC<AutoImageSequenceProps> = ({
         <div ref={containerRef} className={`w-full h-full relative ${className}`}>
             <canvas
                 ref={canvasRef}
-                className={`block w-full h-full object-cover transition-opacity duration-1000 ${loadedCount > 10 ? 'opacity-100' : 'opacity-0'}`}
+                className={`block w-full h-full object-cover transition-opacity duration-1000 ${loadedCount > 0 ? 'opacity-100' : 'opacity-0'}`}
             />
             {/* Loading Skeleton */}
-            {loadedCount <= 10 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 animate-pulse">
+            {loadedCount === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#020202]">
                     <div className="w-8 h-8 rounded-full border-t-2 border-b-2 border-blue-500 animate-spin"></div>
                 </div>
             )}
