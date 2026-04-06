@@ -69,12 +69,14 @@ const ContactSection: React.FC = () => {
                     >
                       {PHONE_NUMBER}
                     </p>
-                    <p
-                      className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
-                      onClick={() => window.open(`tel:${PHONE_NUMBER_2}`)}
-                    >
-                      {PHONE_NUMBER_2}
-                    </p>
+                    {PHONE_NUMBER_2 && (
+                      <p
+                        className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
+                        onClick={() => window.open(`tel:${PHONE_NUMBER_2}`)}
+                      >
+                        {PHONE_NUMBER_2}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -105,7 +107,7 @@ const ContactSection: React.FC = () => {
 
                 <div className="w-full h-48 rounded-[2rem] overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3718.5384498260837!2d81.6270545!3d21.2501435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a28dd003cbd1439%3A0xe4c576c353116fd6!2sAkanksha%20Parisar!5e0!3m2!1sen!2sin!4v1774506452677!5m2!1sen!2sin"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1566!2d81.62!3d21.25!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sNutan%20Rice%20Mill!5e0!3m2!1sen!2sin!4v1712410000000!5m2!1sen!2sin"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}

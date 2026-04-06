@@ -113,15 +113,9 @@ const Footer: React.FC = () => {
                 </li>
               ))}
               <li>
-                <button onClick={() => navigate('/privacy')} className="text-gray-500 hover:text-white text-sm font-black transition-all hover:translate-x-2 flex items-center gap-2 group uppercase tracking-widest">
+                <button onClick={() => navigate('/privacy-policy')} className="text-gray-500 hover:text-white text-sm font-black transition-all hover:translate-x-2 flex items-center gap-2 group uppercase tracking-widest">
                   <ArrowRight className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-all" />
-                  Privacy Policy
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/terms')} className="text-gray-500 hover:text-white text-sm font-black transition-all hover:translate-x-2 flex items-center gap-2 group uppercase tracking-widest">
-                  <ArrowRight className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-all" />
-                  Terms of Service
+                  Privacy Policy & Terms
                 </button>
               </li>
             </ul>
@@ -146,10 +140,12 @@ const Footer: React.FC = () => {
                 <Phone className="w-5 h-5 text-blue-500" />
                 <span className="text-sm font-black text-white tracking-widest uppercase">{PHONE_NUMBER}</span>
               </a>
-              <a href={`tel:${PHONE_NUMBER_2}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-blue-500/50 transition-all">
-                <Phone className="w-5 h-5 text-blue-500" />
-                <span className="text-sm font-black text-white tracking-widest uppercase">{PHONE_NUMBER_2}</span>
-              </a>
+              {PHONE_NUMBER_2 && (
+                <a href={`tel:${PHONE_NUMBER_2}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-blue-500/50 transition-all">
+                  <Phone className="w-5 h-5 text-blue-500" />
+                  <span className="text-sm font-black text-white tracking-widest uppercase">{PHONE_NUMBER_2}</span>
+                </a>
+              )}
               <a href={`mailto:${EMAIL}`} className="flex items-center gap-4 group cursor-pointer bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-violet-500/50 transition-all">
                 <Mail className="w-5 h-5 text-violet-500" />
                 <span className="text-sm font-black text-white tracking-widest uppercase">Connect Node</span>

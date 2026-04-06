@@ -172,8 +172,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/home" element={<LandingPage />} />
-          <Route path="/privacy" element={<LegalPage type="privacy" />} />
-          <Route path="/terms" element={<LegalPage type="terms" />} />
+          <Route path="/privacy-policy" element={<LegalPage />} />
           <Route
             path="/dashboard"
             element={

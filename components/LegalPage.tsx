@@ -1,92 +1,126 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, FileText, Lock, Globe } from 'lucide-react';
-import { COMPANY_NAME, EMAIL, TAGLINE } from '../constants';
+import { ArrowLeft } from 'lucide-react';
+import { EMAIL } from '../constants';
 
-interface LegalPageProps {
-  type: 'privacy' | 'terms';
-}
-
-const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
+const LegalPage: React.FC = () => {
   const navigate = useNavigate();
-  const isPrivacy = type === 'privacy';
 
   return (
-    <div className="min-h-screen bg-[#030303] pt-32 pb-20 px-6 relative overflow-hidden">
-      {/* Background Quantum Grid */}
-      <div className="absolute inset-0 quantum-grid opacity-20 z-0"></div>
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none"></div>
-
-      <div className="max-w-4xl mx-auto relative z-10">
+    <div className="min-h-screen bg-gray-50 pt-32 pb-20 px-6">
+      <div className="max-w-4xl mx-auto">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors text-[10px] font-black uppercase tracking-[0.3em] mb-12 group"
+          className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-sm font-bold mb-8"
         >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Terminal
+          <ArrowLeft className="w-4 h-4" /> Back to Home
         </button>
 
-        <div className="glass border border-white/10 rounded-[3rem] p-8 md:p-16 shadow-3xl bg-gradient-to-br from-white/[0.02] to-transparent">
-          <div className="flex items-center gap-6 mb-12">
-            <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center border border-blue-500/20 text-blue-500">
-              {isPrivacy ? <Shield className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
+        <div className="bg-white border border-gray-200 rounded-xl p-8 md:p-16 shadow-sm font-sans text-gray-800 leading-relaxed space-y-20">
+          
+          {/* Privacy Policy Section */}
+          <div id="privacy">
+            <h1 className="text-3xl font-bold mb-2 text-black">ZENTRIXS Privacy Policy</h1>
+            <p className="mb-8"><strong>Last Updated: 2026</strong></p>
+
+            <div className="space-y-6">
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">1. Introduction</h2>
+                <p>ZENTRIXS values your privacy and is committed to protecting your personal and business data.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">2. Information We Collect</h2>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Name, phone number, email address</li>
+                  <li>Business information</li>
+                  <li>Messages sent via WhatsApp API</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">3. How We Use Data</h2>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>To provide software and automation services</li>
+                  <li>To communicate via WhatsApp API</li>
+                  <li>To improve our services</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">4. Data Security</h2>
+                <p>We use AES-256 encryption and secure servers to protect your data.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">5. Data Sharing</h2>
+                <p>We do not sell or share your data. Data is only used for service delivery.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">6. WhatsApp API Usage</h2>
+                <p>We use official Meta (Facebook) WhatsApp Business API for communication.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">7. User Rights</h2>
+                <p>You can request access, update, or deletion of your data anytime.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">8. Contact Us</h2>
+                <p>Email: <a href={`mailto:${EMAIL}`} className="text-blue-600 underline">{EMAIL}</a></p>
+              </section>
             </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase leading-none italic">
-                {isPrivacy ? 'Privacy' : 'Terms'} <span className="font-thin text-gray-500">Node.</span>
-              </h1>
-              <p className="text-[10px] text-blue-500 font-black uppercase tracking-[0.4em] mt-3">Protocol Version 2.5.0</p>
+          </div>
+
+          <div className="border-t border-gray-100"></div>
+
+          {/* Terms of Service Section */}
+          <div id="terms">
+            <h1 className="text-3xl font-bold mb-2 text-black">ZENTRIXS Terms of Service</h1>
+            <p className="mb-8"><strong>Last Updated: 2026</strong></p>
+
+            <div className="space-y-6">
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">1. Acceptance of Terms</h2>
+                <p>By using ZENTRIXS services, you agree to comply with and be bound by these Terms of Service.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">2. Description of Services</h2>
+                <p>We provide automation software, web development, and WhatsApp API integration services to help businesses grow.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">3. User Conduct</h2>
+                <p>You agree to use our services legally and provide accurate information for system configuration.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">4. Meta Business Policies</h2>
+                <p>Usage of WhatsApp features must comply with the official Meta Business Messaging Policy.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">5. Limitation of Liability</h2>
+                <p>ZENTRIXS is not liable for business outcomes or changes in third-party API policies (e.g., Meta/Google).</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">6. Termination</h2>
+                <p>We reserve the right to suspend or terminate services for any violation of these terms.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-bold mb-2 text-black">7. Contact Information</h2>
+                <p>For support or legal inquiries, email: <a href={`mailto:${EMAIL}`} className="text-blue-600 underline">{EMAIL}</a></p>
+              </section>
             </div>
           </div>
 
-          <div className="space-y-10 text-gray-400 text-sm md:text-base leading-relaxed font-medium">
-            <section className="space-y-4">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3">
-                <Globe className="w-4 h-4 text-blue-500" /> Executive Summary
-              </h3>
-              <p className="border-l-2 border-blue-500 pl-6 py-2 bg-blue-500/5 italic">
-                This document defines the operational parameters of the {COMPANY_NAME} ecosystem. By engaging with our nodes, you agree to the protocols outlined herein.
-              </p>
-            </section>
-
-            <section className="space-y-4">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3">
-                <Lock className="w-4 h-4 text-blue-500" /> Data Integrity & Privacy
-              </h3>
-              <p>
-                {isPrivacy
-                  ? "Your enterprise data is encrypted using AES-256 protocols. ZENTRIXS does not commercialize user data. All system links and AI training data are localized to your secure business environment."
-                  : "Usage of ZENTRIXS services requires adherence to our fair-use policy. Systems are monitored for optimal uptime and security compliance to prevent unauthorized node access."}
-              </p>
-            </section>
-
-            <section className="space-y-4">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] flex items-center gap-3">
-                <FileText className="w-4 h-4 text-blue-500" /> Engagement Protocols
-              </h3>
-              <p>
-                Services provided by ZENTRIXS (Custom Software, AI Automation, Cloud Nodes) are governed by specific project-level Master Service Agreements. This global protocol serves as the base layer for all interactions.
-              </p>
-              <ul className="list-disc pl-6 space-y-2 opacity-80">
-                <li>Secure API endpoint management.</li>
-                <li>Zero-knowledge architecture for sensitive credentials.</li>
-                <li>Automated threat detection and resolution.</li>
-              </ul>
-            </section>
-
-            <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div>
-                <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mb-1">Direct Contact Node:</p>
-                <a href={`mailto:${EMAIL}`} className="text-blue-500 font-black tracking-widest text-sm uppercase hover:text-blue-400 transition-colors">
-                  {EMAIL}
-                </a>
-              </div>
-              <div className="text-[10px] text-gray-700 font-black uppercase tracking-widest text-right">
-                © {new Date().getFullYear()} {COMPANY_NAME} CORE.<br />
-                All Nodes Secured.
-              </div>
-            </div>
-          </div>
+          <p className="mt-12 pt-8 border-t border-gray-100 text-sm text-gray-500">© 2026 ZENTRIXS. All rights reserved.</p>
         </div>
       </div>
     </div>
