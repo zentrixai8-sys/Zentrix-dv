@@ -13,6 +13,8 @@ import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
 import LegalPage from './components/LegalPage';
+import ServiceDetailPage from './components/ServiceDetailPage';
+import TechStackSection from './components/TechStackSection';
 import { PHONE_NUMBER } from './constants';
 import { MessageCircle, Zap, Shield, Rocket, Layers, Database, Ticket, Phone, ChevronUp, Activity, BarChart3, Fingerprint, Cpu } from 'lucide-react';
 
@@ -132,12 +134,13 @@ const LandingPage = () => {
       </section>
 
       <ServicesSection />
+      <TechStackSection />
       <AIConsultant />
       <TestimonialsSection />
       <CEOMessage />
       <ContactSection />
 
-      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-[9999]">
+      <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 flex flex-col gap-3 md:gap-4 z-[9999]">
         <button onClick={() => window.open(`https://wa.me/91${PHONE_NUMBER}?text=Hi,%20I%20want%20to%20see%20Zentrixs%20Business%20Automation%20Demo`, '_blank')} className="w-12 h-12 md:w-14 md:h-14 bg-[#25D366] text-white rounded-2xl shadow-2xl flex items-center justify-center border border-white/10 hover:scale-110 transition-transform">
           <MessageCircle className="h-6 w-6 md:h-7 md:w-7" />
         </button>
@@ -173,6 +176,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/home" element={<LandingPage />} />
           <Route path="/privacy-policy" element={<LegalPage />} />
+          <Route path="/services/:slug" element={<ServiceDetailPage />} />
           <Route
             path="/dashboard"
             element={

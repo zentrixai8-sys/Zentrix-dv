@@ -19,7 +19,7 @@ const ProblemSolution: React.FC = () => {
           </h2>
           <p className="text-zinc-500 text-2xl font-medium mb-12 uppercase italic">Stop doing manual work that slows down your growth.</p>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
             <div className="p-12 bg-red-500/5 border border-red-500/10 rounded-[3rem] reveal reveal-left">
               <p className="text-xl text-zinc-400 font-medium uppercase italic tracking-tight leading-relaxed">
                 Losing business focus due to <br /><span className="text-red-500 font-bold">constant manual follow-ups.</span>
@@ -39,7 +39,7 @@ const ProblemSolution: React.FC = () => {
             <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic">Main Problems</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 icon: Smartphone,
@@ -90,7 +90,7 @@ const ProblemSolution: React.FC = () => {
 
         {/* STATISTICS */}
         {/* BUSINESS USE CASES */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             { label: "Leads Auto Capture", desc: "Never miss a customer inquiry from any source.", icon: Users },
             { label: "Automatic Follow-ups", desc: "AI agents chase leads until they convert.", icon: Zap },

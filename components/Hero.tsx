@@ -12,7 +12,7 @@ const Hero: React.FC = () => {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 lg:px-8 relative z-10 w-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           {/* Left Side: Auto-Playing Robot Video */}
           <div className="relative h-[400px] sm:h-[500px] lg:h-[600px] w-full rounded-3xl overflow-hidden border border-white/5 shadow-2xl reveal reveal-right">

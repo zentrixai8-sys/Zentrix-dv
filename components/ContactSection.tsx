@@ -48,7 +48,7 @@ const ContactSection: React.FC = () => {
   return (
     <section id="contact" className="py-32 bg-zinc-950 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           <div className="reveal reveal-left">
             <h2 className="text-4xl font-extrabold text-white mb-8">Ready to Build the Future?</h2>
             <p className="text-xl text-gray-400 mb-12">
@@ -85,9 +85,9 @@ const ContactSection: React.FC = () => {
                 <div className="bg-violet-600/10 p-4 rounded-2xl text-violet-500 group-hover:bg-violet-600 group-hover:text-white transition-all">
                   <Mail className="w-8 h-8" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Email</h4>
-                  <p className="text-2xl font-bold text-white">{EMAIL}</p>
+                  <p className="text-lg sm:text-2xl font-bold text-white break-words">{EMAIL}</p>
                 </div>
               </div>
 
@@ -96,9 +96,9 @@ const ContactSection: React.FC = () => {
                   <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500">
                     <MapPin className="w-8 h-8" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Office Location</h4>
-                    <p className="text-2xl font-bold text-white mb-2">{ADDRESS}</p>
+                    <p className="text-lg sm:text-2xl font-bold text-white mb-2 break-words">{ADDRESS}</p>
                     <span className="inline-block px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-md text-[10px] font-black uppercase tracking-widest text-green-500">
                       Raipur Based Company
                     </span>
@@ -140,7 +140,7 @@ const ContactSection: React.FC = () => {
               </div>
             ) : (
               <form className="space-y-6" onSubmit={handleSubmit}>
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <input
                     type="text"
                     value={form.name}

@@ -17,7 +17,7 @@ const MissionVision: React.FC = () => {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Mission Node: Slide from Left */}
           <div className="reveal reveal-left group relative">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-[2.5rem] opacity-20 group-hover:opacity-40 blur transition-opacity"></div>
