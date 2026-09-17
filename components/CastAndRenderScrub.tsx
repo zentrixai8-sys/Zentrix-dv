@@ -149,7 +149,7 @@ const CastAndRenderScrub: React.FC = () => {
           function pump(): Promise<Blob> {
             return reader.read().then(function(result) {
               if (result.done) {
-                return new Blob(chunks, { type: "video/mp4" });
+                return new Blob(chunks as BlobPart[], { type: "video/mp4" });
               }
               chunks.push(result.value);
               got += result.value.length;
