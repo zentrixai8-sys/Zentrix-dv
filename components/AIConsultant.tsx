@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Cpu, Send, Loader2, User, Terminal } from 'lucide-react';
+import { Cpu, Send, Loader2, User, Terminal, MessageCircle, Sparkles, Bot } from 'lucide-react';
 import { getCareerAdvice } from '../services/geminiService';
-import { COMPANY_NAME } from '../constants';
+import { COMPANY_NAME, AI_BOT_NUMBER } from '../constants';
 
 const AIConsultant: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -37,15 +37,34 @@ const AIConsultant: React.FC = () => {
             <h3 className="text-5xl font-black text-white leading-tight tracking-tighter mb-8 italic">
               Ask <span className="text-blue-500">ZENTRIXS</span> <span className="font-thin text-gray-500">Expert.</span>
             </h3>
-            <p className="text-gray-500 text-sm leading-relaxed mb-10 uppercase tracking-widest font-medium">
+            <p className="text-gray-500 text-sm leading-relaxed mb-6 uppercase tracking-widest font-medium">
               Have questions? Tell our AI about your business problems, and it will suggest the best solutions for you.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-4 mb-8">
               {['How to save money?', 'Automate my shop', 'I need a website'].map(tag => (
                 <div key={tag} className="px-4 py-2 border border-white/5 bg-white/5 rounded-lg text-[10px] text-gray-400 font-black tracking-widest uppercase inline-block mr-2">
                   {tag}
                 </div>
               ))}
+            </div>
+
+            {/* Live WhatsApp AI Bot Feature Card */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-950/40 to-black/60 border border-cyan-500/30 relative overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  WhatsApp AI Assistant
+                </span>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold">24/7 LIVE</span>
+              </div>
+              <p className="text-white font-mono font-black text-xl mb-1">+91 {AI_BOT_NUMBER}</p>
+              <p className="text-gray-400 text-xs mb-4">Connect directly with Zentrix AI chatbot on WhatsApp for instant replies.</p>
+              <button
+                onClick={() => window.open(`https://wa.me/91${AI_BOT_NUMBER}?text=Hi%20Zentrix%20AI%20Assistant,%20I%20want%20to%20learn%20how%20you%20can%20automate%20my%20business`, '_blank')}
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <MessageCircle className="w-4 h-4" /> Chat on WhatsApp Bot
+              </button>
             </div>
           </div>
 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database, Plus, Image as ImageIcon, MessageSquare, Send, Loader2, Share2, Save, ArrowLeft, RefreshCw, Globe, Instagram, Facebook, Linkedin, Twitter, Sparkles, Zap, ShieldCheck, ShieldAlert, Activity } from 'lucide-react';
 import { addTestimonialToSheet, fetchTestimonialsFromSheet, fetchSettingsFromSheet, updateSettingsInSheet, addBannerToSheet, fetchBannersFromSheet, checkConnectivity } from '../services/sheetService';
+import { SOCIAL_LINKS } from '../constants';
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -12,11 +13,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const [formData, setFormData] = useState({ name: '', logo: '', feedback: '' });
   const [bannerData, setBannerData] = useState({ title: '', imageUrl: '', link: '' });
   const [socialData, setSocialData] = useState({
-    facebook: '',
-    instagram: '',
-    linkedin: '',
-    twitter: '',
-    whatsapp: ''
+    facebook: SOCIAL_LINKS.facebook,
+    instagram: SOCIAL_LINKS.instagram,
+    linkedin: SOCIAL_LINKS.linkedin,
+    twitter: SOCIAL_LINKS.twitter === '#' ? '' : SOCIAL_LINKS.twitter,
+    whatsapp: SOCIAL_LINKS.whatsapp
   });
   
   const [loading, setLoading] = useState(false);

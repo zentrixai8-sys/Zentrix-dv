@@ -5,9 +5,19 @@ export const COMPANY_NAME = "ZENTRIXS";
 export const TAGLINE = "AUTOMATION OS";
 export const PHONE_NUMBER = "7999206708";
 export const PHONE_NUMBER_2 = "";
+export const AI_BOT_NUMBER = "9183335002";
 export const EMAIL = "zentrix.ai8@gmail.com";
 export const ADDRESS = "Ward no. 38, Bhainsthan Road, Near Nutan Rice Mill, Raipur, Chhattisgarh 492009";
 export const LOGO_URL = "https://i.ibb.co/vCP2fg5R/Zentrix-Logo-with-Interlocking-Monogram.png";
+
+export const SOCIAL_LINKS = {
+  instagram: "https://www.instagram.com/zentrix.ai8/",
+  facebook: "https://www.facebook.com/share/1Dau1vwEvh/",
+  whatsapp: `https://wa.me/91${PHONE_NUMBER}`,
+  youtube: "https://youtube.com/@zentrixsraipur?si=Fz8TuDBQNC2pjIGM",
+  linkedin: "https://www.linkedin.com/company/zentrixs/",
+  twitter: "#"
+};
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'HOME', href: 'home' },

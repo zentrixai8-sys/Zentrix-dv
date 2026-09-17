@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, PlayCircle, Zap, ShieldCheck, Activity, Users, Clock, ArrowDownToLine, Box } from 'lucide-react';
-import { PHONE_NUMBER } from '../constants';
+import { PHONE_NUMBER, SOCIAL_LINKS } from '../constants';
 import AutoImageSequence from './AutoImageSequence';
 
 const Hero: React.FC = () => {
@@ -59,10 +59,10 @@ const Hero: React.FC = () => {
               </button>
 
               <button
-                onClick={() => window.open(`https://wa.me/91${PHONE_NUMBER}`, '_blank')}
-                className="px-8 py-4 border border-zinc-700 hover:border-zinc-500 rounded-xl font-bold text-sm tracking-wide text-zinc-300 transition-all flex items-center gap-3 bg-white/[0.02]"
+                onClick={() => window.open(SOCIAL_LINKS.youtube, '_blank')}
+                className="px-8 py-4 border border-zinc-700 hover:border-zinc-500 rounded-xl font-bold text-sm tracking-wide text-zinc-300 transition-all flex items-center gap-3 bg-white/[0.02] hover:bg-white/[0.06]"
               >
-                <PlayCircle className="w-4 h-4 text-zinc-400" /> WATCH VIDEO
+                <PlayCircle className="w-4 h-4 text-red-500" /> WATCH VIDEO
               </button>
             </div>
 

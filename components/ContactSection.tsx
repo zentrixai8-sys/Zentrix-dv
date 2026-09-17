@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { PHONE_NUMBER, PHONE_NUMBER_2, EMAIL, ADDRESS } from '../constants';
+import { Phone, Mail, MapPin, Send, CheckCircle2, AlertCircle, Loader2, Bot, MessageCircle, Sparkles } from 'lucide-react';
+import { PHONE_NUMBER, PHONE_NUMBER_2, AI_BOT_NUMBER, EMAIL, ADDRESS } from '../constants';
 import { addDemoBookingToSheet } from '../services/sheetService';
 
 const ContactSection: React.FC = () => {
@@ -55,13 +55,43 @@ const ContactSection: React.FC = () => {
               Book your free 15-minute discovery call to see how AI can transform your specific business workflows.
             </p>
 
-            <div className="space-y-10">
+            <div className="space-y-8">
+              {/* Zentrix AI Assistant WhatsApp Chatbot Card */}
+              <div
+                className="relative overflow-hidden p-6 rounded-3xl bg-gradient-to-r from-cyan-950/40 via-blue-950/30 to-zinc-900/60 border border-cyan-500/30 group hover:border-cyan-400 transition-all cursor-pointer shadow-[0_0_35px_rgba(6,182,212,0.15)]"
+                onClick={() => window.open(`https://wa.me/91${AI_BOT_NUMBER}?text=Hi%20Zentrix%20AI%20Assistant,%20I%20want%20to%20know%20more%20about%20your%20services`, '_blank')}
+              >
+                <div className="absolute top-0 right-0 px-4 py-1.5 bg-gradient-to-l from-cyan-500 to-blue-600 text-[10px] font-black tracking-widest text-white uppercase rounded-bl-2xl flex items-center gap-1.5 shadow-lg">
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                  24/7 AI Online
+                </div>
+                <div className="flex items-start gap-5">
+                  <div className="bg-cyan-500/20 p-4 rounded-2xl text-cyan-400 group-hover:bg-cyan-500 group-hover:text-black transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] shrink-0">
+                    <Bot className="w-8 h-8" />
+                  </div>
+                  <div className="min-w-0 pr-12">
+                    <h4 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                      <Sparkles className="w-3.5 h-3.5" /> Zentrix AI Assistant (Chatbot)
+                    </h4>
+                    <p className="text-2xl sm:text-3xl font-black text-white tracking-wider font-mono hover:text-cyan-300 transition-colors">
+                      +91 {AI_BOT_NUMBER}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2 font-medium">
+                      Live WhatsApp chatbot for instant automation inquiries, support & live demos.
+                    </p>
+                    <div className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-cyan-400 group-hover:text-cyan-300">
+                      <MessageCircle className="w-4 h-4 text-green-400" /> Click to Chat on WhatsApp →
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-start gap-6 group">
                 <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all">
                   <Phone className="w-8 h-8" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Call Us</h4>
+                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Call Us (Direct)</h4>
                   <div className="space-y-2">
                     <p
                       className="text-2xl font-bold text-white cursor-pointer hover:text-blue-400 transition-colors"
