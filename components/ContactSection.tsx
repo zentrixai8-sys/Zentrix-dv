@@ -121,30 +121,16 @@ const ContactSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-6">
-                  <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500">
-                    <MapPin className="w-8 h-8" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Office Location</h4>
-                    <p className="text-lg sm:text-2xl font-bold text-white mb-2 break-words">{ADDRESS}</p>
-                    <span className="inline-block px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-md text-[10px] font-black uppercase tracking-widest text-green-500">
-                      Raipur Based Company
-                    </span>
-                  </div>
+              <div className="flex items-center gap-6">
+                <div className="bg-blue-600/10 p-4 rounded-2xl text-blue-500">
+                  <MapPin className="w-8 h-8" />
                 </div>
-
-                <div className="w-full h-48 rounded-[2rem] overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-500">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1566!2d81.62!3d21.25!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sNutan%20Rice%20Mill!5e0!3m2!1sen!2sin!4v1712410000000!5m2!1sen!2sin"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Office Location</h4>
+                  <p className="text-lg sm:text-2xl font-bold text-white mb-2 break-words">{ADDRESS}</p>
+                  <span className="inline-block px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-md text-[10px] font-black uppercase tracking-widest text-green-500">
+                    Raipur Based Company
+                  </span>
                 </div>
               </div>
             </div>
