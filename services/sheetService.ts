@@ -44,28 +44,262 @@ const getDynamicValue = (obj: any, possibleKeys: string[]) => {
   return null;
 };
 
+export const DEFAULT_TESTIMONIALS = [
+  {
+    name: "POPULAR PAINTS",
+    logo: "https://i.ibb.co/Vp3MfZvL/popular-paints-logo-white-og.png",
+    text: "The service was smooth, efficient, and exceeded our expectations.",
+    role: "Strategic Partner",
+    company: "POPULAR PAINTS",
+    rating: 5
+  },
+  {
+    name: "AVINASH GROUP",
+    logo: "https://i.ibb.co/PsNGkTX7/download.jpg",
+    text: "Very satisfied with the service and support. The team goes above and beyond to help.",
+    role: "Strategic Partner",
+    company: "AVINASH GROUP",
+    rating: 5
+  },
+  {
+    name: "MAHAVEER HAIR SOLUTION",
+    logo: "https://i.ibb.co/rfK0BQ81/download.png",
+    text: "Innovative solutions with reliable execution. Their technical expertise is top-notch.",
+    role: "Strategic Partner",
+    company: "MAHAVEER HAIR SOLUTION",
+    rating: 5
+  },
+  {
+    name: "PRATAP TECHNOCRATS PVT.LTD",
+    logo: "https://i.ibb.co/pjWNbZ9Y/1910e78d-5a7d-4548-9792-e4d54c13b485.png",
+    text: "Zentrix Web App saved me 2 hours daily! Bookings automated perfectly. Highly recommend!",
+    role: "Strategic Partner",
+    company: "PRATAP TECHNOCRATS PVT.LTD",
+    rating: 5
+  }
+];
+
+// CSV parser that handles quotes and multi-line cells
+const parseCSV = (text: string) => {
+  const lines: string[][] = [];
+  let row: string[] = [];
+  let inQuotes = false;
+  let currentToken = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentToken += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      row.push(currentToken.trim());
+      currentToken = '';
+    } else if ((char === '\r' || char === '\n') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') i++;
+      row.push(currentToken.trim());
+      if (row.some(val => val !== '')) lines.push(row);
+      row = [];
+      currentToken = '';
+    } else {
+      currentToken += char;
+    }
+  }
+  if (currentToken || row.length > 0) {
+    row.push(currentToken.trim());
+    if (row.some(val => val !== '')) lines.push(row);
+  }
+
+  if (lines.length < 2) return [];
+  const headers = lines[0].map(h => h.trim().toLowerCase());
+  const data: Record<string, any>[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const r = lines[i];
+    const item: Record<string, any> = {};
+    headers.forEach((h, idx) => {
+      if (h) item[h] = r[idx] || '';
+    });
+    data.push(item);
+  }
+  return data;
+};
+
+// 1. Fetch via public Google Sheets CSV export (CORS enabled: Access-Control-Allow-Origin: *)
+export const fetchSheetDataViaCsv = async (sheetName: string): Promise<any[] | null> => {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const text = await response.text();
+    const parsed = parseCSV(text);
+    return parsed.length > 0 ? parsed : null;
+  } catch (err) {
+    console.warn(`CSV fetch for sheet "${sheetName}" failed:`, err);
+    return null;
+  }
+};
+
+// 2. Fetch via JSONP dynamic script tag (100% immune to browser CORS)
+export const fetchSheetDataViaJsonp = (sheetName: string): Promise<any[] | null> => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const callbackName = 'gviz_jsonp_' + Math.random().toString(36).substring(2, 9);
+    const script = document.createElement('script');
+    let finished = false;
+
+    const timeout = setTimeout(() => {
+      if (!finished) {
+        cleanup();
+        resolve(null);
+      }
+    }, 8000);
+
+    const cleanup = () => {
+      finished = true;
+      clearTimeout(timeout);
+      try {
+        delete (window as any)[callbackName];
+      } catch (e) {}
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+
+    (window as any)[callbackName] = (json: any) => {
+      try {
+        const rows = json.table?.rows;
+        if (!rows || rows.length < 2) {
+          cleanup();
+          resolve([]);
+          return;
+        }
+        const headers = rows[0].c.map((cell: any) => (cell?.v ?? '').toString().trim().toLowerCase());
+        const results: any[] = [];
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i]?.c || [];
+          const item: Record<string, any> = {};
+          let hasData = false;
+          headers.forEach((header: string, colIdx: number) => {
+            if (header) {
+              const val = row[colIdx] ? (row[colIdx].f ?? row[colIdx].v ?? '') : '';
+              item[header] = val;
+              if (val) hasData = true;
+            }
+          });
+          if (hasData) results.push(item);
+        }
+        cleanup();
+        resolve(results);
+      } catch (err) {
+        cleanup();
+        resolve(null);
+      }
+    };
+
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${callbackName}&sheet=${encodeURIComponent(sheetName)}&headers=0&t=${Date.now()}`;
+    script.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+    document.head.appendChild(script);
+  });
+};
+
+// 3. Fallback direct GViz API
+export const fetchSheetDataViaGviz = async (sheetName: string): Promise<any[] | null> => {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=0`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const text = await response.text();
+    const startIdx = text.indexOf('{');
+    const endIdx = text.lastIndexOf('}');
+    if (startIdx === -1 || endIdx === -1) return null;
+
+    const json = JSON.parse(text.substring(startIdx, endIdx + 1));
+    const rows = json.table?.rows;
+    if (!rows || rows.length < 2) return [];
+
+    const headers = rows[0].c.map((cell: any) => (cell?.v ?? '').toString().trim().toLowerCase());
+
+    const results: any[] = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i]?.c || [];
+      const item: Record<string, any> = {};
+      let hasData = false;
+      headers.forEach((header: string, colIdx: number) => {
+        if (header) {
+          const val = row[colIdx] ? (row[colIdx].f ?? row[colIdx].v ?? '') : '';
+          item[header] = val;
+          if (val) hasData = true;
+        }
+      });
+      if (hasData) results.push(item);
+    }
+    return results;
+  } catch (err) {
+    return null;
+  }
+};
+
+// Unified fetch from sheet that tries all available techniques
+export const fetchSheetData = async (sheetName: string): Promise<any[] | null> => {
+  // 1. Try public CSV export (CORS enabled by Google)
+  const csvData = await fetchSheetDataViaCsv(sheetName);
+  if (csvData && csvData.length > 0) return csvData;
+
+  // 2. Try JSONP (immune to CORS restrictions in all browsers)
+  const jsonpData = await fetchSheetDataViaJsonp(sheetName);
+  if (jsonpData && jsonpData.length > 0) return jsonpData;
+
+  // 3. Try direct GViz
+  const gvizData = await fetchSheetDataViaGviz(sheetName);
+  if (gvizData && gvizData.length > 0) return gvizData;
+
+  return null;
+};
+
 export const checkConnectivity = async (): Promise<boolean> => {
   try {
-    if (!APPS_SCRIPT_URL) return false;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=admin&t=${Date.now()}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=settings`, { signal: controller.signal });
+    const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
     return response.ok;
   } catch (error) {
-    console.error("Connectivity Ping Failed:", error);
     return false;
   }
 };
 
 export const fetchBannersFromSheet = async () => {
   try {
-    if (!APPS_SCRIPT_URL) throw new Error("No URL");
-    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=ADS`);
-    if (!response.ok) throw new Error("Fetch failed");
-    const data = await response.json();
+    let data = await fetchSheetData('ADS');
+    if ((!data || data.length === 0) && APPS_SCRIPT_URL) {
+      try {
+        const response = await fetch(`${APPS_SCRIPT_URL}?sheet=ADS`);
+        if (response.ok) {
+          const json = await response.json();
+          if (Array.isArray(json) && json.length > 0) data = json;
+        }
+      } catch (e) {}
+    }
+
     if (Array.isArray(data) && data.length > 0) {
-      return data
+      const valid = data
         .filter(item => getDynamicValue(item, ['CONTENT', 'title']) || getDynamicValue(item, ['IMAGE URL', 'image_url']))
         .map((item: any) => ({
           id: item.id || Math.random().toString(),
@@ -73,10 +307,10 @@ export const fetchBannersFromSheet = async () => {
           link: getDynamicValue(item, ['link', 'LINK']) || '#',
           title: getDynamicValue(item, ['CONTENT', 'title']) || 'PROMOTION'
         }));
+      if (valid.length > 0) return valid;
     }
-    throw new Error("Empty data");
+    throw new Error("Empty banner data");
   } catch (error) {
-    // Return Default Banner if fetch fails
     return [{
       id: 'default-1',
       imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80',
@@ -88,30 +322,35 @@ export const fetchBannersFromSheet = async () => {
 
 export const fetchTestimonialsFromSheet = async () => {
   try {
-    if (!APPS_SCRIPT_URL) return null;
-    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=admin`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    if (Array.isArray(data)) {
-      return data
-        .filter(item => getDynamicValue(item, ['client_name', 'name', 'company', 'feedback']))
+    // Fetch live data directly from sheet tab 'admin'
+    const data = await fetchSheetData('admin');
+
+    if (Array.isArray(data) && data.length > 0) {
+      const parsed = data
+        .filter(item => getDynamicValue(item, ['client_name', 'name', 'client name', 'company', 'feedback']))
         .map((item: any) => {
-          const name = getDynamicValue(item, ['client_name', 'name']) || 'Enterprise Partner';
-          const logoRaw = getDynamicValue(item, ['logo_url', 'logo', 'client_logo', 'image', 'brand_logo', 'image_url']);
+          const name = getDynamicValue(item, ['client_name', 'name', 'client name']) || 'Enterprise Partner';
+          const logoRaw = getDynamicValue(item, ['logo_url', 'logo', 'client_logo', 'image', 'brand_logo', 'image_url', 'logo url']);
           const logo = resolveImageUrl(logoRaw);
+          const rawFeedback = (getDynamicValue(item, ['feedback', 'text', 'testimonial']) || 'Quality service.').toString().trim();
+          const cleanFeedback = rawFeedback.replace(/^["“]+|["”]+$/g, '').trim();
+
           return {
             name: name,
             logo: logo,
-            text: getDynamicValue(item, ['feedback', 'text', 'testimonial']) || 'Quality service.',
+            text: cleanFeedback,
             role: 'Strategic Partner',
             company: getDynamicValue(item, ['company', 'designation']) || name,
             rating: 5
           };
         });
+
+      if (parsed.length > 0) return parsed;
     }
-    return [];
+    return DEFAULT_TESTIMONIALS;
   } catch (error) {
-    return null;
+    console.error("Testimonials fetch error:", error);
+    return DEFAULT_TESTIMONIALS;
   }
 };
 
@@ -183,11 +422,18 @@ export const addDemoBookingToSheet = async (data: { name: string, phone: string,
 
 export const fetchSettingsFromSheet = async () => {
   try {
-    if (!APPS_SCRIPT_URL) return null;
-    const response = await fetch(`${APPS_SCRIPT_URL}?sheet=settings`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    if (Array.isArray(data)) {
+    let data = await fetchSheetData('settings');
+    if ((!data || data.length === 0) && APPS_SCRIPT_URL) {
+      try {
+        const response = await fetch(`${APPS_SCRIPT_URL}?sheet=settings`);
+        if (response.ok) {
+          const json = await response.json();
+          if (Array.isArray(json) && json.length > 0) data = json;
+        }
+      } catch (e) {}
+    }
+
+    if (Array.isArray(data) && data.length > 0) {
       const settings: Record<string, string> = {};
       data.forEach(item => {
         const key = getDynamicValue(item, ['setting_key', 'key']);
@@ -198,7 +444,6 @@ export const fetchSettingsFromSheet = async () => {
     }
     return null;
   } catch (error) {
-    // Suppress CORS errors for settings, just return null so defaults are used
     return null;
   }
 };

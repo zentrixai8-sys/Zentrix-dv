@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Quote, ChevronLeft, ChevronRight, Star, Loader2, Globe, Activity, User, Building2 } from 'lucide-react';
-import { fetchTestimonialsFromSheet } from '../services/sheetService';
+import { fetchTestimonialsFromSheet, DEFAULT_TESTIMONIALS } from '../services/sheetService';
 
 const ClientLogoSlot = ({ src, name }: { src: string | null, name: string }) => {
   const [error, setError] = useState(false);
@@ -46,8 +46,8 @@ const ClientLogoSlot = ({ src, name }: { src: string | null, name: string }) => 
 
 const TestimonialsSection: React.FC = () => {
   const [startIndex, setStartIndex] = useState(0);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<any[]>(DEFAULT_TESTIMONIALS);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
