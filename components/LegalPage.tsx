@@ -17,21 +17,23 @@ const LegalPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" /> Back to Home
         </button>
 
+        <h1 className="text-3xl sm:text-4xl font-black mb-8 text-black">ZENTRIXS Legal Protocols: Privacy Policy &amp; Terms of Service</h1>
+
         <div className="bg-white border border-gray-200 rounded-xl p-8 md:p-16 shadow-sm font-sans text-gray-800 leading-relaxed space-y-20">
           
           {/* Privacy Policy Section */}
           <div id="privacy">
-            <h1 className="text-3xl font-bold mb-2 text-black">ZENTRIXS Privacy Policy</h1>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-black">ZENTRIXS Privacy Policy</h2>
             <p className="mb-8"><strong>Last Updated: 2026</strong></p>
 
             <div className="space-y-6">
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">1. Introduction</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">1. Introduction</h3>
                 <p>ZENTRIXS values your privacy and is committed to protecting your personal and business data.</p>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">2. Information We Collect</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">2. Information We Collect</h3>
                 <ul className="list-disc pl-6 space-y-1">
                   <li>Name, phone number, email address</li>
                   <li>Business information</li>
@@ -40,7 +42,7 @@ const LegalPage: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">3. How We Use Data</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">3. How We Use Data</h3>
                 <ul className="list-disc pl-6 space-y-1">
                   <li>To provide software and automation services</li>
                   <li>To communicate via WhatsApp API</li>
@@ -49,27 +51,27 @@ const LegalPage: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">4. Data Security</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">4. Data Security</h3>
                 <p>We use AES-256 encryption and secure servers to protect your data.</p>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">5. Data Sharing</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">5. Data Sharing</h3>
                 <p>We do not sell or share your data. Data is only used for service delivery.</p>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">6. WhatsApp API Usage</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">6. WhatsApp API Usage</h3>
                 <p>We use official Meta (Facebook) WhatsApp Business API for communication.</p>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">7. User Rights</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">7. User Rights</h3>
                 <p>You can request access, update, or deletion of your data anytime.</p>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">8. Contact Us</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">8. Contact Us</h3>
                 <p>Email: <a href={`mailto:${EMAIL}`} className="text-blue-600 underline">{EMAIL}</a></p>
               </section>
             </div>
@@ -79,12 +81,12 @@ const LegalPage: React.FC = () => {
 
           {/* Terms of Service Section */}
           <div id="terms">
-            <h1 className="text-3xl font-bold mb-2 text-black">ZENTRIXS Terms of Service</h1>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-black">ZENTRIXS Terms of Service</h2>
             <p className="mb-8"><strong>Last Updated: 2026</strong></p>
 
             <div className="space-y-6">
               <section>
-                <h2 className="text-xl font-bold mb-2 text-black">1. Acceptance of Terms</h2>
+                <h3 className="text-xl font-bold mb-2 text-black">1. Acceptance of Terms</h3>
                 <p>By using ZENTRIXS services, you agree to comply with and be bound by these Terms of Service.</p>
               </section>
 

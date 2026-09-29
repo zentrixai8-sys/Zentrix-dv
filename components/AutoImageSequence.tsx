@@ -132,7 +132,7 @@ const AutoImageSequence: React.FC<AutoImageSequenceProps> = ({
                 alt="Robot Sequence Start" 
                 className="absolute inset-0 block w-full h-full object-cover"
                 // @ts-ignore
-                fetchpriority="high"
+                fetchPriority="high"
             />
             
             {/* 2. Animation Canvas: Sits on top of the static poster and smoothly begins playing when ready */}

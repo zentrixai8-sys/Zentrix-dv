@@ -626,7 +626,7 @@ const CastAndRenderScrub: React.FC = () => {
             {/* Panel 1 */}
             <section className="panel" data-panel>
               <div className="eyebrow">Objects studio <span>&middot;</span> No. 112 Render Lane</div>
-              <h1 dangerouslySetInnerHTML={{ __html: "Built at four.<br />Out by seven." }}></h1>
+              <h2 dangerouslySetInnerHTML={{ __html: "Built at four.<br />Out by seven." }}></h2>
               <p className="sub">Six kinds of mesh, one render farm, and a queue that starts before the sun does.</p>
               <div className="cta">
                 <a className="pill" href="#board">View the reel</a>
@@ -636,7 +636,7 @@ const CastAndRenderScrub: React.FC = () => {
             {/* Panel 2 */}
             <section className="panel" data-panel>
               <div className="eyebrow">Across the studio</div>
-              <h1>Flat, never bent.</h1>
+              <h2>Flat, never bent.</h2>
               <p className="sub">The mesh should still be clean when it reaches the viewport. We export to order, never before.</p>
               <div className="cta">
                 <a className="pill" href="#visit">Tour our space</a>
@@ -646,7 +646,7 @@ const CastAndRenderScrub: React.FC = () => {
             {/* Panel 3 */}
             <section className="panel" data-panel>
               <div className="eyebrow">The surface</div>
-              <h1 dangerouslySetInnerHTML={{ __html: "Smooth enough to<br />hold a light pass." }}></h1>
+              <h2 dangerouslySetInnerHTML={{ __html: "Smooth enough to<br />hold a light pass." }}></h2>
               <p className="sub">Custom surface shaders whipped every morning, spread to the edge and weighed by the quarter pound.</p>
               <div className="cta">
                 <a className="pill" href="#order">Start a brief</a>

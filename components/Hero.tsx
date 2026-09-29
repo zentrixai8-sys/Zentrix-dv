@@ -41,22 +41,29 @@ const Hero: React.FC = () => {
             {/* Main Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-[72px] font-bold text-white leading-[1.1] mb-6 tracking-tight">
               ZENTRIXS <br />
-              <span className="text-blue-500">Automation OS</span>
+              <span className="text-blue-500">Automation</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-zinc-400 text-lg md:text-xl font-normal leading-relaxed max-w-xl mb-10">
-              Streamline operations, reduce costs, and scale intelligently with ZENTRIXS.
+              Autonomous AI business agents, official WhatsApp bots, custom CRM and intelligent business automation systems engineered for growth in Raipur and Central India.
             </p>
 
             {/* Buttons Row */}
             <div className="flex flex-wrap gap-4 items-center mb-16">
-              <button
-                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              <a
+                href="/contact"
+                onClick={(e) => {
+                  const contactEl = document.getElementById('contact');
+                  if (contactEl) {
+                    e.preventDefault();
+                    contactEl.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 className="px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-sm tracking-wide transition-all flex items-center gap-3 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
               >
                 BOOK A DEMO <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
 
               <button
                 onClick={() => window.open(SOCIAL_LINKS.youtube, '_blank')}

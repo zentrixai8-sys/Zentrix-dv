@@ -91,7 +91,7 @@ const WhyChooseSection: React.FC = () => {
                    <Zap className="text-blue-500 w-10 h-10 mb-8" />
                    <h3 className="text-3xl font-black text-white mb-6 tracking-tight">MISSION ALPHA</h3>
                    <p className="text-gray-400 text-lg leading-relaxed font-medium">
-                     Empowering Raipur's enterprise ecosystem with intelligent, self-sustaining IT infrastructure.
+                     Empowering Raipur's enterprise ecosystem with intelligent, self-sustaining business automation and AI agents.
                    </p>
                 </div>
                 
