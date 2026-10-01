@@ -1,0 +1,13 @@
+name = "zentrix-rain-71e2"
+main = "src/index.ts"
+compatibility_date = "2024-03-01"
+
+# Cloudflare D1 Database Binding (Connected to User's Real Account Database)
+[[d1_databases]]
+binding = "DB"
+database_name = "zentrixs"
+database_id = "2b7d2148-91c5-4162-9cdd-d9b15eda57ae"
+
+[vars]
+ENVIRONMENT = "production"
+APP_NAME = "Zentrixs Enterprise Portal API"

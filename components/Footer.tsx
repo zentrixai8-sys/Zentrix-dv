@@ -128,7 +128,7 @@ const Footer: React.FC = () => {
             </Link>
 
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm font-medium">
-              Business automation, autonomous AI agents, WhatsApp Cloud API bots, custom CRM, and billing software in {CITY}, {STATE}.
+              Premier <strong>website and software development</strong> company providing autonomous AI agents, WhatsApp Cloud API bots, custom CRM, and billing software in {CITY}, {STATE}.
             </p>
 
             {/* Identical NAP in footer */}

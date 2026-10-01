@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, PlayCircle, Zap, ShieldCheck, Activity, Users, Clock, ArrowDownToLine, Box } from 'lucide-react';
+import { ArrowRight, PlayCircle, Zap, ShieldCheck, Activity, Users, Clock, ArrowDownToLine, Box, Cpu, Bot, TrendingUp } from 'lucide-react';
 import { PHONE_NUMBER, SOCIAL_LINKS } from '../constants';
 import AutoImageSequence from './AutoImageSequence';
 
@@ -14,8 +14,8 @@ const Hero: React.FC = () => {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-8 relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
-          {/* Left Side: Auto-Playing Robot Video */}
-          <div className="relative h-[400px] sm:h-[500px] lg:h-[600px] w-full rounded-3xl overflow-hidden border border-white/5 shadow-2xl reveal reveal-right">
+          {/* Left Side: Auto-Playing AI Robot Video */}
+          <div className="relative h-[400px] sm:h-[500px] lg:h-[600px] w-full rounded-3xl overflow-hidden border border-white/5 shadow-2xl reveal reveal-right bg-black">
             {/* Glossy Reflection */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10"></div>
             
@@ -23,11 +23,27 @@ const Hero: React.FC = () => {
               src="/video-frames/"
               frameCount={192}
               fps={30}
-              className="w-full h-full scale-[1.05]" /* scale slightly to hide edges if needed */
+              className="w-full h-full scale-[1.05]"
             />
 
             {/* Cyan glowing overlay around borders */}
             <div className="absolute inset-0 border border-cyan-500/20 rounded-3xl pointer-events-none z-20 shadow-[inset_0_0_50px_rgba(6,182,212,0.1)]"></div>
+
+            {/* Crawlable Video element for SEO / Screen Readers */}
+            <video
+              className="sr-only"
+              controls
+              playsInline
+              preload="none"
+              poster="/images/website-and-software-development.webp"
+              aria-label="Website and software development video demonstration"
+            >
+              <source
+                src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260818_072341_50851634-bbc3-4c33-9acc-7647d4db44aa.mp4"
+                type="video/mp4"
+              />
+            </video>
+
           </div>
 
           {/* Right Side: Hero Content */}
@@ -44,10 +60,27 @@ const Hero: React.FC = () => {
               <span className="text-blue-500">Automation</span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-zinc-400 text-lg md:text-xl font-normal leading-relaxed max-w-xl mb-10">
-              Autonomous AI business agents, official WhatsApp bots, custom CRM and intelligent business automation systems engineered for growth in Raipur and Central India.
+            {/* Ultra-Premium Subtitle focused on Custom Software, Autopilot Mode & Business Automation */}
+            <p className="text-zinc-400 text-lg md:text-xl font-normal leading-[1.65] max-w-xl mb-10 tracking-[-0.015em]">
+              We engineer <span className="text-white font-medium">custom software</span> that runs your company on <span className="text-white font-medium">autopilot mode</span>—true <span className="text-white font-medium">Business Automation</span> built to capture leads, execute operations, and scale 24/7 without manual effort.
             </p>
+
+            {/* SEO Backend Crawlable Block (Hidden from visible UI, indexed by Googlebot & SERP OK) */}
+            <div className="sr-only">
+              <h2>Custom Software and Business Automation Company in Raipur</h2>
+              <p>
+                Zentrixs engineers custom software to run companies on autopilot mode through end-to-end business automation. Leading website and software development company delivering software and website development, custom software and website development, ai software website and app development company solutions, and software development and website design across India.
+              </p>
+              <ul>
+                <li>Custom Software and Website Development Architecture</li>
+                <li>Company on Autopilot Mode with Autonomous AI Agents</li>
+                <li>End-to-End Business Automation and CRM Pipelines</li>
+                <li>AI Software Website and App Development Company Solutions</li>
+                <li>Website Designing and Software Development Standards</li>
+                <li>Software and Website Development Services &amp; Cloud Tools</li>
+                <li>Premier Website and Software Development Company India</li>
+              </ul>
+            </div>
 
             {/* Buttons Row */}
             <div className="flex flex-wrap gap-4 items-center mb-16">
@@ -73,33 +106,33 @@ const Hero: React.FC = () => {
               </button>
             </div>
 
-            {/* 3 Feature Cards */}
+            {/* 3 Pillars: Custom Software, Autopilot Mode, Business Automation */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-              {/* Card 1 */}
-              <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
-                  <Zap className="w-5 h-5 text-blue-500" />
+              {/* Card 1: Custom Software */}
+              <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-blue-500/30 transition-all duration-300 group">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Cpu className="w-5 h-5 text-blue-500" />
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">Intelligent<br/>Automation</h3>
-                <p className="text-zinc-500 text-xs leading-relaxed">AI agents that<br/>learn & optimize.</p>
+                <h3 className="text-white font-bold text-sm mb-2">Custom Software<br/>Engineering</h3>
+                <p className="text-zinc-500 text-xs leading-relaxed">Bespoke software tailored to your company's exact operational workflows.</p>
               </div>
 
-              {/* Card 2 */}
-              <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
-                  <ShieldCheck className="w-5 h-5 text-blue-500" />
+              {/* Card 2: Autopilot Mode */}
+              <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-blue-500/30 transition-all duration-300 group">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Bot className="w-5 h-5 text-blue-500" />
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">Secure &<br/>Reliable</h3>
-                <p className="text-zinc-500 text-xs leading-relaxed">Enterprise-grade<br/>security.</p>
+                <h3 className="text-white font-bold text-sm mb-2">Company on<br/>Autopilot Mode</h3>
+                <p className="text-zinc-500 text-xs leading-relaxed">Autonomous AI agents &amp; bots that sell, support &amp; follow up 24/7 without delays.</p>
               </div>
 
-              {/* Card 3 */}
-              <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
-                  <Activity className="w-5 h-5 text-blue-500" />
+              {/* Card 3: Business Automation */}
+              <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-blue-500/30 transition-all duration-300 group">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-5 h-5 text-blue-500" />
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">Scalable<br/>& Flexible</h3>
-                <p className="text-zinc-500 text-xs leading-relaxed">Built to grow<br/>with your business.</p>
+                <h3 className="text-white font-bold text-sm mb-2">End-to-End<br/>Business Automation</h3>
+                <p className="text-zinc-500 text-xs leading-relaxed">Seamless sync across leads, CRM, billing &amp; WhatsApp to scale revenue automatically.</p>
               </div>
             </div>
 

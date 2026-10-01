@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { AlertTriangle, Rocket, CheckCircle, Smartphone, Clock, XCircle, Users, Zap, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Rocket, CheckCircle, Smartphone, Clock, XCircle, Users, Zap, TrendingUp, Bot, FileText, PackageCheck, Database, BarChart3 } from 'lucide-react';
 
 const ProblemSolution: React.FC = () => {
   return (
@@ -72,39 +71,106 @@ const ProblemSolution: React.FC = () => {
         </div>
 
         {/* THE SOLUTION SECTION */}
-        <div className="flex flex-col items-center text-center mb-24 reveal reveal-scale">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8">
-            <CheckCircle className="w-4 h-4 text-emerald-500" />
-            <span className="text-emerald-500 font-black tracking-widest text-[10px] uppercase">The Solution</span>
+        <div className="flex flex-col items-center text-center mb-20 reveal reveal-scale">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold tracking-wider mb-6">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>AUTOPILOT ENGINE &bull; 6 CORE PILLARS</span>
           </div>
 
-          <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 uppercase italic">
-            Automated <span className="text-emerald-500">Growth.</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight mb-6">
+            Put Your Business On{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300">
+              Autopilot Growth.
+            </span>
           </h2>
 
-          <p className="text-zinc-400 text-xl md:text-2xl max-w-3xl font-medium leading-relaxed uppercase italic">
-            We build smart systems that work for you.
-            Focus on <span className="text-white">Growing Business</span> while we handle the rest.
+          <p className="text-zinc-400 text-lg md:text-xl max-w-2xl font-normal leading-relaxed">
+            Eliminate manual friction, never miss a lead, and automate end-to-end operations with our custom software &amp; autonomous AI agents.
           </p>
         </div>
 
-        {/* STATISTICS */}
-        {/* BUSINESS USE CASES */}
+        {/* 6 MISSION-CRITICAL AUTOPILOT MODULES */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { label: "Leads Auto Capture", desc: "Never miss a customer inquiry from any source.", icon: Users },
-            { label: "Automatic Follow-ups", desc: "AI agents chase leads until they convert.", icon: Zap },
-            { label: "Billing Automation", desc: "Generate invoices and track payments instantly.", icon: TrendingUp },
-            { label: "Inventory Control", desc: "Real-time stock tracking and low-stock alerts.", icon: CheckCircle },
-            { label: "Customer Database", desc: "Securely store and organize all client data.", icon: Rocket },
-            { label: "Sales Reports", desc: "Daily analytics to measure your business growth.", icon: Smartphone }
+            {
+              badge: "Zero Lead Leakage",
+              label: "Leads Auto Capture",
+              desc: "Instantly captures and qualifies customer inquiries from WhatsApp, Meta ads, Google & website forms into one unified pipeline.",
+              icon: Users,
+              metric: "Omnichannel 24/7"
+            },
+            {
+              badge: "Autonomous AI",
+              label: "Automatic Follow-ups",
+              desc: "Intelligent AI agents follow up with warm leads on WhatsApp, answer product FAQs, and book consultations until they convert.",
+              icon: Bot,
+              metric: "3x Faster Conversions"
+            },
+            {
+              badge: "Instant Invoicing",
+              label: "Billing Automation",
+              desc: "Generate professional GST bills, dispatch automated payment reminders via WhatsApp, and track settlements in real time.",
+              icon: FileText,
+              metric: "100% Tax Compliant"
+            },
+            {
+              badge: "Live Multi-Warehouse",
+              label: "Inventory Control",
+              desc: "Automated stock tracking, reorder alert triggers, and real-time catalog syncing to prevent costly stockouts or dead inventory.",
+              icon: PackageCheck,
+              metric: "Real-Time Sync"
+            },
+            {
+              badge: "Bank-Grade Encryption",
+              label: "Customer Database (CRM)",
+              desc: "Securely organize client interaction histories, transaction records, and communication timelines in one high-speed database.",
+              icon: Database,
+              metric: "Cloud Encrypted"
+            },
+            {
+              badge: "Executive Insights",
+              label: "Sales & Growth Reports",
+              desc: "Automated daily and weekly analytics digests delivered right to your WhatsApp with revenue metrics, margins & team performance.",
+              icon: BarChart3,
+              metric: "Daily WhatsApp Digest"
+            }
           ].map((item, i) => (
-            <div key={i} className="reveal reveal-up stagger-2 bg-[#080808] border border-white/5 p-10 rounded-[2.5rem] hover:border-blue-500/30 transition-all group">
-              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white text-blue-500 transition-colors">
-                <item.icon className="w-6 h-6" />
+            <div
+              key={i}
+              className="reveal reveal-up stagger-2 relative bg-gradient-to-b from-zinc-900/70 via-black/80 to-black/90 backdrop-blur-xl border border-white/[0.08] p-8 md:p-9 rounded-3xl hover:border-cyan-500/40 hover:shadow-[0_15px_40px_rgba(6,182,212,0.12)] transition-all duration-500 group flex flex-col justify-between overflow-hidden"
+            >
+              {/* Radial ambient glow */}
+              <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/25 transition-all duration-500 pointer-events-none" />
+
+              <div>
+                {/* Header: Icon + Micro Pill */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-black group-hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all duration-300">
+                    <item.icon className="w-6 h-6 transition-transform duration-300" />
+                  </div>
+                  <span className="font-mono text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400 group-hover:text-cyan-300 group-hover:border-cyan-500/30 transition-colors">
+                    {item.badge}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h4 className="text-xl font-bold text-white mb-3 tracking-tight group-hover:text-cyan-200 transition-colors">
+                  {item.label}
+                </h4>
+
+                {/* Description */}
+                <p className="text-zinc-400 text-sm leading-relaxed font-normal">
+                  {item.desc}
+                </p>
               </div>
-              <h4 className="text-xl font-black text-white mb-4 uppercase italic tracking-tighter">{item.label}</h4>
-              <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{item.desc}</p>
+
+              {/* Bottom Footer Accent */}
+              <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-500 font-mono">
+                <span className="group-hover:text-zinc-300 transition-colors">{item.metric}</span>
+                <span className="text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-bold text-[11px]">
+                  Autopilot Active &rarr;
+                </span>
+              </div>
             </div>
           ))}
         </div>

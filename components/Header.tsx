@@ -5,17 +5,20 @@ import { NAV_ITEMS, COMPANY_NAME, LOGO_URL } from '../constants';
 import LoginModal from './LoginModal';
 
 interface HeaderProps {
-  isAdmin: boolean;
+  isAdmin?: boolean;
+  userRole?: 'admin' | 'company' | null;
   onLogout: () => void;
-  onLoginSuccess: (user: string) => void;
+  onLoginSuccess: (user: string, role: 'admin' | 'company') => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) => {
+const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isLoggedIn = !!isAdmin || !!userRole;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -102,19 +105,27 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
               ))}
 
               <div className="flex items-center gap-6 border-l border-white/10 pl-12">
-                {isAdmin ? (
-                  <button
-                    onClick={onLogout}
-                    className="flex items-center gap-3 text-red-500 hover:text-red-400 text-[10px] font-black tracking-widest uppercase"
-                  >
-                    <LogOut className="w-4 h-4" /> Disconnect
-                  </button>
+                {isLoggedIn ? (
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to="/dashboard"
+                      className="px-4 py-2 bg-blue-600/20 text-cyan-400 border border-blue-500/30 rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-blue-600 hover:text-white transition-all"
+                    >
+                      {userRole === 'company' ? 'Company Portal' : 'Admin Console'}
+                    </Link>
+                    <button
+                      onClick={onLogout}
+                      className="flex items-center gap-2 text-red-500 hover:text-red-400 text-[10px] font-black tracking-widest uppercase"
+                    >
+                      <LogOut className="w-4 h-4" /> Disconnect
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => setShowLogin(true)}
                     className="p-3 glass rounded-xl text-blue-500 hover:text-white hover:bg-blue-600 transition-all border-white/10"
-                    title="System Login"
-                    aria-label="Admin Login"
+                    title="Company & Admin Portal Login"
+                    aria-label="Portal Login"
                   >
                     <Lock className="w-4 h-4" />
                   </button>
@@ -153,15 +164,36 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
                 {item.label}
               </Link>
             ))}
-            <button
-              onClick={() => {
-                setShowLogin(true);
-                setIsOpen(false);
-              }}
-              className="w-full py-4 glass text-blue-500 rounded-2xl font-black uppercase tracking-widest"
-            >
-              Admin Login
-            </button>
+            {isLoggedIn ? (
+              <div className="space-y-4">
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-center w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest"
+                >
+                  {userRole === 'company' ? 'Go To Company Portal' : 'Go To Admin Console'}
+                </Link>
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setIsOpen(false);
+                  }}
+                  className="w-full py-3 text-red-500 border border-red-500/30 rounded-2xl font-bold uppercase tracking-wider"
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setShowLogin(true);
+                  setIsOpen(false);
+                }}
+                className="w-full py-4 glass text-blue-500 rounded-2xl font-black uppercase tracking-widest"
+              >
+                Portal Login (Company / Admin)
+              </button>
+            )}
             <Link
               to="/contact"
               onClick={() => setIsOpen(false)}
@@ -176,8 +208,8 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, onLogout, onLoginSuccess }) =>
       {showLogin && (
         <LoginModal
           onClose={() => setShowLogin(false)}
-          onSuccess={(user) => {
-            onLoginSuccess(user);
+          onSuccess={(user, role) => {
+            onLoginSuccess(user, role);
             navigate('/dashboard');
             setShowLogin(false);
           }}

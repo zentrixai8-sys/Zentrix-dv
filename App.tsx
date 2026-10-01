@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
+import LoginModal from './components/LoginModal';
 import Hero from './components/Hero';
 import OffersSection from './components/OffersSection';
 import ProblemSolution from './components/ProblemSolution';
@@ -11,6 +12,9 @@ import TestimonialsSection from './components/TestimonialsSection';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
+import CompanyDashboard from './components/CompanyDashboard';
+import SuperAdminConsole from './components/SuperAdminConsole';
+import { getAuthSession, clearAuthSession } from './services/taskService';
 import LegalPage from './components/LegalPage';
 import ServiceDetailPage from './components/ServiceDetailPage';
 import ServicesPage from './components/ServicesPage';
@@ -130,19 +134,42 @@ export const LandingPage = () => {
 
 // Reusable AppContent for both Client (BrowserRouter) and Server (MemoryRouter)
 export const AppContent: React.FC = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [, setAdminUser] = useState('');
+  const [authRole, setAuthRole] = useState<'admin' | 'company' | null>(() => {
+    const session = getAuthSession();
+    return session ? (session.role === 'admin' ? 'admin' : 'company') : null;
+  });
+  const [, setCurrentUser] = useState<string>(() => {
+    const session = getAuthSession();
+    return session?.user || '';
+  });
 
-  const handleLoginSuccess = (user: string) => {
-    setIsAdmin(true);
-    setAdminUser(user);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isDashboardRoute = location.pathname === '/dashboard';
+
+  const handleLoginSuccess = (user: string, role: 'admin' | 'company') => {
+    setAuthRole(role);
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    clearAuthSession();
+    setAuthRole(null);
+    setCurrentUser('');
   };
 
   return (
     <div className="min-h-screen bg-[#010101] selection:bg-blue-600/40 text-white">
       <SEOHead />
       <ScrollToTop />
-      <Header isAdmin={isAdmin} onLogout={() => setIsAdmin(false)} onLoginSuccess={handleLoginSuccess} />
+      {(!isDashboardRoute || !authRole) && (
+        <Header
+          isAdmin={authRole === 'admin'}
+          userRole={authRole}
+          onLogout={handleLogout}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -150,21 +177,45 @@ export const AppContent: React.FC = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:slug" element={<ServiceDetailPage />} />
+        <Route path="/website-and-software-development" element={<ServiceDetailPage slugOverride="website-and-software-development" />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/privacy-policy" element={<LegalPage />} />
         <Route
           path="/dashboard"
           element={
-            isAdmin
-              ? <div className="pt-40 pb-20 px-6"><AdminDashboard onClose={() => window.location.href = '/'} /></div>
-              : <LandingPage />
+            authRole === 'admin' ? (
+              <SuperAdminConsole onLogout={handleLogout} />
+            ) : authRole === 'company' ? (
+              <CompanyDashboard onLogout={handleLogout} />
+            ) : (
+              <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
+                <LoginModal
+                  onClose={() => navigate('/')}
+                  onSuccess={(user, role) => handleLoginSuccess(user, role)}
+                />
+              </div>
+            )
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
+              <LoginModal
+                onClose={() => navigate('/')}
+                onSuccess={(user, role) => {
+                  handleLoginSuccess(user, role);
+                  navigate('/dashboard');
+                }}
+              />
+            </div>
           }
         />
         <Route path="*" element={<LandingPage />} />
       </Routes>
 
-      <Footer />
+      {!isDashboardRoute && <Footer />}
     </div>
   );
 };

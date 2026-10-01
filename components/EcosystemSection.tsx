@@ -71,9 +71,9 @@ export const EcosystemSection: React.FC = () => {
             <em className="font-instrument italic font-normal text-[#9a9a9a] not-italic-fallback">To Grow.</em>
           </h2>
 
-          {/* Lede Text */}
-          <p className="text-[#9a9a9a] text-[15.5px] md:text-lg leading-[1.55] max-w-[520px] font-normal tracking-[-0.015em] mb-10">
-            Deploy adaptive AI agents that learn, execute, and scale operational tasks across your business in minutes.
+          {/* Lede Text with target keyword */}
+          <p className="text-[#9a9a9a] text-[15.5px] md:text-lg leading-[1.55] max-w-[620px] font-normal tracking-[-0.015em] mb-10">
+            As a full-stack <strong>website and software development</strong> company, we engineer custom software architectures, autonomous AI agents, and web portals that automate operations and accelerate growth.
           </p>
 
           {/* Liquid-Metal Pills Filter */}
@@ -111,17 +111,91 @@ export const EcosystemSection: React.FC = () => {
 
             {/* Frost Ghost Hero CTA */}
             <a
-              href="#services"
+              href="/services/website-and-software-development"
               className="group relative isolate overflow-hidden inline-flex items-center justify-center h-[42px] px-6 rounded-[6px] text-[13.5px] font-medium tracking-[-0.02em] cursor-pointer transition-all duration-300 border border-[rgba(198,198,198,0.55)] text-white bg-gradient-to-br from-white/[0.12] via-black/50 to-[rgba(150,170,200,0.1)] backdrop-blur-[16px] hover:border-[rgba(220,230,255,0.8)] hover:shadow-[0_0_24px_rgba(170,200,255,0.28)]"
             >
               <span className="absolute inset-0 -translate-x-[130%] group-hover:translate-x-[130%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-              <span className="relative z-10 font-normal">See it in action</span>
+              <span className="relative z-10 font-normal">Explore Software Services</span>
             </a>
           </div>
         </div>
 
+        {/* WebP Showcase Gallery (3 WebP Images with exact SEO naming & alts) */}
+        <div className="mb-20">
+          <div className="text-center mb-10">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
+              Modern <span className="text-blue-500 font-instrument italic font-normal">Website and Software Development</span> Architecture
+            </h3>
+            <p className="text-zinc-400 text-sm max-w-xl mx-auto font-normal">
+              High-performance web applications, responsive cross-device layouts, and intelligent backend automation engineered by Zentrixs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Image 1: Main WebP image with exact keyword in filename and alt */}
+            <div className="group relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-950/80 shadow-2xl transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)]">
+              <div className="aspect-video w-full overflow-hidden bg-black/60 relative">
+                <img
+                  src="/images/website-and-software-development.webp"
+                  alt="Zentrixs - Premier website and software development company"
+                  width="640"
+                  height="360"
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+              </div>
+              <div className="p-5">
+                <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest block mb-1">Architecture 01</span>
+                <h4 className="text-sm font-bold text-white mb-1">Full-Stack Cloud Dashboard</h4>
+                <p className="text-zinc-400 text-xs">Custom software engineering with live metric tracking and automated workflows.</p>
+              </div>
+            </div>
+
+            {/* Image 2: Custom software architecture */}
+            <div className="group relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-950/80 shadow-2xl transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)]">
+              <div className="aspect-video w-full overflow-hidden bg-black/60 relative">
+                <img
+                  src="/images/custom-software-and-website-development.webp"
+                  alt="Custom software and website development architecture by Zentrixs"
+                  width="640"
+                  height="360"
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+              </div>
+              <div className="p-5">
+                <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest block mb-1">Architecture 02</span>
+                <h4 className="text-sm font-bold text-white mb-1">Neural AI &amp; Database Mesh</h4>
+                <p className="text-zinc-400 text-xs">Scalable microservices, vector search, and official WhatsApp Cloud API integration.</p>
+              </div>
+            </div>
+
+            {/* Image 3: Responsive web & app showcase */}
+            <div className="group relative rounded-2xl overflow-hidden border border-white/10 bg-zinc-950/80 shadow-2xl transition-all duration-500 hover:border-blue-500/40 hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)]">
+              <div className="aspect-video w-full overflow-hidden bg-black/60 relative">
+                <img
+                  src="/images/ai-software-website-and-app-development.webp"
+                  alt="AI software website and app development company showcase"
+                  width="640"
+                  height="360"
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+              </div>
+              <div className="p-5">
+                <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest block mb-1">Architecture 03</span>
+                <h4 className="text-sm font-bold text-white mb-1">Responsive Multi-Device UI</h4>
+                <p className="text-zinc-400 text-xs">High-converting mobile-first web designs with sub-second page rendering speed.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Feature Cards Grid (Liquid Glass Tiles) */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {filteredFeatures.map((feature, i) => (
             <div
               key={i}
@@ -144,6 +218,57 @@ export const EcosystemSection: React.FC = () => {
               <p className="text-zinc-400 text-sm leading-relaxed font-normal relative z-10">{feature.text}</p>
             </div>
           ))}
+        </div>
+
+        {/* Crawlable Internal Links Bar (5+ Contextual Links for Search Crawlers) */}
+        <div className="mb-20 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+          <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-4">
+            Explore Dedicated Software &amp; Automation Portals:
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="/services/website-and-software-development"
+              className="text-xs px-3.5 py-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors"
+            >
+              Website and Software Development
+            </a>
+            <a
+              href="/services/ai-business-chatbot"
+              className="text-xs px-3.5 py-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors"
+            >
+              AI Business Chatbots
+            </a>
+            <a
+              href="/services/whatsapp-automation"
+              className="text-xs px-3.5 py-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors"
+            >
+              WhatsApp Cloud API Automation
+            </a>
+            <a
+              href="/services/crm-lead-management"
+              className="text-xs px-3.5 py-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors"
+            >
+              Custom CRM &amp; Lead Systems
+            </a>
+            <a
+              href="/services/billing-inventory-software"
+              className="text-xs px-3.5 py-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors"
+            >
+              Billing &amp; Inventory Software
+            </a>
+            <a
+              href="/services/ai-voice-agents"
+              className="text-xs px-3.5 py-2 rounded-lg bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors"
+            >
+              AI Voice Calling Agents
+            </a>
+            <a
+              href="/contact"
+              className="text-xs px-3.5 py-2 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-400 hover:text-white hover:bg-blue-600 transition-all font-semibold"
+            >
+              Book Development Consultation &rarr;
+            </a>
+          </div>
         </div>
 
         {/* Stats Footer (Exact 3 Stats from Vesper.ai specification) */}

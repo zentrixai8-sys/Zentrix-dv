@@ -280,20 +280,20 @@ export const SERVICES: Service[] = [
     ]
   },
   {
-    slug: 'business-website-development',
-    title: 'High-Conversion Business Website Development',
-    shortTitle: 'Business Websites',
-    h1: 'Business Website Development & Portals in Raipur',
-    metaTitle: 'Website Development in Raipur | Zentrixs',
-    metaDescription: 'High-conversion, ultra-fast business website development in Raipur by Zentrixs. Modern responsive designs engineered to capture leads. Request a quote.',
-    description: 'High-conversion, ultra-fast business websites designed to establish brand authority and capture qualified customer leads automatically.',
+    slug: 'website-and-software-development',
+    title: 'Custom Website and Software Development Services',
+    shortTitle: 'Website & Software Development',
+    h1: 'Website and Software Development Company in Raipur',
+    metaTitle: 'Website and Software Development Company | Zentrixs',
+    metaDescription: 'Zentrixs is a premier website and software development company in Raipur. Custom software, AI agents, WhatsApp bots, and high-conversion web solutions.',
+    description: 'Bespoke website and software development services engineered to automate operations, capture leads, and scale your brand with cutting-edge tech.',
     icon: 'Globe',
-    details: 'Professional websites that look breathtaking, load in under a second, dominate Google search results, and turn casual visitors into paying clients.',
-    specs: ['Responsive Mobile Design', 'Speed & Technical SEO Ready', 'Lead Generation Funnels', 'CMS & Admin Dashboard'],
-    implementation: 'Built a custom responsive web portal for a Raipur corporate consultancy, increasing customer inquiry conversion by 40% in 60 days.',
+    details: 'Custom software and high-speed responsive websites built with modern React, Next.js, and neural AI automation for forward-thinking enterprises.',
+    specs: ['Custom Software Architecture', 'Responsive Mobile-First UI', 'Technical On-Page SEO', 'Enterprise Database & API Sync'],
+    implementation: 'Engineered a custom software and website portal for a leading corporate brand, boosting digital lead acquisition by 45% within 60 days.',
     overview: [
-      'Your website is the single most critical digital storefront for your company. A slow, dated, or generic template website repels high-value clients and damages your reputation. Zentrixs crafts bespoke, high-performance web applications and corporate websites for forward-thinking enterprises in Raipur and nationwide.',
-      'We combine cutting-edge frontend engineering (React, Next.js, modern CSS architectures) with technical on-page SEO, rich schema markup, and responsive UI design. Every page is built with lightning-fast load times, flawless mobile usability, and conversion-focused calls to action.'
+      'As a premier website and software development company, Zentrixs engineers bespoke digital systems that combine visually striking aesthetics with robust backend reliability. Whether you require custom software and website development, full-stack enterprise portals, or AI-integrated web applications, our engineering team delivers solutions tailored to your operational workflows.',
+      'We specialize in modern website designing and software development using clean code standards, ultra-fast pre-rendered static HTML, and mobile-first responsiveness. As an innovative AI software website and app development company, we integrate intelligent automation directly into your websites—connecting live customer interactions to official WhatsApp APIs, custom CRM pipelines, and automated billing software.'
     ],
     keyFeatures: [
       { title: 'Custom UI/UX & Responsive Layouts', desc: 'Bespoke layouts tailored to your unique brand identity with smooth animations and mobile-first responsiveness.' },

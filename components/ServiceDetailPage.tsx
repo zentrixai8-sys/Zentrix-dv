@@ -3,14 +3,21 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { SERVICES, PHONE_NUMBER, CITY } from '../constants';
 
-const ServiceDetailPage: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+interface ServiceDetailPageProps {
+  slugOverride?: string;
+}
+
+const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slugOverride }) => {
+  const params = useParams<{ slug: string }>();
+  const slug = slugOverride || params.slug;
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Find service by slug or fallback
+  // Find service by slug or fallback (with alias support for website-and-software-development)
   const serviceIndex = SERVICES.findIndex(
-    s => s.slug === slug || s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === slug
+    s => s.slug === slug || 
+         s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') === slug ||
+         (slug === 'business-website-development' && s.slug === 'website-and-software-development')
   );
   const service = SERVICES[serviceIndex];
   const nextService = SERVICES[(serviceIndex + 1) % SERVICES.length];
@@ -163,6 +170,19 @@ const ServiceDetailPage: React.FC = () => {
                 <p key={idx}>{para}</p>
               ))}
             </div>
+
+            {service.slug === 'website-and-software-development' && (
+              <div className="my-10 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
+                <img
+                  src="/images/website-and-software-development.webp"
+                  alt="Zentrixs - Premier website and software development company"
+                  width="1200"
+                  height="675"
+                  loading="lazy"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            )}
           </div>
         </section>
 

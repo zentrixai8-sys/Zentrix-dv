@@ -151,8 +151,8 @@ export const getSeoMetadataForRoute = (route: string): RouteSeoConfig => {
   // Home Page
   if (cleanRoute === '/' || cleanRoute === '/home') {
     return {
-      title: 'Business Automation & AI Agents in Raipur | Zentrixs',
-      description: 'Zentrixs builds autonomous AI agents, WhatsApp automation, custom CRM & business automation systems in Raipur. Automate sales & support 24/7. Book a demo today.',
+      title: 'Zentrixs: Premium IT Solutions | Website and Software Development Company',
+      description: 'Zentrixs is a leading website and software development company and premium IT solutions provider in Raipur. We engineer custom software, autonomous AI agents, WhatsApp bots, and web portals.',
       canonical: `${SITE_URL}/`,
       ogType: 'website',
       ogImage: LOGO_URL,
@@ -295,7 +295,8 @@ export const getSeoMetadataForRoute = (route: string): RouteSeoConfig => {
   // Service Detail Pages
   if (cleanRoute.startsWith('/services/')) {
     const slug = cleanRoute.replace('/services/', '');
-    const service = SERVICES.find(s => s.slug === slug);
+    const effectiveSlug = slug === 'business-website-development' ? 'website-and-software-development' : slug;
+    const service = SERVICES.find(s => s.slug === effectiveSlug);
     if (service) {
       return {
         title: service.metaTitle,
@@ -311,6 +312,32 @@ export const getSeoMetadataForRoute = (route: string): RouteSeoConfig => {
             { name: service.shortTitle || service.title, url: `/services/${service.slug}` }
           ]),
           getServiceSchema(service),
+          ...(service.faqs && service.faqs.length > 0 ? [getFAQPageSchema(service.faqs)] : [])
+        ]
+      };
+    }
+  }
+
+  // Dedicated route alias for website-and-software-development
+  if (cleanRoute === '/website-and-software-development') {
+    const service = SERVICES.find(s => s.slug === 'website-and-software-development');
+    if (service) {
+      return {
+        title: service.metaTitle,
+        description: service.metaDescription,
+        canonical: `${SITE_URL}/website-and-software-development`,
+        ogType: 'article',
+        ogImage: `${SITE_URL}/images/website-and-software-development.webp`,
+        schemas: [
+          getOrganizationSchema(),
+          getBreadcrumbSchema([
+            { name: 'Home', url: '/' },
+            { name: 'Website & Software Development', url: '/website-and-software-development' }
+          ]),
+          {
+            ...getServiceSchema(service),
+            url: `${SITE_URL}/website-and-software-development`
+          },
           ...(service.faqs && service.faqs.length > 0 ? [getFAQPageSchema(service.faqs)] : [])
         ]
       };
@@ -333,6 +360,8 @@ export const ALL_ROUTES: string[] = [
   '/about',
   '/services',
   ...SERVICES.map(s => `/services/${s.slug}`),
+  '/services/business-website-development',
+  '/website-and-software-development',
   '/contact',
   '/blog',
   '/privacy-policy'
