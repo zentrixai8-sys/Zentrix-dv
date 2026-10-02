@@ -6,9 +6,10 @@ import { SOCIAL_LINKS } from '../constants';
 
 interface AdminDashboardProps {
   onClose: () => void;
+  isLight?: boolean;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, isLight = false }) => {
   const [activeTab, setActiveTab] = useState<'clients' | 'social' | 'promo'>('clients');
   const [formData, setFormData] = useState({ name: '', logo: '', feedback: '' });
   const [bannerData, setBannerData] = useState({ title: '', imageUrl: '', link: '' });
@@ -101,12 +102,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     setLoading(false);
   };
 
+  const cmsBg = isLight ? "bg-white" : "bg-[#0A0A0A]";
+  const cmsInner = isLight ? "bg-[#FBF5EC]" : "bg-[#121212]";
+  const cmsBorder = isLight ? "border-[#EDE2D3]" : "border-white/5";
+  const cmsInk = isLight ? "text-[#2A2118]" : "text-white";
+  const cmsMuted = isLight ? "text-[#9C8F7D]" : "text-zinc-500";
+  const cmsFaint = isLight ? "text-[#B5A892]" : "text-zinc-700";
+  const cmsInputBase = isLight ? "bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892]" : "bg-[#121212] border-white/5 text-white";
+
   return (
     <div className="max-w-7xl mx-auto pb-20 px-4 animate-fade-in">
       {/* Top Bar with Connection Status */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
         <div className="flex items-center gap-6">
-          <button onClick={onClose} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.3em]">
+          <button onClick={onClose} className={`flex items-center gap-2 transition-colors text-[10px] font-black uppercase tracking-[0.3em] ${isLight ? "text-[#9C8F7D] hover:text-[#2A2118]" : "text-zinc-500 hover:text-white"}`}>
             <ArrowLeft className="w-4 h-4" /> Exit Terminal
           </button>
           
@@ -119,22 +128,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
           </div>
         </div>
         
-        <div className="flex bg-[#0A0A0A] p-1.5 rounded-2xl border border-white/5">
+        <div className={`flex p-1.5 rounded-2xl border ${isLight ? "bg-[#FDF3E7] border-[#EDE2D3]" : "bg-[#0A0A0A] border-white/5"}`}>
           <button 
             onClick={() => setActiveTab('clients')}
-            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-lg' : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Clients
           </button>
           <button 
             onClick={() => setActiveTab('promo')}
-            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'promo' ? 'bg-amber-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'promo' ? 'bg-amber-600 text-white shadow-lg' : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Promotions
           </button>
           <button 
             onClick={() => setActiveTab('social')}
-            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'social' ? 'bg-cyan-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'social' ? 'bg-cyan-600 text-white shadow-lg' : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Social
           </button>
@@ -143,23 +152,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
 
       {activeTab === 'clients' && (
         <div className="grid lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
-            <h2 className="text-2xl font-black text-white uppercase italic mb-10 tracking-tighter">Append Client Node</h2>
+          <div className={`lg:col-span-8 border rounded-[3rem] p-12 shadow-xl ${cmsBg} ${cmsBorder}`}>
+            <h2 className={`text-2xl font-black uppercase italic mb-10 tracking-tighter ${cmsInk}`}>Append Client Node</h2>
             <form onSubmit={handleSubmitClient} className="space-y-8">
               <input 
                 type="text" placeholder="CLIENT NAME" required
                 value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase"
+                className={`w-full border rounded-2xl px-8 py-5 text-sm font-medium outline-none uppercase ${cmsInputBase} ${isLight ? "focus:border-[#EA552E]" : "focus:border-blue-500/30"}`}
               />
               <input 
                 type="text" placeholder="LOGO URL (IMGBB/HOSTED)" required
                 value={formData.logo} onChange={e => setFormData({...formData, logo: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none"
+                className={`w-full border rounded-2xl px-8 py-5 text-sm font-medium outline-none ${cmsInputBase} ${isLight ? "focus:border-[#EA552E]" : "focus:border-blue-500/30"}`}
               />
               <textarea 
                 placeholder="CLIENT FEEDBACK..." required rows={4}
                 value={formData.feedback} onChange={e => setFormData({...formData, feedback: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-blue-500/30 outline-none uppercase resize-none"
+                className={`w-full border rounded-2xl px-8 py-5 text-sm font-medium outline-none uppercase resize-none ${cmsInputBase} ${isLight ? "focus:border-[#EA552E]" : "focus:border-blue-500/30"}`}
               />
               <button 
                 type="submit" disabled={loading}
@@ -169,35 +178,35 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
               </button>
             </form>
           </div>
-          <div className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12">
+          <div className={`lg:col-span-4 border rounded-[3rem] p-12 ${cmsBg} ${cmsBorder}`}>
             <div className="flex items-center justify-between mb-10">
-              <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Database Health</h3>
+              <h3 className={`text-xl font-black uppercase italic tracking-tighter ${cmsInk}`}>Database Health</h3>
               <Activity className={`w-5 h-5 ${isConnected ? 'text-green-500' : 'text-zinc-700'}`} />
             </div>
             
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-[#121212] p-6 rounded-2xl border border-white/5">
+              <div className={`flex justify-between items-center p-6 rounded-2xl border ${cmsInner} ${cmsBorder}`}>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Active Nodes</p>
-                  <p className="text-3xl font-black text-white">{clientCount}</p>
+                  <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${cmsMuted}`}>Active Nodes</p>
+                  <p className={`text-3xl font-black ${cmsInk}`}>{clientCount}</p>
                 </div>
                 <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
                   <Database className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl border border-white/5 bg-[#121212]">
+              <div className={`p-6 rounded-2xl border ${cmsInner} ${cmsBorder}`}>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Data Sync</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${cmsMuted}`}>Data Sync</span>
                   <RefreshCw 
                     onClick={loadData} 
                     className={`w-4 h-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all ${fetching ? 'animate-spin' : ''}`} 
                   />
                 </div>
-                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className={`w-full h-1 rounded-full overflow-hidden ${isLight ? "bg-[#F3EADC]" : "bg-white/5"}`}>
                    <div className={`h-full bg-blue-500 transition-all duration-1000 ${fetching ? 'w-full animate-pulse' : 'w-full'}`}></div>
                 </div>
-                <p className="text-[8px] text-zinc-700 font-bold uppercase tracking-widest mt-3">
+                <p className={`text-[8px] font-bold uppercase tracking-widest mt-3 ${cmsFaint}`}>
                   {fetching ? 'Syncing core datasets...' : 'All nodes current and stable.'}
                 </p>
               </div>
@@ -216,26 +225,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
 
       {activeTab === 'promo' && (
         <div className="grid lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
+          <div className={`lg:col-span-8 border rounded-[3rem] p-12 shadow-xl ${cmsBg} ${cmsBorder}`}>
             <div className="flex items-center gap-4 mb-10">
                <Zap className="w-6 h-6 text-amber-500" />
-               <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Broadcast Hub</h2>
+               <h2 className={`text-2xl font-black uppercase italic tracking-tighter ${cmsInk}`}>Broadcast Hub</h2>
             </div>
             <form onSubmit={handleSubmitBanner} className="space-y-8">
               <input 
                 type="text" placeholder="PROMOTION TITLE" required
                 value={bannerData.title} onChange={e => setBannerData({...bannerData, title: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-amber-500/30 outline-none uppercase"
+                className={`w-full border rounded-2xl px-8 py-5 text-sm font-medium outline-none uppercase ${cmsInputBase} focus:border-amber-500`}
               />
               <input 
                 type="text" placeholder="BANNER IMAGE URL" required
                 value={bannerData.imageUrl} onChange={e => setBannerData({...bannerData, imageUrl: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-amber-500/30 outline-none"
+                className={`w-full border rounded-2xl px-8 py-5 text-sm font-medium outline-none ${cmsInputBase} focus:border-amber-500`}
               />
               <input 
                 type="text" placeholder="ACTION LINK (OPTIONAL)"
                 value={bannerData.link} onChange={e => setBannerData({...bannerData, link: e.target.value})}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl px-8 py-5 text-sm font-medium text-white focus:border-amber-500/30 outline-none"
+                className={`w-full border rounded-2xl px-8 py-5 text-sm font-medium outline-none ${cmsInputBase} focus:border-amber-500`}
               />
               <button 
                 type="submit" disabled={loading}
@@ -245,15 +254,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
               </button>
             </form>
           </div>
-          <div className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12">
-            <h3 className="text-xl font-black text-white uppercase italic mb-6">Campaign Status</h3>
+          <div className={`lg:col-span-4 border rounded-[3rem] p-12 ${cmsBg} ${cmsBorder}`}>
+            <h3 className={`text-xl font-black uppercase italic mb-6 ${cmsInk}`}>Campaign Status</h3>
             <div className="space-y-6">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              <div className={`flex justify-between items-center text-[10px] font-black uppercase tracking-widest ${cmsMuted}`}>
                 <span>Active Banners:</span>
-                <span className="text-white">{bannerCount}</span>
+                <span className={cmsInk}>{bannerCount}</span>
               </div>
-              <div className="pt-6 border-t border-white/5">
-                <p className="text-[8px] text-zinc-600 font-black uppercase tracking-[0.3em]">Nodes broadcasted to site frontend in real-time.</p>
+              <div className={`pt-6 border-t ${cmsBorder}`}>
+                <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${cmsFaint}`}>Nodes broadcasted to site frontend in real-time.</p>
               </div>
             </div>
           </div>
@@ -261,14 +270,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
       )}
 
       {activeTab === 'social' && (
-        <div className="max-w-4xl mx-auto bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-12 shadow-3xl">
+        <div className={`max-w-4xl mx-auto border rounded-[3rem] p-12 shadow-xl ${cmsBg} ${cmsBorder}`}>
           <div className="flex items-center gap-6 mb-12">
             <div className="w-16 h-16 bg-cyan-600/10 rounded-2xl flex items-center justify-center text-cyan-500 border border-cyan-500/20 shadow-inner">
               <Share2 className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none italic">Social <span className="text-cyan-500">Protocol.</span></h2>
-              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.4em] mt-2">Update Global Access Links</p>
+              <h2 className={`text-3xl font-black tracking-tighter uppercase leading-none italic ${cmsInk}`}>Social <span className="text-cyan-500">Protocol.</span></h2>
+              <p className={`text-[10px] font-black uppercase tracking-[0.4em] mt-2 ${cmsMuted}`}>Update Global Access Links</p>
             </div>
           </div>
 
@@ -281,7 +290,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
               { id: 'whatsapp', icon: Globe, label: 'WhatsApp Link' }
             ].map(social => (
               <div key={social.id} className="space-y-3">
-                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest flex items-center gap-2">
+                <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${cmsMuted}`}>
                   <social.icon className="w-3 h-3" /> {social.label}
                 </label>
                 <input 
@@ -289,7 +298,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                   value={(socialData as any)[social.id]}
                   onChange={e => setSocialData({...socialData, [social.id]: e.target.value})}
                   placeholder="https://..."
-                  className="w-full bg-[#121212] border border-white/5 rounded-2xl px-6 py-4 text-xs font-medium text-white focus:border-cyan-500/30 outline-none"
+                  className={`w-full border rounded-2xl px-6 py-4 text-xs font-medium outline-none ${cmsInputBase} focus:border-cyan-500`}
                 />
               </div>
             ))}

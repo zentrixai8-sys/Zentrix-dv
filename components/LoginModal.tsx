@@ -3,6 +3,7 @@ import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ChevronRight, C
 import { validateLogin } from '../services/sheetService';
 import { loginCompany, loginAdmin } from '../services/taskService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
+import ThemeSelector from './ThemeSelector';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -98,29 +99,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
         {/* Top Gradient Bar */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600"></div>
 
-        {/* Theme Toggle Button (Light / Dark) */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          title={isLight ? 'Switch to Dark Theme' : 'Switch to Light Theme'}
-          className={`absolute top-5 left-6 px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold border ${
-            isLight
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200 shadow-sm'
-              : 'bg-white/5 hover:bg-white/10 text-amber-300 border-white/10'
-          }`}
-        >
-          {isLight ? (
-            <>
-              <Moon className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="text-[11px] font-semibold text-slate-700">Dark Theme</span>
-            </>
-          ) : (
-            <>
-              <Sun className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[11px] font-semibold text-slate-300">Light Theme</span>
-            </>
-          )}
-        </button>
+        {/* Theme Selector (Light / Dark) */}
+        <ThemeSelector
+          theme={theme}
+          onChange={setTheme}
+          size="sm"
+          className="absolute top-4 left-5 z-10"
+        />
 
         {/* Close Button */}
         <button

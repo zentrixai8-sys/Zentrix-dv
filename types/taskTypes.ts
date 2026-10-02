@@ -57,9 +57,12 @@ export interface Employee {
   id: string;
   name: string;
   role: string;
-  email: string;
-  activeTasksCount: number;
+  designation?: string;
+  email?: string;
+  phone?: string;
+  activeTasksCount?: number;
   avatar?: string;
+  createdAt?: string;
 }
 
 export interface AuthSession {

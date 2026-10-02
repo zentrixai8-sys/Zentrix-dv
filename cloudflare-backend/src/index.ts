@@ -360,16 +360,169 @@ app.put('/api/companies/:id/logo', async (c) => {
   }
 });
 
-// GET /api/employees - Team engineers list
-app.get('/api/employees', async (c) => {
+// ==========================================
+// 4. USERS & EMPLOYEES ENDPOINTS (Stored in D1 users table)
+// ==========================================
+
+// GET /api/users & /api/employees - Team engineers & users list from D1 users table
+const handleGetUsers = async (c: any) => {
   try {
     const db = c.env.DB;
-    const result = await db.prepare('SELECT id, name, email, role FROM users WHERE role IN ("admin", "support_engineer")').all();
-    return c.json({ success: true, employees: result.results });
+    const { results } = await db.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
+    const users = (results || []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      username: row.username,
+      idCode: row.id_code,
+      role: row.designation || row.role || 'Systems Support Engineer',
+      designation: row.designation || row.role || 'Systems Support Engineer',
+      password: row.password,
+      email: row.email || (row.username && row.username.includes('@') ? row.username : undefined),
+      phone: row.phone || (row.username && /^[0-9+ ]+$/.test(row.username) ? row.username : undefined),
+      avatar: row.dp_url || row.avatar || undefined,
+      dpUrl: row.dp_url || row.avatar || undefined,
+      createdAt: row.created_at
+    }));
+    return c.json({ success: true, count: users.length, users, employees: users });
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
   }
-});
+};
+
+app.get('/api/users', handleGetUsers);
+app.get('/api/employees', handleGetUsers);
+
+// POST /api/users & /api/employees - Store new employee/user in D1 users table
+const handleCreateUser = async (c: any) => {
+  try {
+    const db = c.env.DB;
+    const body = await c.req.json();
+    const id = body.id || `emp_${Date.now()}`;
+    const name = body.name ? body.name.trim() : '';
+    if (!name) {
+      return c.json({ error: 'Name is required' }, 400);
+    }
+    const username = (body.username || body.phone || body.email || name.toLowerCase().replace(/\s+/g, '.')).trim();
+    const idCode = (body.idCode || body.id_code || `ENG-${Math.floor(100 + Math.random() * 900)}`).toUpperCase().trim();
+    const password = body.password || body.phone || 'zentrix@123';
+    const designation = (body.designation || body.role || 'Systems Support Engineer').trim();
+    const dpUrl = body.dpUrl || body.dp_url || body.avatar || '';
+    const phone = body.phone ? body.phone.trim() : '';
+    const email = body.email ? body.email.trim() : '';
+    const role = body.userRole || body.role || 'employee';
+    const now = new Date().toISOString();
+
+    // 1. Try inserting with extended schema (including designation, dp_url, phone, email)
+    let inserted = false;
+    try {
+      await db.prepare(`
+        INSERT INTO users (id, name, username, id_code, password, role, designation, dp_url, phone, email, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(id, name, username, idCode, password, role, designation, dpUrl, phone, email, now).run();
+      inserted = true;
+    } catch {
+      // 2. Try inserting with basic schema if columns don't exist yet
+      try {
+        await db.prepare(`
+          INSERT INTO users (id, name, username, id_code, password, role, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(id, name, username, idCode, password, designation, now).run();
+        inserted = true;
+      } catch (basicErr: any) {
+        // 3. Fallback replace
+        await db.prepare(`
+          INSERT OR REPLACE INTO users (id, name, username, id_code, password, role, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(id, name, username, idCode, password, designation, now).run();
+        inserted = true;
+      }
+    }
+
+    const newUser = {
+      id,
+      name,
+      username,
+      idCode,
+      password,
+      role: designation,
+      designation,
+      phone,
+      email,
+      avatar: dpUrl,
+      dpUrl,
+      createdAt: now
+    };
+
+    return c.json({ success: true, user: newUser, employee: newUser }, 201);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+};
+
+app.post('/api/users', handleCreateUser);
+app.post('/api/employees', handleCreateUser);
+
+// PUT /api/users/:id & /api/employees/:id - Update user in D1 users table
+const handleUpdateUser = async (c: any) => {
+  try {
+    const db = c.env.DB;
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    const name = body.name ? body.name.trim() : undefined;
+    const designation = (body.designation || body.role) ? (body.designation || body.role).trim() : undefined;
+    const password = body.password ? body.password.trim() : undefined;
+    const username = (body.username || body.phone || body.email) ? (body.username || body.phone || body.email).trim() : undefined;
+    const dpUrl = (body.dpUrl || body.dp_url || body.avatar) ? (body.dpUrl || body.dp_url || body.avatar).trim() : undefined;
+    const phone = body.phone ? body.phone.trim() : undefined;
+    const email = body.email ? body.email.trim() : undefined;
+
+    try {
+      await db.prepare(`
+        UPDATE users
+        SET name = COALESCE(?, name),
+            username = COALESCE(?, username),
+            password = COALESCE(?, password),
+            role = COALESCE(?, role),
+            designation = COALESCE(?, designation),
+            dp_url = COALESCE(?, dp_url),
+            phone = COALESCE(?, phone),
+            email = COALESCE(?, email)
+        WHERE id = ?
+      `).bind(name || null, username || null, password || null, designation || null, designation || null, dpUrl || null, phone || null, email || null, id).run();
+    } catch {
+      await db.prepare(`
+        UPDATE users
+        SET name = COALESCE(?, name),
+            username = COALESCE(?, username),
+            password = COALESCE(?, password),
+            role = COALESCE(?, role)
+        WHERE id = ?
+      `).bind(name || null, username || null, password || null, designation || null, id).run();
+    }
+
+    return c.json({ success: true, message: 'User updated successfully' });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+};
+
+app.put('/api/users/:id', handleUpdateUser);
+app.put('/api/employees/:id', handleUpdateUser);
+
+// DELETE /api/users/:id & /api/employees/:id - Delete user from D1 users table
+const handleDeleteUser = async (c: any) => {
+  try {
+    const db = c.env.DB;
+    const id = c.req.param('id');
+    await db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
+    return c.json({ success: true, message: 'User deleted from users table' });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+};
+
+app.delete('/api/users/:id', handleDeleteUser);
+app.delete('/api/employees/:id', handleDeleteUser);
 
 // GET /api/systems
 app.get('/api/systems', async (c) => {

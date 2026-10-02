@@ -10,31 +10,50 @@ const STORAGE_KEYS = {
 // Configurable Cloudflare Worker API URL
 export const CLOUDFLARE_API_URL = (import.meta as any).env?.VITE_CLOUDFLARE_API_URL || '';
 
-// Cloudinary Configuration from User's Cloudinary Account (reads from .env with fallback)
-export const CLOUDINARY_CLOUD_NAME = (import.meta as any).env?.VITE_CLOUDINARY_CLOUD_NAME || 'dfbllmnld';
-export const CLOUDINARY_UPLOAD_PRESET = (import.meta as any).env?.VITE_CLOUDINARY_UPLOAD_PRESET || 'zentrixs';
+// Cloudinary Configuration from User's Cloudinary Account
+export const CLOUDINARY_CLOUD_NAME = 'dfbllmnld';
+export const CLOUDINARY_UPLOAD_PRESET = 'zentrixs';
+
+export const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+};
 
 export const uploadFileToCloudinary = async (file: File): Promise<{ success: boolean; url?: string; error?: string }> => {
+  // First try uploading to Cloudinary
   try {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
       method: 'POST',
       body: formData
     });
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || 'Cloudinary upload failed');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.secure_url) {
+        return { success: true, url: data.secure_url };
+      }
+    } else {
+      const errRes = await res.json().catch(() => ({}));
+      console.warn('Cloudinary response error:', errRes);
     }
-
-    const data = await res.json();
-    return { success: true, url: data.secure_url };
   } catch (error: any) {
-    console.error('Cloudinary upload error:', error);
-    return { success: false, error: error.message };
+    console.warn('Cloudinary upload network error, using direct Data URL fallback:', error);
+  }
+
+  // Automatic Data URL fallback (ensures image is always saved and previewed cleanly)
+  try {
+    const base64Url = await fileToBase64(file);
+    return { success: true, url: base64Url };
+  } catch (b64Err: any) {
+    return { success: false, error: b64Err?.message || 'File processing failed' };
   }
 };
 
@@ -48,7 +67,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'admin@cirticare.com',
     phone: '+91 98765 11223',
     activeSystemsCount: 3,
-    avatar: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&auto=format&fit=crop&q=60'
+    avatar: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&auto=format&fit=crop&q=60',
+    logoUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&auto=format&fit=crop&q=60'
   },
   {
     id: 'comp_piramal',
@@ -59,7 +79,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'vaibhav@piramalpetroleum.com',
     phone: '+91 98765 43210',
     activeSystemsCount: 7,
-    avatar: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
+    avatar: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60',
+    logoUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
   },
   {
     id: 'comp_popular',
@@ -70,7 +91,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'contact@popularpaints.com',
     phone: '+91 98234 56789',
     activeSystemsCount: 4,
-    avatar: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=100&auto=format&fit=crop&q=60'
+    avatar: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=100&auto=format&fit=crop&q=60',
+    logoUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=100&auto=format&fit=crop&q=60'
   },
   {
     id: 'comp_avinash',
@@ -81,7 +103,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'admin@avinashgroup.com',
     phone: '+91 98980 12345',
     activeSystemsCount: 5,
-    avatar: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=60'
+    avatar: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=60',
+    logoUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=60'
   },
   {
     id: 'comp_pratap',
@@ -92,16 +115,17 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'support@prataptechno.com',
     phone: '+91 98123 45670',
     activeSystemsCount: 3,
-    avatar: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=100&auto=format&fit=crop&q=60'
+    avatar: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=100&auto=format&fit=crop&q=60',
+    logoUrl: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=100&auto=format&fit=crop&q=60'
   }
 ];
 
 export const DEFAULT_EMPLOYEES: Employee[] = [
-  { id: 'emp_1', name: 'Vaibhav Sharma', role: 'Automation Architect', email: 'vaibhav@zentrixs.com', activeTasksCount: 3 },
-  { id: 'emp_2', name: 'Amit Verma', role: 'Cloudflare D1 & Backend Lead', email: 'amit@zentrixs.com', activeTasksCount: 2 },
-  { id: 'emp_3', name: 'Alex Rivera', role: 'Full Stack Systems Engineer', email: 'alex@zentrixs.com', activeTasksCount: 4 },
-  { id: 'emp_4', name: 'Robert Vance', role: 'Senior DevOps & Integration Lead', email: 'robert@zentrixs.com', activeTasksCount: 2 },
-  { id: 'emp_5', name: 'Priya Patel', role: 'AI Agent & FMS Specialist', email: 'priya@zentrixs.com', activeTasksCount: 1 }
+  { id: 'emp_1', name: 'Vaibhav Sharma', role: 'Automation Architect', email: 'vaibhav@zentrixs.com', phone: '+91 98765 43210', activeTasksCount: 3, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80' },
+  { id: 'emp_2', name: 'Amit Verma', role: 'Full Stack & Backend Lead', email: 'amit@zentrixs.com', phone: '+91 98111 22334', activeTasksCount: 2, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80' },
+  { id: 'emp_3', name: 'Alex Rivera', role: 'Full Stack Systems Engineer', email: 'alex@zentrixs.com', phone: '+91 98222 33445', activeTasksCount: 4, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80' },
+  { id: 'emp_4', name: 'Robert Vance', role: 'Senior DevOps & Integration Lead', email: 'robert@zentrixs.com', phone: '+91 98333 44556', activeTasksCount: 2, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80' },
+  { id: 'emp_5', name: 'Priya Patel', role: 'AI Agent & FMS Specialist', email: 'priya@zentrixs.com', phone: '+91 98444 55667', activeTasksCount: 1, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80' }
 ];
 
 export const INITIAL_TASKS: Task[] = [
@@ -358,16 +382,28 @@ const getStoredCompanies = (): Company[] => {
       return DEFAULT_COMPANIES;
     }
     const raw = localStorage.getItem(STORAGE_KEYS.COMPANIES);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(DEFAULT_COMPANIES));
-      return DEFAULT_COMPANIES;
+    let list: Company[] = DEFAULT_COMPANIES;
+    if (raw) {
+      try {
+        list = JSON.parse(raw);
+      } catch {
+        list = DEFAULT_COMPANIES;
+      }
     }
-    const parsed = JSON.parse(raw);
-    if (!parsed.some((c: any) => c.code?.toUpperCase() === 'CIRTICARE01' || c.name?.toLowerCase() === 'cirti care')) {
-      parsed.unshift(DEFAULT_COMPANIES[0]);
-      localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(parsed));
+    if (!list.some((c: any) => c.code?.toUpperCase() === 'CIRTICARE01' || c.name?.toLowerCase() === 'cirti care')) {
+      list.unshift(DEFAULT_COMPANIES[0]);
     }
-    return parsed;
+    // Normalize logoUrl and avatar for all companies
+    const normalized = list.map(c => {
+      const logo = c.logoUrl || c.avatar || '';
+      return {
+        ...c,
+        logoUrl: logo,
+        avatar: logo || 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
+      };
+    });
+    localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(normalized));
+    return normalized;
   } catch {
     return DEFAULT_COMPANIES;
   }
@@ -400,13 +436,18 @@ export const createCompany = async (compInput: Partial<Company>): Promise<{ succ
 
   if (CLOUDFLARE_API_URL) {
     try {
-      await fetch(`${CLOUDFLARE_API_URL}/api/companies`, {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/companies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCompany)
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        return { success: false, error: errData.error || 'Credential save failed: database rejected the request' };
+      }
     } catch (e) {
       console.warn(e);
+      return { success: false, error: 'Credential save failed: could not reach database server' };
     }
   }
 
@@ -417,7 +458,12 @@ export const createCompany = async (compInput: Partial<Company>): Promise<{ succ
 
 export const updateCompanyLogo = async (companyId: string, logoUrl: string): Promise<boolean> => {
   const companies = getStoredCompanies();
-  const idx = companies.findIndex(c => c.id === companyId || c.code === companyId);
+  const searchId = (companyId || '').trim().toLowerCase();
+  const idx = companies.findIndex(c => 
+    (c.id && c.id.toLowerCase() === searchId) || 
+    (c.code && c.code.toLowerCase() === searchId) ||
+    (c.name && c.name.toLowerCase() === searchId)
+  );
   if (idx !== -1) {
     companies[idx].avatar = logoUrl;
     companies[idx].logoUrl = logoUrl;
@@ -426,7 +472,7 @@ export const updateCompanyLogo = async (companyId: string, logoUrl: string): Pro
 
   if (CLOUDFLARE_API_URL) {
     try {
-      await fetch(`${CLOUDFLARE_API_URL}/api/companies/${companyId}/logo`, {
+      await fetch(`${CLOUDFLARE_API_URL}/api/companies/${encodeURIComponent(companyId)}/logo`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ logoUrl })
@@ -447,7 +493,7 @@ export const fetchCompanies = async (): Promise<Company[]> => {
         if (Array.isArray(data.companies) && data.companies.length > 0) {
           const stored = getStoredCompanies();
           data.companies.forEach((rc: any) => {
-            const idx = stored.findIndex(c => c.id === rc.id || c.code === rc.code);
+            const idx = stored.findIndex(c => c.id === rc.id || c.code === rc.code || c.name?.toLowerCase() === rc.name?.toLowerCase());
             if (idx !== -1) {
               if (rc.logo_url) {
                 stored[idx].logoUrl = rc.logo_url;
@@ -467,7 +513,7 @@ export const fetchCompanies = async (): Promise<Company[]> => {
                 email: rc.email || '',
                 phone: rc.phone || '',
                 activeSystemsCount: 1,
-                logoUrl: rc.logo_url,
+                logoUrl: rc.logo_url || '',
                 avatar: rc.logo_url || 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
               });
             }
@@ -710,6 +756,7 @@ export const createTask = async (taskInput: Partial<Task>): Promise<{ success: b
         const tasks = getStoredTasks();
         tasks.unshift(data.task || newTask);
         saveTasks(tasks);
+        invalidateTaskCache();
         return { success: true, task: data.task || newTask };
       }
     } catch (e) {
@@ -806,7 +853,200 @@ export const deleteTask = async (taskId: string): Promise<boolean> => {
 };
 
 export const getCompanies = (): Company[] => getStoredCompanies();
-export const getEmployees = (): Employee[] => DEFAULT_EMPLOYEES;
+
+export const getStoredEmployees = (): Employee[] => {
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return DEFAULT_EMPLOYEES;
+    }
+    const raw = localStorage.getItem(STORAGE_KEYS.EMPLOYEES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(DEFAULT_EMPLOYEES));
+      return DEFAULT_EMPLOYEES;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_EMPLOYEES;
+  } catch {
+    return DEFAULT_EMPLOYEES;
+  }
+};
+
+export const saveEmployees = (emps: Employee[]): void => {
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(emps));
+  } catch (e) {
+    console.error('Failed to save employees to localStorage', e);
+  }
+};
+
+export const createEmployee = async (empInput: {
+  name: string;
+  role: string;
+  designation?: string;
+  phone?: string;
+  email?: string;
+  avatar?: string;
+}): Promise<{ success: boolean; employee?: Employee; error?: string }> => {
+  if (!empInput.name.trim()) {
+    return { success: false, error: 'Employee name is required' };
+  }
+
+  const employees = getStoredEmployees();
+  const avatarUrl = empInput.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(empInput.name)}&background=EA552E&color=fff&bold=true`;
+  const empId = `emp_${Date.now()}`;
+  const now = new Date().toISOString();
+  const desig = empInput.designation?.trim() || empInput.role.trim() || 'Systems Support Engineer';
+
+  const newEmp: Employee = {
+    id: empId,
+    name: empInput.name.trim(),
+    role: empInput.role.trim() || 'employee',
+    designation: desig,
+    phone: empInput.phone?.trim() || '',
+    email: empInput.email?.trim() || `${empInput.name.toLowerCase().replace(/\s+/g, '.')}@zentrixs.com`,
+    avatar: avatarUrl,
+    activeTasksCount: 0,
+    createdAt: now
+  };
+
+  // Persist directly into Cloudflare D1 'users' table
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: empId,
+          name: newEmp.name,
+          username: newEmp.phone || newEmp.email || newEmp.name.toLowerCase().replace(/\s+/g, '.'),
+          idCode: `ENG-${Math.floor(100 + Math.random() * 900)}`,
+          password: newEmp.phone || 'zentrix@123',
+          role: newEmp.role,
+          designation: desig,
+          phone: newEmp.phone,
+          email: newEmp.email,
+          avatar: newEmp.avatar,
+          dpUrl: newEmp.avatar
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+      }
+    } catch (e) {
+      console.warn('Cloudflare create user in D1 failed, saving locally', e);
+    }
+  }
+
+  employees.unshift(newEmp);
+  saveEmployees(employees);
+  return { success: true, employee: newEmp };
+};
+
+export const updateEmployee = async (
+  empId: string,
+  updates: Partial<Omit<Employee, 'id'>>
+): Promise<{ success: boolean; employee?: Employee; error?: string }> => {
+  const employees = getStoredEmployees();
+  const index = employees.findIndex(e => e.id === empId);
+  if (index === -1) {
+    return { success: false, error: 'Employee not found' };
+  }
+
+  const updated: Employee = {
+    ...employees[index],
+    ...updates,
+    name: updates.name !== undefined ? updates.name.trim() : employees[index].name,
+    role: updates.role !== undefined ? updates.role.trim() : employees[index].role,
+    designation: updates.designation !== undefined ? updates.designation.trim() : (employees[index].designation || employees[index].role),
+    phone: updates.phone !== undefined ? updates.phone.trim() : employees[index].phone,
+    email: updates.email !== undefined ? updates.email.trim() : employees[index].email,
+    avatar: updates.avatar !== undefined ? updates.avatar : employees[index].avatar
+  };
+
+  // Update in Cloudflare D1 'users' table
+  if (CLOUDFLARE_API_URL) {
+    try {
+      await fetch(`${CLOUDFLARE_API_URL}/api/users/${empId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: updated.name,
+          role: updated.role,
+          designation: updated.designation,
+          username: updated.phone || updated.email,
+          phone: updated.phone,
+          email: updated.email,
+          avatar: updated.avatar,
+          dpUrl: updated.avatar
+        })
+      });
+    } catch (e) {
+      console.warn('Cloudflare update user failed, updated locally', e);
+    }
+  }
+
+  employees[index] = updated;
+  saveEmployees(employees);
+  return { success: true, employee: updated };
+};
+
+export const deleteEmployee = async (empId: string): Promise<boolean> => {
+  if (CLOUDFLARE_API_URL) {
+    try {
+      await fetch(`${CLOUDFLARE_API_URL}/api/users/${empId}`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Cloudflare delete user failed, deleting locally', e);
+    }
+  }
+  const employees = getStoredEmployees();
+  const filtered = employees.filter(e => e.id !== empId);
+  saveEmployees(filtered);
+  return true;
+};
+
+export const fetchEmployees = async (): Promise<Employee[]> => {
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/users`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.users) && data.users.length > 0) {
+          const stored = getStoredEmployees();
+          data.users.forEach((u: any) => {
+            const idx = stored.findIndex(e => e.id === u.id || (e.name && e.name.toLowerCase() === u.name.toLowerCase()));
+            if (idx !== -1) {
+              stored[idx].name = u.name;
+              stored[idx].role = u.role || stored[idx].role;
+              if (u.phone) stored[idx].phone = u.phone;
+              if (u.email) stored[idx].email = u.email;
+              if (u.avatar) stored[idx].avatar = u.avatar;
+            } else {
+              stored.unshift({
+                id: u.id,
+                name: u.name,
+                role: u.role || 'Support Engineer',
+                phone: u.phone || (u.username && /^[0-9+ ]+$/.test(u.username) ? u.username : ''),
+                email: u.email || (u.username && u.username.includes('@') ? u.username : `${u.name.toLowerCase().replace(/\s+/g, '.')}@zentrixs.com`),
+                avatar: u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=EA552E&color=fff&bold=true`,
+                activeTasksCount: 0,
+                createdAt: u.createdAt || new Date().toISOString()
+              });
+            }
+          });
+          saveEmployees(stored);
+          return stored;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to sync users from D1, using local', e);
+    }
+  }
+  return getStoredEmployees();
+};
+
+export const getEmployees = (): Employee[] => getStoredEmployees();
+
 export const getSystemsForCompany = (companyId?: string): SystemItem[] => {
   if (!companyId) return SYSTEM_LIST;
   return SYSTEM_LIST.filter(s => s.companyId === companyId);
