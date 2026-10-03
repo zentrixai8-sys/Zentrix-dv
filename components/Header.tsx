@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Lock, LogOut } from 'lucide-react';
-import { NAV_ITEMS, COMPANY_NAME, LOGO_URL } from '../constants';
+import { Lock, LogOut, ArrowUpRight, MessageCircle, Phone, Sparkles } from 'lucide-react';
+import { NAV_ITEMS, COMPANY_NAME, LOGO_URL, AI_BOT_NUMBER, PHONE_NUMBER } from '../constants';
 import LoginModal from './LoginModal';
 
 interface HeaderProps {
@@ -13,6 +13,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const navigate = useNavigate();
@@ -25,6 +26,23 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuc
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Lock body scroll when overlay is open & support Escape key
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsOpen(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isOpen]);
 
   const handleNavClick = (href: string) => {
     setIsOpen(false);
@@ -46,166 +64,261 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuc
     }
   };
 
+  const menuItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Services', href: '/services' },
+    { label: 'About Us', href: '/about' },
+    { label: 'Blog & Insights', href: '/blog' },
+    { label: 'Contact', href: '/contact' },
+    ...(isLoggedIn
+      ? [{ label: userRole === 'company' ? 'Company Dashboard' : 'Admin Console', href: '/dashboard' }]
+      : [{ label: 'Client Portal Login', href: '#login', isLoginTrigger: true }]),
+    { label: 'Book Live Demo', href: '/contact', isCta: true }
+  ];
+
   return (
     <>
-      <nav aria-label="Main Navigation" className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-black/95 backdrop-blur-xl py-3 border-b border-white/5' : 'bg-transparent py-4'}`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            {/* Logo Section */}
-            <Link
-              to="/"
-              className="flex items-center gap-4 cursor-pointer group"
-              onClick={() => {
-                if (location.pathname === '/') {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              aria-label={`${COMPANY_NAME} Home`}
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
-                <div className="relative w-12 h-12 overflow-hidden rounded-xl border border-white/10 group-hover:scale-105 transition-transform bg-zinc-900 flex items-center justify-center">
-                  <img
-                    src={LOGO_URL}
-                    alt={`${COMPANY_NAME} - Business Automation & AI Agents Logo`}
-                    width="48"
-                    height="48"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    className="w-full h-full object-contain p-2"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d47353039331e11a6839.svg";
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-[0.3em] text-white uppercase group-hover:text-blue-400 transition-colors">
-                  ZEN<span className="font-extralight text-blue-500">TRIXS</span>
-                </span>
-                <span className="text-[8px] text-gray-500 font-bold uppercase tracking-[0.5em] mt-[-2px] group-hover:text-gray-300 transition-colors">
-                  Automation
-                </span>
-              </div>
-            </Link>
-
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center space-x-12">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  onClick={() => handleNavClick(item.href)}
-                  className={`transition-all font-bold text-xs tracking-[0.2em] uppercase hover:scale-105 active:scale-95 ${
-                    location.pathname === item.href ? 'text-blue-400' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              <div className="flex items-center gap-6 border-l border-white/10 pl-12">
-                {isLoggedIn ? (
-                  <div className="flex items-center gap-3">
-                    <Link
-                      to="/dashboard"
-                      className="px-4 py-2 bg-blue-600/20 text-cyan-400 border border-blue-500/30 rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-blue-600 hover:text-white transition-all"
-                    >
-                      {userRole === 'company' ? 'Company Portal' : 'Admin Console'}
-                    </Link>
-                    <button
-                      onClick={onLogout}
-                      className="flex items-center gap-2 text-red-500 hover:text-red-400 text-[10px] font-black tracking-widest uppercase"
-                    >
-                      <LogOut className="w-4 h-4" /> Disconnect
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowLogin(true)}
-                    className="p-3 glass rounded-xl text-blue-500 hover:text-white hover:bg-blue-600 transition-all border-white/10"
-                    title="Company & Admin Portal Login"
-                    aria-label="Portal Login"
-                  >
-                    <Lock className="w-4 h-4" />
-                  </button>
-                )}
-
-                <Link
-                  to="/contact"
-                  className="px-8 py-3 rounded-xl text-xs font-black tracking-widest text-white bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:scale-105 active:scale-95 uppercase"
-                >
-                  Book Demo
-                </Link>
-              </div>
+      {/* Top Floating Glass Header Bar */}
+      <header className="fixed top-0 inset-x-0 z-50 px-4 sm:px-6 lg:px-8 pt-4 pointer-events-none">
+        <div 
+          className={`max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-7 py-3 rounded-full transition-all duration-500 pointer-events-auto border ${
+            scrolled 
+              ? 'bg-[#080a0f]/85 border-cyan-500/20 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)]' 
+              : 'bg-black/50 border-white/10 backdrop-blur-xl shadow-2xl'
+          }`}
+        >
+          {/* Brand Logo */}
+          <Link
+            to="/"
+            onClick={() => {
+              if (location.pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            className="flex items-center gap-3.5 group cursor-pointer"
+            aria-label={`${COMPANY_NAME} Home`}
+          >
+            <div className="relative w-10 h-10 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-cyan-500/50 group-hover:scale-105 transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+              <img
+                src={LOGO_URL}
+                alt={COMPANY_NAME}
+                className="w-full h-full object-contain p-1.5"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://i.ibb.co/P2msKBd/Logo.png";
+                }}
+              />
             </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-black tracking-[0.25em] text-white uppercase group-hover:text-cyan-400 transition-colors">
+                ZEN<span className="font-light text-cyan-400">TRIXS</span>
+              </span>
+              <span className="text-[7px] text-zinc-400 font-mono font-bold uppercase tracking-[0.45em] -mt-1">
+                Automation
+              </span>
+            </div>
+          </Link>
 
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden text-gray-400 p-2 hover:text-white transition-colors"
-              aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
-              aria-expanded={isOpen}
-            >
-              {isOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Nav */}
-        <div className={`md:hidden absolute top-full left-0 w-full bg-black z-[10000] border-b border-white/5 transition-all duration-500 overflow-hidden shadow-2xl ${isOpen ? 'max-h-[100vh] opacity-100 py-10' : 'max-h-0 opacity-0'}`}>
-          <div className="px-8 space-y-8">
+          {/* Desktop Links */}
+          <div className="hidden lg:flex items-center space-x-9">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
-                className="block w-full text-left text-3xl font-black text-gray-500 hover:text-blue-500 uppercase tracking-tighter transition-colors"
                 onClick={() => handleNavClick(item.href)}
+                className={`transition-all font-semibold text-xs tracking-[0.18em] uppercase hover:text-cyan-400 hover:scale-105 active:scale-95 ${
+                  location.pathname === item.href ? 'text-cyan-400 font-bold' : 'text-zinc-300'
+                }`}
               >
                 {item.label}
               </Link>
             ))}
-            {isLoggedIn ? (
-              <div className="space-y-4">
-                <Link
-                  to="/dashboard"
-                  onClick={() => setIsOpen(false)}
-                  className="block text-center w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest"
-                >
-                  {userRole === 'company' ? 'Go To Company Portal' : 'Go To Admin Console'}
-                </Link>
+          </div>
+
+          {/* Right Action Icons & Morphing Menu Button */}
+          <div className="flex items-center gap-3.5">
+            {/* Direct Login / Dashboard Icon on Desktop */}
+            <div className="hidden sm:flex items-center">
+              {isLoggedIn ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/dashboard"
+                    className="px-3.5 py-1.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase hover:bg-cyan-500 hover:text-black transition-all"
+                  >
+                    {userRole === 'company' ? 'Portal' : 'Admin'}
+                  </Link>
+                  <button
+                    onClick={onLogout}
+                    className="p-2 text-zinc-400 hover:text-red-400 transition-colors"
+                    title="Disconnect Session"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={() => {
-                    onLogout();
-                    setIsOpen(false);
-                  }}
-                  className="w-full py-3 text-red-500 border border-red-500/30 rounded-2xl font-bold uppercase tracking-wider"
+                  onClick={() => setShowLogin(true)}
+                  className="p-2.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 hover:text-cyan-400 hover:border-cyan-500/40 hover:bg-cyan-500/10 transition-all shadow-md"
+                  title="Client Portal Login"
+                  aria-label="Login to Client Portal"
                 >
-                  Disconnect
+                  <Lock className="w-4 h-4" />
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setShowLogin(true);
-                  setIsOpen(false);
-                }}
-                className="w-full py-4 glass text-blue-500 rounded-2xl font-black uppercase tracking-widest"
-              >
-                Portal Login (Company / Admin)
-              </button>
-            )}
+              )}
+            </div>
+
+            {/* Book Demo CTA Button */}
             <Link
               to="/contact"
-              onClick={() => setIsOpen(false)}
-              className="block text-center w-full py-6 bg-blue-600 text-white rounded-2xl font-black text-xl tracking-widest uppercase shadow-2xl"
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-mono font-bold tracking-widest uppercase text-black bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 active:scale-95 transition-all"
             >
-              Get Started
+              <span>Book Demo</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
+
+            {/* Motion Overlay Menu Button (Two-Phase Morph Hamburger) */}
+            <button
+              type="button"
+              onClick={() => setIsOpen(prev => !prev)}
+              aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
+              aria-expanded={isOpen}
+              className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+            >
+              <span className="text-[11px] font-mono font-bold tracking-widest uppercase text-zinc-300">
+                {isOpen ? 'Close' : 'Menu'}
+              </span>
+              
+              {/* Morphing Lines Container */}
+              <div className="w-5 h-4 flex flex-col justify-between items-end relative">
+                <span 
+                  className={`h-0.5 bg-cyan-400 rounded-full transition-all duration-300 ${
+                    isOpen ? 'w-5 translate-y-[7px] rotate-45' : 'w-5'
+                  }`} 
+                />
+                <span 
+                  className={`h-0.5 bg-cyan-400 rounded-full transition-all duration-300 ${
+                    isOpen ? 'w-5 -translate-y-[7px] -rotate-45' : 'w-3.5'
+                  }`} 
+                />
+              </div>
+            </button>
           </div>
         </div>
-      </nav>
+      </header>
 
+      {/* FULLSCREEN MOTION OVERLAY MENU */}
+      <div 
+        className={`fixed inset-0 z-40 bg-[#07090e]/95 backdrop-blur-2xl transition-all duration-700 flex flex-col justify-between p-6 sm:p-12 md:p-16 ${
+          isOpen 
+            ? 'opacity-100 pointer-events-auto scale-100' 
+            : 'opacity-0 pointer-events-none scale-95'
+        }`}
+        style={{
+          clipPath: isOpen ? 'circle(150% at calc(100% - 60px) 40px)' : 'circle(0% at calc(100% - 60px) 40px)'
+        }}
+      >
+        {/* Ambient Top Spotlight */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
+
+        {/* Top spacer for header bar */}
+        <div className="h-16 shrink-0" />
+
+        {/* Main Navigation Links with Stagger, Numbers & Hover Shift Dimming */}
+        <nav className="flex-1 flex flex-col justify-center max-w-5xl mx-auto w-full my-auto">
+          <ul className="space-y-3 sm:space-y-4">
+            {menuItems.map((item, index) => {
+              const isHovered = hoveredIndex === index;
+              const isDimmed = hoveredIndex !== null && !isHovered;
+
+              return (
+                <li
+                  key={item.label}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  className="transition-all duration-300"
+                  style={{
+                    transform: isHovered ? 'translateX(18px)' : 'translateX(0)',
+                    opacity: isDimmed ? 0.3 : 1
+                  }}
+                >
+                  {item.isLoginTrigger ? (
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        setShowLogin(true);
+                      }}
+                      className="inline-flex items-baseline gap-4 text-left group cursor-pointer text-white"
+                    >
+                      <span className="font-mono text-xs sm:text-sm text-cyan-400 font-bold tabular-nums">
+                        0{index + 1}
+                      </span>
+                      <span className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight group-hover:text-cyan-300 transition-colors">
+                        {item.label}
+                      </span>
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.href}
+                      onClick={() => handleNavClick(item.href)}
+                      className="inline-flex items-baseline gap-4 group cursor-pointer text-white"
+                    >
+                      <span className="font-mono text-xs sm:text-sm text-cyan-400 font-bold tabular-nums">
+                        0{index + 1}
+                      </span>
+                      <span className={`text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight transition-colors ${
+                        item.isCta 
+                          ? 'bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent group-hover:brightness-125' 
+                          : 'group-hover:text-cyan-300'
+                      }`}>
+                        {item.label}
+                      </span>
+                      {item.isCta && (
+                        <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      )}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Bottom Secondary Links & Contact Ribbon */}
+        <div className="relative z-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6 max-w-5xl mx-auto w-full text-xs font-mono text-zinc-400">
+          <div className="flex items-center gap-6">
+            <a
+              href={`https://wa.me/91${AI_BOT_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-400" />
+              <span>WhatsApp AI (+91 {AI_BOT_NUMBER})</span>
+            </a>
+            <a
+              href={`tel:${PHONE_NUMBER}`}
+              className="hidden md:flex items-center gap-2 hover:text-cyan-400 transition-colors"
+            >
+              <Phone className="w-4 h-4 text-cyan-400" />
+              <span>Call Direct</span>
+            </a>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Link
+              to="/privacy-policy"
+              onClick={() => setIsOpen(false)}
+              className="hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-zinc-600">&bull;</span>
+            <span className="text-zinc-500">&copy; 2026 Zentrixs Automation</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Login Modal */}
       {showLogin && (
         <LoginModal
           onClose={() => setShowLogin(false)}
