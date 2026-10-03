@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, ArrowRight, Bot, MapPin } from 'lucide-react';
+import { Mail, Phone, ArrowRight, Bot, MapPin, Cookie } from 'lucide-react';
+import { openCookieModal } from './CookieConsentModal';
 import {
   COMPANY_NAME,
   TAGLINE,
@@ -110,10 +111,9 @@ const Footer: React.FC = () => {
                     alt={`${COMPANY_NAME} Logo`}
                     width="40"
                     height="40"
-                    loading="lazy"
-                    className="w-10 h-10 object-contain transition-opacity duration-500"
-                    onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
-                    onError={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
+                    loading="eager"
+                    decoding="async"
+                    className="w-10 h-10 object-contain"
                   />
                 </div>
               </div>
@@ -290,11 +290,33 @@ const Footer: React.FC = () => {
 
         </div>
 
-        <div className="pt-10 border-t border-white/[0.05] flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-500 font-medium">
-          <p>&copy; {new Date().getFullYear()} <strong className="text-white font-semibold">{COMPANY_NAME} CORE</strong>. All rights reserved. Registered in {CITY}, {STATE}, India.</p>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Systems Online &bull; Raipur Support Active</span>
+        <div className="pt-8 border-t border-white/[0.05] flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-500 font-medium">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <p>&copy; {new Date().getFullYear()} <strong className="text-white font-semibold">{COMPANY_NAME}</strong>. All rights reserved. Registered in {CITY}, {STATE}, India.</p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
+            <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-zinc-700">•</span>
+            <Link to="/privacy-policy#terms" className="text-gray-400 hover:text-white transition-colors">
+              Terms of Service
+            </Link>
+            <span className="text-zinc-700">•</span>
+            <button
+              onClick={openCookieModal}
+              className="text-cyan-400/90 hover:text-cyan-300 transition-colors flex items-center gap-1.5 cursor-pointer group"
+              title="Manage Cookie Preferences"
+            >
+              <Cookie className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
+              <span>Cookie Preferences</span>
+            </button>
+            <span className="text-zinc-700 hidden sm:inline">•</span>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Systems Active</span>
+            </div>
           </div>
         </div>
       </div>

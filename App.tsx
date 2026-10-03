@@ -8,7 +8,7 @@ import ProblemSolution from './components/ProblemSolution';
 import MissionVision from './components/MissionVision';
 import ServicesSection from './components/ServicesSection';
 import AIConsultant from './components/AIConsultant';
-import TestimonialsSection from './components/TestimonialsSection';
+import { ClientLogosSection, ClientFeedbackSection } from './components/TestimonialsSection';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
@@ -25,6 +25,7 @@ import TechStackSection from './components/TechStackSection';
 import CEOMessage from './components/CEOMessage';
 import SEOHead from './components/SEOHead';
 import EcosystemSection from './components/EcosystemSection';
+import CookieConsentModal from './components/CookieConsentModal';
 import { PHONE_NUMBER, AI_BOT_NUMBER } from './constants';
 import { MessageCircle, Phone, ChevronUp } from 'lucide-react';
 
@@ -78,16 +79,15 @@ export const LandingPage = () => {
   return (
     <>
       <Hero />
+      <ClientLogosSection />
+      <TechStackSection />
+      <EcosystemSection />
       <OffersSection />
       <ProblemSolution />
       <MissionVision />
-
-      <EcosystemSection />
-
       <ServicesSection />
-      <TechStackSection />
       <AIConsultant />
-      <TestimonialsSection />
+      <ClientFeedbackSection />
       <CEOMessage />
       <ContactSection />
 
@@ -215,6 +215,7 @@ export const AppContent: React.FC = () => {
         <Route path="*" element={<LandingPage />} />
       </Routes>
 
+      <CookieConsentModal />
       {!isDashboardRoute && <Footer />}
     </div>
   );

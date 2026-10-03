@@ -91,8 +91,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'contact@popularpaints.com',
     phone: '+91 98234 56789',
     activeSystemsCount: 4,
-    avatar: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=100&auto=format&fit=crop&q=60',
-    logoUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=100&auto=format&fit=crop&q=60'
+    avatar: '/logos/popular-paints.png',
+    logoUrl: '/logos/popular-paints.png'
   },
   {
     id: 'comp_avinash',
@@ -103,8 +103,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'admin@avinashgroup.com',
     phone: '+91 98980 12345',
     activeSystemsCount: 5,
-    avatar: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=60',
-    logoUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&auto=format&fit=crop&q=60'
+    avatar: '/logos/avinash-group.jpg',
+    logoUrl: '/logos/avinash-group.jpg'
   },
   {
     id: 'comp_pratap',
@@ -115,8 +115,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'support@prataptechno.com',
     phone: '+91 98123 45670',
     activeSystemsCount: 3,
-    avatar: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=100&auto=format&fit=crop&q=60',
-    logoUrl: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=100&auto=format&fit=crop&q=60'
+    avatar: '/logos/pratap-technocrats.png',
+    logoUrl: '/logos/pratap-technocrats.png'
   }
 ];
 

@@ -47,7 +47,7 @@ const getDynamicValue = (obj: any, possibleKeys: string[]) => {
 export const DEFAULT_TESTIMONIALS = [
   {
     name: "POPULAR PAINTS",
-    logo: "https://i.ibb.co/Vp3MfZvL/popular-paints-logo-white-og.png",
+    logo: "/logos/popular-paints.png",
     text: "The service was smooth, efficient, and exceeded our expectations.",
     role: "Strategic Partner",
     company: "POPULAR PAINTS",
@@ -55,7 +55,7 @@ export const DEFAULT_TESTIMONIALS = [
   },
   {
     name: "AVINASH GROUP",
-    logo: "https://i.ibb.co/PsNGkTX7/download.jpg",
+    logo: "/logos/avinash-group.jpg",
     text: "Very satisfied with the service and support. The team goes above and beyond to help.",
     role: "Strategic Partner",
     company: "AVINASH GROUP",
@@ -63,7 +63,7 @@ export const DEFAULT_TESTIMONIALS = [
   },
   {
     name: "MAHAVEER HAIR SOLUTION",
-    logo: "https://i.ibb.co/rfK0BQ81/download.png",
+    logo: "/logos/mahaveer-hair.png",
     text: "Innovative solutions with reliable execution. Their technical expertise is top-notch.",
     role: "Strategic Partner",
     company: "MAHAVEER HAIR SOLUTION",
@@ -71,7 +71,7 @@ export const DEFAULT_TESTIMONIALS = [
   },
   {
     name: "PRATAP TECHNOCRATS PVT.LTD",
-    logo: "https://i.ibb.co/pjWNbZ9Y/1910e78d-5a7d-4548-9792-e4d54c13b485.png",
+    logo: "/logos/pratap-technocrats.png",
     text: "Zentrix Web App saved me 2 hours daily! Bookings automated perfectly. Highly recommend!",
     role: "Strategic Partner",
     company: "PRATAP TECHNOCRATS PVT.LTD",

@@ -224,11 +224,11 @@ body::before {
 .precision-scrollbar::-webkit-scrollbar-thumb { background: #111; }
 .precision-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-img {
+img.lazy-fade {
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
 }
 
-img.loaded {
+img.lazy-fade.loaded {
   opacity: 1;
 }

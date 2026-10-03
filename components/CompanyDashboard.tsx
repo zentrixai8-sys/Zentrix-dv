@@ -309,7 +309,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               <div className={`w-11 h-11 rounded-2xl p-1.5 flex items-center justify-center shrink-0 overflow-hidden border shadow-sm ${
                 isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-white/5 border-white/10'
               }`}>
-                <img src={companyLogo} alt={companyName} className="w-full h-full object-contain" onError={() => setCompanyLogoError(true)} />
+                <img src={companyLogo} alt={companyName} loading="eager" decoding="async" className="w-full h-full object-contain" onError={() => setCompanyLogoError(true)} />
               </div>
             ) : (
               <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm tracking-wide shadow-sm ${

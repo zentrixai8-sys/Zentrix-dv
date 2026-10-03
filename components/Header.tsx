@@ -70,10 +70,11 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuc
                     alt={`${COMPANY_NAME} - Business Automation & AI Agents Logo`}
                     width="48"
                     height="48"
-                    className="w-full h-full object-contain p-2 transition-opacity duration-500"
-                    onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    className="w-full h-full object-contain p-2"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).classList.add('loaded');
                       (e.target as HTMLImageElement).src = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d47353039331e11a6839.svg";
                     }}
                   />

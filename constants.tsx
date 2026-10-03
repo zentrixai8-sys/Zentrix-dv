@@ -16,7 +16,7 @@ export const GEO_COORDINATES = {
   longitude: 81.6296
 };
 export const SITE_URL = "https://www.zentrixs.in";
-export const LOGO_URL = "https://i.ibb.co/3mSM6qF6/App.png";
+export const LOGO_URL = "/logo.png";
 
 export const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/zentrix.ai8/",
