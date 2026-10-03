@@ -7,7 +7,7 @@ import OffersSection from './components/OffersSection';
 import ProblemSolution from './components/ProblemSolution';
 import MissionVision from './components/MissionVision';
 import ServicesSection from './components/ServicesSection';
-import AIConsultant from './components/AIConsultant';
+import AgentFlow from './components/AgentFlow';
 import { ClientLogosSection, ClientFeedbackSection } from './components/TestimonialsSection';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
@@ -86,7 +86,7 @@ export const LandingPage = () => {
       <ProblemSolution />
       <MissionVision />
       <ServicesSection />
-      <AIConsultant />
+      <AgentFlow />
       <ClientFeedbackSection />
       <CEOMessage />
       <ContactSection />
