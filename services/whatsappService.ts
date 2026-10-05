@@ -37,7 +37,9 @@ export interface WhatsAppLogEntry {
   messagePreview: string;
 }
 
+// Storage keys
 const STORAGE_KEY = 'zentrix_whatsapp_meta_config_v1';
+const TEMPLATES_CACHE_KEY = 'zentrix_whatsapp_templates_cache_v2';
 
 // Default / fallback configuration
 export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
@@ -50,14 +52,14 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
   testPhoneNumber: ''
 };
 
-// Default template matching user's Meta template in Screenshot 1 & 2
+// Initial 5 registered Meta templates matching live account
 export const DEFAULT_META_TEMPLATES: WhatsAppTemplate[] = [
   {
     id: 'tpl_help_ticket_001',
     name: 'help_ticket',
-    status: 'IN_REVIEW',
-    category: 'Utility',
-    language: 'English (US)',
+    status: 'APPROVED',
+    category: 'UTILITY',
+    language: 'en_US',
     bodyText: 'Hi {{1}}, thank you for contacting Zentrixs! 🙏\n\nYour support ticket {{2}} has been raised successfully.\n\nYou can check your ticket status on our website.',
     components: [
       {
@@ -70,11 +72,53 @@ export const DEFAULT_META_TEMPLATES: WhatsAppTemplate[] = [
     ]
   },
   {
-    id: 'tpl_ticket_status_002',
+    id: 'tpl_offersms_002',
+    name: 'offersms',
+    status: 'APPROVED',
+    category: 'MARKETING',
+    language: 'en_US',
+    bodyText: '🚨 "Premium Salon Upgrade - Limited Time Offer! Enjoy exclusive automation packages designed to grow your business.',
+    components: [
+      {
+        type: 'BODY',
+        text: '🚨 "Premium Salon Upgrade - Limited Time Offer! Enjoy exclusive automation packages designed to grow your business.'
+      }
+    ]
+  },
+  {
+    id: 'tpl_marketing_welcome_003',
+    name: 'marketing_welcome',
+    status: 'APPROVED',
+    category: 'MARKETING',
+    language: 'en_US',
+    bodyText: 'Hello {{1}} 🤩 Thank you for showing interest in Zentrixs Enterprise AI Solutions. Our specialist will connect with you shortly.',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Hello {{1}} 🤩 Thank you for showing interest in Zentrixs Enterprise AI Solutions. Our specialist will connect with you shortly.'
+      }
+    ]
+  },
+  {
+    id: 'tpl_welcome_for_website_004',
+    name: 'welcome_for_website',
+    status: 'APPROVED',
+    category: 'UTILITY',
+    language: 'en_US',
+    bodyText: 'HelloHello {{1}} 🤩 Thank you for visiting our website. Your request has been received by our support team.',
+    components: [
+      {
+        type: 'BODY',
+        text: 'HelloHello {{1}} 🤩 Thank you for visiting our website. Your request has been received by our support team.'
+      }
+    ]
+  },
+  {
+    id: 'tpl_ticket_update_005',
     name: 'ticket_update',
     status: 'APPROVED',
-    category: 'Utility',
-    language: 'English (US)',
+    category: 'UTILITY',
+    language: 'en_US',
     bodyText: 'Hello {{1}}, your ticket {{2}} status has been updated to {{3}}. Zentrixs engineer: {{4}}.',
     components: [
       {
@@ -84,6 +128,82 @@ export const DEFAULT_META_TEMPLATES: WhatsAppTemplate[] = [
     ]
   }
 ];
+
+// Load templates stored in Cloudflare D1 (with local cache fallback)
+export const getStoredCloudflareTemplates = async (): Promise<{ templates: WhatsAppTemplate[]; source: 'cloudflare' | 'cache' | 'default' }> => {
+  // 1. Check local cache first for instant UI response
+  let cachedList: WhatsAppTemplate[] | null = null;
+  try {
+    const raw = localStorage.getItem(TEMPLATES_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedList = parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse cached templates:', e);
+  }
+
+  // 2. Query Cloudflare D1 database
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/templates`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.templates && Array.isArray(data.templates) && data.templates.length > 0) {
+          localStorage.setItem(TEMPLATES_CACHE_KEY, JSON.stringify(data.templates));
+          return { templates: data.templates, source: 'cloudflare' };
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load templates from Cloudflare D1, using local fallback:', err);
+    }
+  }
+
+  if (cachedList && cachedList.length > 0) {
+    return { templates: cachedList, source: 'cache' };
+  }
+
+  // 3. Fallback: Seed default templates into Cloudflare D1 in background
+  if (CLOUDFLARE_API_URL) {
+    syncTemplatesToCloudflare(DEFAULT_META_TEMPLATES).catch(() => {});
+  }
+
+  return { templates: DEFAULT_META_TEMPLATES, source: 'default' };
+};
+
+// Sync / Upsert templates directly to Cloudflare D1
+export const syncTemplatesToCloudflare = async (
+  templates: WhatsAppTemplate[]
+): Promise<{ success: boolean; count: number; error?: string }> => {
+  if (!CLOUDFLARE_API_URL) {
+    localStorage.setItem(TEMPLATES_CACHE_KEY, JSON.stringify(templates));
+    return { success: true, count: templates.length };
+  }
+
+  try {
+    const res = await fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/templates/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ templates })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem(TEMPLATES_CACHE_KEY, JSON.stringify(data.templates || templates));
+      return { success: true, count: data.count || templates.length };
+    }
+    return { success: false, count: 0, error: data.error };
+  } catch (err: any) {
+    console.error('Failed to sync templates to Cloudflare D1:', err);
+    return { success: false, count: 0, error: err.message };
+  }
+};
 
 export const getWhatsAppConfig = (): WhatsAppConfig => {
   try {
@@ -96,6 +216,36 @@ export const getWhatsAppConfig = (): WhatsAppConfig => {
   }
 };
 
+export const getStoredCloudflareConfig = async (): Promise<WhatsAppConfig | null> => {
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/config`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.config && typeof data.config === 'object') {
+          const current = getWhatsAppConfig();
+          const merged: WhatsAppConfig = {
+            ...current,
+            ...data.config,
+            phoneNumberId: data.config.phoneNumberId || current.phoneNumberId || '',
+            wabaId: data.config.wabaId || current.wabaId || '',
+            accessToken: data.config.accessToken || current.accessToken || '',
+            templateName: data.config.templateName || current.templateName || 'help_ticket',
+            languageCode: data.config.languageCode || current.languageCode || 'en_US',
+            isEnabled: data.config.isEnabled !== undefined ? data.config.isEnabled : current.isEnabled,
+            testPhoneNumber: data.config.testPhoneNumber || current.testPhoneNumber || ''
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch WhatsApp config from Cloudflare D1:', e);
+    }
+  }
+  return null;
+};
+
 export const saveWhatsAppConfig = (partial: Partial<WhatsAppConfig>): WhatsAppConfig => {
   const current = getWhatsAppConfig();
   const updated: WhatsAppConfig = {
@@ -104,6 +254,18 @@ export const saveWhatsAppConfig = (partial: Partial<WhatsAppConfig>): WhatsAppCo
     lastUpdated: new Date().toISOString()
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+  // Asynchronously persist credentials & configuration to Cloudflare D1
+  if (CLOUDFLARE_API_URL) {
+    fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated)
+    }).catch((err) => {
+      console.warn('Failed to save WhatsApp config to Cloudflare D1:', err);
+    });
+  }
+
   return updated;
 };
 
@@ -160,6 +322,24 @@ export const getWhatsAppLogs = (): WhatsAppLogEntry[] => {
   }
 };
 
+export const getStoredCloudflareLogs = async (): Promise<{ success: boolean; logs: WhatsAppLogEntry[]; source: 'cloudflare' | 'local' }> => {
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/logs`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.logs && Array.isArray(data.logs) && data.logs.length > 0) {
+          localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(data.logs));
+          return { success: true, logs: data.logs, source: 'cloudflare' };
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch WhatsApp logs from Cloudflare D1, falling back to local storage:', e);
+    }
+  }
+  return { success: true, logs: getWhatsAppLogs(), source: 'local' };
+};
+
 export const addWhatsAppLog = (entry: Omit<WhatsAppLogEntry, 'id' | 'timestamp'>): WhatsAppLogEntry => {
   const current = getWhatsAppLogs();
   const newEntry: WhatsAppLogEntry = {
@@ -169,29 +349,53 @@ export const addWhatsAppLog = (entry: Omit<WhatsAppLogEntry, 'id' | 'timestamp'>
   };
   const updated = [newEntry, ...current].slice(0, 100);
   localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(updated));
+
+  // Asynchronously persist to Cloudflare D1 database
+  if (CLOUDFLARE_API_URL) {
+    fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newEntry)
+    }).catch((err) => {
+      console.warn('Failed to save WhatsApp log to Cloudflare D1:', err);
+    });
+  }
+
   return newEntry;
 };
 
 export const clearWhatsAppLogs = (): void => {
   localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify([]));
+
+  // Clear in Cloudflare D1 database as well
+  if (CLOUDFLARE_API_URL) {
+    fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/logs`, {
+      method: 'DELETE'
+    }).catch((err) => {
+      console.warn('Failed to clear WhatsApp logs in Cloudflare D1:', err);
+    });
+  }
 };
 
-// Fetch Templates from Meta Graph API (or Worker proxy)
+
+// Fetch Templates from Meta Graph API, automatically storing/updating in Cloudflare D1
 export const fetchMetaTemplates = async (
   customConfig?: WhatsAppConfig
-): Promise<{ success: boolean; templates: WhatsAppTemplate[]; error?: string; source: 'meta' | 'fallback' }> => {
+): Promise<{ success: boolean; templates: WhatsAppTemplate[]; error?: string; source: 'meta' | 'fallback' | 'cloudflare'; savedToCloudflare?: boolean }> => {
   const config = customConfig || getWhatsAppConfig();
 
   if (!config.wabaId || !config.accessToken) {
+    // If credentials missing, try loading what is already stored in Cloudflare D1
+    const stored = await getStoredCloudflareTemplates();
     return {
       success: true,
-      templates: DEFAULT_META_TEMPLATES,
-      source: 'fallback',
-      error: 'WABA ID and Meta Access Token are required to fetch live templates directly from Meta Graph API. Showing configured template.'
+      templates: stored.templates,
+      source: stored.source === 'cloudflare' ? 'cloudflare' : 'fallback',
+      error: 'WABA ID and Meta Access Token are required to fetch live templates from Meta. Serving stored templates.'
     };
   }
 
-  // 1. Try via Cloudflare Worker proxy first (bypasses browser CORS)
+  // 1. Fetch via Cloudflare Worker proxy (which automatically upserts into Cloudflare D1)
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/whatsapp/templates`, {
@@ -206,10 +410,12 @@ export const fetchMetaTemplates = async (
       if (res.ok) {
         const data = await res.json();
         if (data.templates && Array.isArray(data.templates) && data.templates.length > 0) {
+          localStorage.setItem(TEMPLATES_CACHE_KEY, JSON.stringify(data.templates));
           return {
             success: true,
             templates: data.templates,
-            source: 'meta'
+            source: 'meta',
+            savedToCloudflare: true
           };
         }
       }
@@ -235,8 +441,8 @@ export const fetchMetaTemplates = async (
         id: item.id || `tpl_${item.name}`,
         name: item.name,
         status: (item.status || 'IN_REVIEW').toUpperCase() as any,
-        category: item.category || 'Utility',
-        language: item.language || 'English (US)',
+        category: (item.category || 'UTILITY').toUpperCase(),
+        language: item.language || 'en_US',
         bodyText: bodyComp.text || 'No body text',
         components: item.components || [],
         qualityRating: item.quality_score?.score
@@ -244,25 +450,35 @@ export const fetchMetaTemplates = async (
     });
 
     if (parsedTemplates.length > 0) {
+      // Store/upsert all new templates into Cloudflare D1 immediately
+      syncTemplatesToCloudflare(parsedTemplates).catch((err) => {
+        console.warn('Background sync to Cloudflare D1 error:', err);
+      });
+      localStorage.setItem(TEMPLATES_CACHE_KEY, JSON.stringify(parsedTemplates));
+
       return {
         success: true,
         templates: parsedTemplates,
-        source: 'meta'
+        source: 'meta',
+        savedToCloudflare: true
       };
     }
   } catch (err: any) {
     console.warn('Direct Meta templates fetch failed:', err);
+    // On error, return what is stored in Cloudflare D1 / cache
+    const stored = await getStoredCloudflareTemplates();
     return {
       success: true,
-      templates: DEFAULT_META_TEMPLATES,
+      templates: stored.templates,
       source: 'fallback',
-      error: `Meta Graph API: ${err.message || 'Could not fetch live templates'}. Displaying template preview.`
+      error: `Meta Graph API: ${err.message || 'Could not fetch live templates'}. Serving stored templates.`
     };
   }
 
+  const stored = await getStoredCloudflareTemplates();
   return {
     success: true,
-    templates: DEFAULT_META_TEMPLATES,
+    templates: stored.templates,
     source: 'fallback'
   };
 };

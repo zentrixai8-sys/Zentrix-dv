@@ -413,12 +413,61 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               const comp = tasks.filter((t) => t.status === 'Completed').length;
               const compUrgent = tasks.filter((t) => t.status === 'Completed' && (t.priorityInCustomer === 'Urgent' || t.priorityInCustomer === 'High')).length;
               return [
-                { label: 'Completed Tasks', value: comp, icon: CheckCircle2, accent: 'emerald' as const, sub: 'Resolved & Live ✓', live: true, ratio: 1 },
-                { label: 'High Priority Closed', value: compUrgent, icon: AlertTriangle, accent: 'red' as const, sub: 'Critical Solved', ratio: comp ? compUrgent / comp : 0 },
-                { label: 'Total Company Tasks', value: totalTasks, icon: Layers, accent: 'cyan' as const, sub: 'All Historical', ratio: 1 },
-                { label: 'Completion Rate', value: `${totalTasks ? Math.round((comp / totalTasks) * 100) : 0}%`, icon: Zap, accent: 'blue' as const, sub: 'Resolution Rate', ratio: totalTasks ? comp / totalTasks : 0 },
-                { label: 'Still Active/Pending', value: activeTasks, icon: Clock, accent: 'amber' as const, sub: 'Ongoing Work', ratio: totalTasks ? activeTasks / totalTasks : 0 },
-                { label: 'Protected Systems', value: systems.length || 7, icon: Server, accent: 'purple' as const, sub: '100% Operational', ratio: 1 },
+                {
+                  label: 'Completed Tasks',
+                  value: comp,
+                  icon: CheckCircle2,
+                  accent: 'emerald' as const,
+                  sub: 'Resolved & Live ✓',
+                  live: true,
+                  ratio: 1,
+                  onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'High Priority Closed',
+                  value: compUrgent,
+                  icon: AlertTriangle,
+                  accent: 'red' as const,
+                  sub: 'Critical Solved',
+                  ratio: comp ? compUrgent / comp : 0,
+                  onClick: () => { setActiveTab('completed'); setPriorityFilter('High'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Total Company Tasks',
+                  value: totalTasks,
+                  icon: Layers,
+                  accent: 'cyan' as const,
+                  sub: 'All Historical',
+                  ratio: 1,
+                  onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Completion Rate',
+                  value: `${totalTasks ? Math.round((comp / totalTasks) * 100) : 0}%`,
+                  icon: Zap,
+                  accent: 'blue' as const,
+                  sub: 'Resolution Rate',
+                  ratio: totalTasks ? comp / totalTasks : 0,
+                  onClick: () => { setActiveTab('completed'); }
+                },
+                {
+                  label: 'Still Active/Pending',
+                  value: activeTasks,
+                  icon: Clock,
+                  accent: 'amber' as const,
+                  sub: 'Ongoing Work',
+                  ratio: totalTasks ? activeTasks / totalTasks : 0,
+                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Protected Systems',
+                  value: systems.length || 7,
+                  icon: Server,
+                  accent: 'purple' as const,
+                  sub: '100% Operational',
+                  ratio: 1,
+                  onClick: () => { setActiveTab('systems'); }
+                },
               ];
             }
 
@@ -428,22 +477,120 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               const inRev = tasks.filter((t) => t.status === 'In Review').length;
               const pendUrgent = tasks.filter((t) => t.status === 'Pending' && (t.priorityInCustomer === 'Urgent' || t.priorityInCustomer === 'High')).length;
               return [
-                { label: 'Pending Action', value: pend, icon: Clock, accent: 'amber' as const, sub: 'Awaiting engineer ↗', live: true, ratio: 1 },
-                { label: 'In Progress Dev', value: inProg, icon: Zap, accent: 'blue' as const, sub: 'Active Resolution', ratio: totalTasks ? inProg / totalTasks : 0 },
-                { label: 'In Review / QA', value: inRev, icon: Eye, accent: 'purple' as const, sub: 'Verification Stage', ratio: totalTasks ? inRev / totalTasks : 0 },
-                { label: 'Urgent Pending', value: pendUrgent, icon: AlertTriangle, accent: 'red' as const, sub: 'Priority Tickets', ratio: pend ? pendUrgent / pend : 0 },
-                { label: 'Completed So Far', value: completedTasks, icon: CheckCircle2, accent: 'emerald' as const, sub: 'Resolved Tickets ✓', ratio: totalTasks ? completedTasks / totalTasks : 0 },
-                { label: 'Total Raised', value: totalTasks, icon: Layers, accent: 'cyan' as const, sub: 'Lifetime Tickets', ratio: 1 },
+                {
+                  label: 'Pending Action',
+                  value: pend,
+                  icon: Clock,
+                  accent: 'amber' as const,
+                  sub: 'Awaiting engineer ↗',
+                  live: true,
+                  ratio: 1,
+                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'In Progress Dev',
+                  value: inProg,
+                  icon: Zap,
+                  accent: 'blue' as const,
+                  sub: 'Active Resolution',
+                  ratio: totalTasks ? inProg / totalTasks : 0,
+                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery('In Progress'); }
+                },
+                {
+                  label: 'In Review / QA',
+                  value: inRev,
+                  icon: Eye,
+                  accent: 'purple' as const,
+                  sub: 'Verification Stage',
+                  ratio: totalTasks ? inRev / totalTasks : 0,
+                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery('In Review'); }
+                },
+                {
+                  label: 'Urgent Pending',
+                  value: pendUrgent,
+                  icon: AlertTriangle,
+                  accent: 'red' as const,
+                  sub: 'Priority Tickets',
+                  ratio: pend ? pendUrgent / pend : 0,
+                  onClick: () => { setActiveTab('pending'); setPriorityFilter('High'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Completed So Far',
+                  value: completedTasks,
+                  icon: CheckCircle2,
+                  accent: 'emerald' as const,
+                  sub: 'Resolved Tickets ✓',
+                  ratio: totalTasks ? completedTasks / totalTasks : 0,
+                  onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Total Raised',
+                  value: totalTasks,
+                  icon: Layers,
+                  accent: 'cyan' as const,
+                  sub: 'Lifetime Tickets',
+                  ratio: 1,
+                  onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
               ];
             }
 
             return [
-              { label: 'Total Tasks', value: totalTasks, icon: Layers, accent: 'cyan' as const, sub: 'Real-time Live Sync', live: true, ratio: 1 },
-              { label: 'Active Tasks', value: activeTasks, icon: Zap, accent: 'blue' as const, sub: 'In Progress & Dev', ratio: totalTasks ? activeTasks / totalTasks : 0 },
-              { label: 'Pending', value: pendingTasks, icon: Clock, accent: 'amber' as const, sub: 'Awaiting engineer ↗', ratio: totalTasks ? pendingTasks / totalTasks : 0 },
-              { label: 'High / Urgent', value: urgentTasks, icon: AlertTriangle, accent: 'red' as const, sub: 'Priority tickets', ratio: totalTasks ? urgentTasks / totalTasks : 0 },
-              { label: 'Completed', value: completedTasks, icon: CheckCircle2, accent: 'emerald' as const, sub: 'Verified & Live ✓', ratio: totalTasks ? completedTasks / totalTasks : 0 },
-              { label: 'Connected Systems', value: systems.length || 7, icon: Server, accent: 'purple' as const, sub: '100% Operational', ratio: 1 },
+              {
+                label: 'Total Tasks',
+                value: totalTasks,
+                icon: Layers,
+                accent: 'cyan' as const,
+                sub: 'Real-time Live Sync',
+                live: true,
+                ratio: 1,
+                onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
+              },
+              {
+                label: 'Active Tasks',
+                value: activeTasks,
+                icon: Zap,
+                accent: 'blue' as const,
+                sub: 'In Progress & Dev',
+                ratio: totalTasks ? activeTasks / totalTasks : 0,
+                onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+              },
+              {
+                label: 'Pending',
+                value: pendingTasks,
+                icon: Clock,
+                accent: 'amber' as const,
+                sub: 'Awaiting engineer ↗',
+                ratio: totalTasks ? pendingTasks / totalTasks : 0,
+                onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+              },
+              {
+                label: 'High / Urgent',
+                value: urgentTasks,
+                icon: AlertTriangle,
+                accent: 'red' as const,
+                sub: 'Priority tickets',
+                ratio: totalTasks ? urgentTasks / totalTasks : 0,
+                onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('High'); setSearchQuery(''); }
+              },
+              {
+                label: 'Completed',
+                value: completedTasks,
+                icon: CheckCircle2,
+                accent: 'emerald' as const,
+                sub: 'Verified & Live ✓',
+                ratio: totalTasks ? completedTasks / totalTasks : 0,
+                onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
+              },
+              {
+                label: 'Connected Systems',
+                value: systems.length || 7,
+                icon: Server,
+                accent: 'purple' as const,
+                sub: '100% Operational',
+                ratio: 1,
+                onClick: () => { setActiveTab('systems'); }
+              },
             ];
           })().map((tile, idx) => {
             const palette: Record<string, { rgb: string; iconGrad: string; meterLight: string; meterDark: string; numLight: string; numDark: string; subLight: string; subDark: string; ring: string }> = {
@@ -459,10 +606,20 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
             return (
               <div
                 key={tile.label}
-                className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ring-1 ring-transparent ${p.ring} ${
+                role="button"
+                tabIndex={0}
+                onClick={tile.onClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    tile.onClick?.();
+                  }
+                }}
+                className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 active:scale-[0.98] cursor-pointer select-none ring-1 ring-transparent ${p.ring} ${
                   isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
                 }`}
                 style={{ animationDelay: `${idx * 0.05}s` }}
+                title={`Click to view ${tile.label}`}
               >
                 {/* Radial accent glow */}
                 <div
@@ -473,7 +630,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 <div className="relative flex items-start justify-between mb-3">
                   <div className={`text-[10px] font-bold uppercase tracking-widest pt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{tile.label}</div>
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 shadow-md`}
                     style={{ boxShadow: `0 6px 16px rgba(${p.rgb},${isLight ? 0.35 : 0.45})` }}
                   >
                     <Icon className="w-4 h-4" />
@@ -1121,52 +1278,52 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
       {/* TICKET DETAILS MODAL */}
       {viewingTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-md">
-          <div className="w-full max-w-xl bg-[#0F172A] border border-white/20 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-6 ${isLight ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/85 backdrop-blur-md'}`}>
+          <div className={`w-full max-w-xl rounded-3xl p-6 md:p-8 space-y-6 border transition-all ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_20px_50px_rgba(0,0,0,0.15)] text-[#2A2118]' : 'bg-[#0F172A] border-white/20 shadow-2xl text-white'}`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div>
-                <span className="font-mono text-cyan-400 font-bold text-sm">{viewingTask.ticketNumber}</span>
-                <h3 className="text-lg font-bold text-white mt-1">{viewingTask.systemName}</h3>
+                <span className={`font-mono font-bold text-sm ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{viewingTask.ticketNumber}</span>
+                <h3 className={`text-lg font-bold mt-1 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.systemName}</h3>
               </div>
               <button
                 onClick={() => setViewingTask(null)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-2"
+                className={`text-lg font-bold p-2 transition-colors ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
               >
                 &times;
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-slate-400">Type of Work:</span>
-                <div className="text-white font-bold">{viewingTask.typeOfWork}</div>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Type of Work:</span>
+                <div className={`font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.typeOfWork}</div>
               </div>
-              <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-slate-400">Raised By:</span>
-                <div className="text-white font-bold">{viewingTask.personName}</div>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Raised By:</span>
+                <div className={`font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.personName}</div>
               </div>
-              <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-slate-400">Assigned Engineer:</span>
-                <div className="text-cyan-400 font-bold">{viewingTask.assignedTo || 'Assigning...'}</div>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Assigned Engineer:</span>
+                <div className={`font-bold mt-0.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{viewingTask.assignedTo || 'Assigning...'}</div>
               </div>
-              <div className="bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-slate-400">Target Resolution:</span>
-                <div className="text-white font-bold font-mono">{viewingTask.expectedDateToClose}</div>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Target Resolution:</span>
+                <div className={`font-bold font-mono mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.expectedDateToClose}</div>
               </div>
             </div>
 
             <div>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Description</span>
-              <div className="bg-black/50 p-4 rounded-2xl border border-white/10 text-xs text-slate-200 leading-relaxed max-h-40 overflow-y-auto">
+              <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Description</span>
+              <div className={`p-4 rounded-2xl border text-xs leading-relaxed max-h-40 overflow-y-auto ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#2A2118]' : 'bg-black/50 border-white/10 text-slate-200'}`}>
                 {viewingTask.descriptionOfWork}
               </div>
             </div>
 
             <div>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Internal Notes & Status</span>
-              <div className="bg-black/40 p-3 rounded-xl border border-white/5 text-xs text-slate-300 flex items-center justify-between">
+              <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Internal Notes & Status</span>
+              <div className={`p-3 rounded-xl border text-xs flex items-center justify-between ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#5C5244]' : 'bg-black/40 border-white/5 text-slate-300'}`}>
                 <span>{viewingTask.notes || 'Under review by Zentrixs engineering team.'}</span>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/20 text-cyan-400 border border-cyan-500/30">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-500/20 text-cyan-400 border-cyan-500/30'}`}>
                   {viewingTask.status}
                 </span>
               </div>
@@ -1174,17 +1331,17 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
             {viewingTask.uploadFileUrl && (
               <div>
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Cloudinary Attachment</span>
-                <div className="bg-cyan-950/30 border border-cyan-500/30 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Cloudinary Attachment</span>
+                <div className={`rounded-2xl p-4 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
+                    <div className={`p-2.5 rounded-xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
                       <Paperclip className="w-4 h-4" />
                     </div>
                     <div className="overflow-hidden">
-                      <div className="text-xs font-bold text-white truncate font-mono">
+                      <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
                         {viewingTask.uploadFileName || 'Uploaded File'}
                       </div>
-                      <div className="text-[10px] text-cyan-400 truncate">
+                      <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
                         Stored in Cloudinary (dfbllmnld / zentrixs)
                       </div>
                     </div>
@@ -1193,7 +1350,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                     href={viewingTask.uploadFileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-cyan-500/20 shrink-0 flex items-center gap-1.5"
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-md shadow-cyan-500/20'}`}
                   >
                     <span>View / Download</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -1202,10 +1359,10 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               </div>
             )}
 
-            <div className="flex justify-end pt-4 border-t border-white/10">
+            <div className={`flex justify-end pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <button
                 onClick={() => setViewingTask(null)}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-600/30"
+                className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all text-white ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'}`}
               >
                 Close
               </button>

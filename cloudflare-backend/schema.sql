@@ -101,3 +101,78 @@ VALUES
 -- INSERT AUTHORIZED COMPANY: Cirti Care
 INSERT OR REPLACE INTO companies (id, name, code, password, contact_person, email, phone, status)
 VALUES ('comp_cirticare', 'Cirti Care', 'CIRTICARE01', 'Cirti123', 'Cirti Care Admin', 'admin@cirticare.com', '+91 98765 11223', 'ACTIVE');
+
+-- =========================================================================
+-- TABLE 6: WHATSAPP TEMPLATES (Stores Meta WhatsApp Message Templates in Cloudflare D1)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS whatsapp_templates (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT DEFAULT 'UTILITY',
+    language TEXT DEFAULT 'en_US',
+    status TEXT DEFAULT 'APPROVED',
+    body_text TEXT DEFAULT '',
+    components_json TEXT,
+    quality_rating TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_whatsapp_templates_name ON whatsapp_templates(name);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_templates_status ON whatsapp_templates(status);
+
+-- SEED META TEMPLATES IN CLOUDFLARE D1
+INSERT OR REPLACE INTO whatsapp_templates (id, name, category, language, status, body_text, components_json)
+VALUES 
+('tpl_help_ticket_001', 'help_ticket', 'UTILITY', 'en_US', 'APPROVED', 'Hi {{1}}, thank you for contacting Zentrixs! 🙏\n\nYour support ticket {{2}} has been raised successfully.\n\nYou can check your ticket status on our website.', '[{"type":"BODY","text":"Hi {{1}}, thank you for contacting Zentrixs! 🙏\\n\\nYour support ticket {{2}} has been raised successfully.\\n\\nYou can check your ticket status on our website."}]'),
+('tpl_offersms_002', 'offersms', 'MARKETING', 'en_US', 'APPROVED', '🚨 "Premium Salon Upgrade - Limited Time Offer! Enjoy exclusive automation packages designed to grow your business.', '[{"type":"BODY","text":"🚨 \\"Premium Salon Upgrade - Limited Time Offer! Enjoy exclusive automation packages designed to grow your business."}]'),
+('tpl_marketing_welcome_003', 'marketing_welcome', 'MARKETING', 'en_US', 'APPROVED', 'Hello {{1}} 🤩 Thank you for showing interest in Zentrixs Enterprise AI Solutions. Our specialist will connect with you shortly.', '[{"type":"BODY","text":"Hello {{1}} 🤩 Thank you for showing interest in Zentrixs Enterprise AI Solutions. Our specialist will connect with you shortly."}]'),
+('tpl_welcome_for_website_004', 'welcome_for_website', 'UTILITY', 'en_US', 'APPROVED', 'HelloHello {{1}} 🤩 Thank you for visiting our website. Your request has been received by our support team.', '[{"type":"BODY","text":"HelloHello {{1}} 🤩 Thank you for visiting our website. Your request has been received by our support team."}]'),
+('tpl_ticket_update_005', 'ticket_update', 'UTILITY', 'en_US', 'APPROVED', 'Hello {{1}}, your ticket {{2}} status has been updated to {{3}}. Zentrixs engineer: {{4}}.', '[{"type":"BODY","text":"Hello {{1}}, your ticket {{2}} status has been updated to {{3}}. Zentrixs engineer: {{4}}."}]');
+
+-- =========================================================================
+-- TABLE 7: WHATSAPP DISPATCH LOGS (Stores Live Meta WhatsApp Notifications in Cloudflare D1)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS whatsapp_logs (
+    id TEXT PRIMARY KEY,
+    recipient_phone TEXT NOT NULL,
+    recipient_name TEXT,
+    template_name TEXT,
+    language TEXT,
+    ticket_number TEXT,
+    status TEXT DEFAULT 'SENT',
+    message_id TEXT,
+    error TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    trigger_type TEXT DEFAULT 'TICKET_CREATED',
+    message_preview TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_timestamp ON whatsapp_logs(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_ticket ON whatsapp_logs(ticket_number);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_recipient ON whatsapp_logs(recipient_phone);
+
+-- SEED INITIAL DISPATCH LOGS
+INSERT OR REPLACE INTO whatsapp_logs (id, recipient_phone, recipient_name, template_name, language, ticket_number, status, message_id, timestamp, trigger_type, message_preview)
+VALUES 
+('log_init_001', '+91 98765 11223', 'Deepak sahu', 'help_ticket', 'English (US)', 'tkt-2026-101', 'SENT', 'wamid.HBgMOTE5ODc2NTExMjIzFQIAERgSRTI0NkU2NEQ0NkQzMzE2QUEA', datetime('now', '-35 minutes'), 'TICKET_CREATED', 'Hi Deepak sahu, thank you for contacting Zentrixs! 🙏 Your support ticket tkt-2026-101 has been raised successfully.'),
+('log_init_002', '+91 98765 11223', 'Cirti Care Admin', 'help_ticket', 'English (US)', 'tkt-2026-102', 'SENT', 'wamid.HBgMOTE5ODc2NTExMjIzFQIAERgSRTI0NkU2NEQ0NkQzMzE2QUFB', datetime('now', '-120 minutes'), 'TICKET_CREATED', 'Hi Cirti Care Admin, thank you for contacting Zentrixs! 🙏 Your support ticket tkt-2026-102 has been raised successfully.');
+
+-- =========================================================================
+-- TABLE 8: WHATSAPP CONFIGURATION / CREDENTIALS (Persistent in Cloudflare D1)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS whatsapp_config (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    phone_number_id TEXT DEFAULT '',
+    waba_id TEXT DEFAULT '',
+    access_token TEXT DEFAULT '',
+    template_name TEXT DEFAULT 'help_ticket',
+    language_code TEXT DEFAULT 'en_US',
+    is_enabled INTEGER DEFAULT 1,
+    test_phone_number TEXT DEFAULT '',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO whatsapp_config (id, phone_number_id, waba_id, access_token, template_name, language_code, is_enabled, test_phone_number)
+VALUES ('default', '', '', '', 'help_ticket', 'en_US', 1, '');

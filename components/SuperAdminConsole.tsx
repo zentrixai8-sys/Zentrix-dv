@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
+import {
+  Shield,
   Users,
   Zap,
   Clock,
-  CheckCircle2, 
-  AlertTriangle, 
-  Search, 
-  Filter, 
-  UserCheck, 
-  ExternalLink, 
-  RefreshCw, 
-  LogOut, 
-  Layers, 
-  Building2, 
-  ChevronRight, 
-  Sliders, 
-  Settings, 
-  FileText, 
-  Flame, 
-  MessageSquare, 
-  Eye, 
-  Check, 
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  Filter,
+  UserCheck,
+  ExternalLink,
+  RefreshCw,
+  LogOut,
+  Layers,
+  Building2,
+  ChevronRight,
+  Sliders,
+  Settings,
+  FileText,
+  Flame,
+  MessageSquare,
+  Eye,
+  Check,
   Calendar,
   User,
   Plus,
@@ -43,22 +43,22 @@ import {
   Pencil
 } from 'lucide-react';
 import { Task, TaskStatus, Company, Employee } from '../types/taskTypes';
-import { 
-  fetchTasks, 
-  assignTask, 
-  updateTaskStatus, 
-  deleteTask, 
-  getCompanies, 
+import {
+  fetchTasks,
+  assignTask,
+  updateTaskStatus,
+  deleteTask,
+  getCompanies,
   fetchCompanies,
   createCompany,
   updateCompanyLogo,
   uploadFileToCloudinary,
-  getEmployees, 
+  getEmployees,
   fetchEmployees,
   createEmployee,
   updateEmployee,
   deleteEmployee,
-  clearAuthSession 
+  clearAuthSession
 } from '../services/taskService';
 import AdminDashboard from './AdminDashboard';
 import AdminAnalyticsOverview from './AdminAnalyticsOverview';
@@ -80,7 +80,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Filters
   const [selectedCompany, setSelectedCompany] = useState<string>('All');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
@@ -145,6 +145,9 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [uploadingNewAvatar, setUploadingNewAvatar] = useState(false);
   const [creatingEmp, setCreatingEmp] = useState(false);
   const [empSearch, setEmpSearch] = useState('');
+
+  // View Employee Profile Details Modal
+  const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
 
   // Edit Employee / Engineer Profile
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -341,7 +344,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
     if (logoUrl) {
       // 1. Immediately update React state for instantaneous UI feedback
-      setCompanies(prev => prev.map(c => 
+      setCompanies(prev => prev.map(c =>
         (c.id === editingLogoCompany.id || c.code === editingLogoCompany.code)
           ? { ...c, logoUrl, avatar: logoUrl }
           : c
@@ -508,9 +511,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   };
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${
-      isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
-    }`}>
+    <div className={`min-h-screen font-sans transition-colors duration-300 ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
+      }`}>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-blue-600 text-white px-5 py-3 rounded-2xl shadow-2xl border border-blue-400 text-xs font-bold animate-bounce flex items-center gap-2">
@@ -520,18 +522,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       )}
 
       {/* Website-Styled Admin Header */}
-      <header className={`border-b sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${
-        isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
-      }`}>
+      <header className={`border-b sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
+        }`}>
         <div className="w-full flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           {/* Exact Brand Logo matching Website */}
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center space-x-3.5 group cursor-pointer" title="Go to Zentrixs Website">
               <div className="relative">
                 <div className={`absolute inset-0 blur-xl opacity-20 group-hover:opacity-60 transition-opacity ${isLight ? 'bg-[#EA552E]' : 'bg-blue-500'}`}></div>
-                <div className={`relative w-11 h-11 overflow-hidden rounded-xl border group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shadow-lg ${
-                  isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-zinc-900 border-white/10'
-                }`}>
+                <div className={`relative w-11 h-11 overflow-hidden rounded-xl border group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shadow-lg ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-zinc-900 border-white/10'
+                  }`}>
                   <img
                     src={LOGO_URL}
                     alt={`${COMPANY_NAME} Logo`}
@@ -546,14 +546,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className={`text-xl sm:text-2xl font-black tracking-[0.3em] uppercase transition-colors ${
-                    isLight ? 'text-[#2A2118] group-hover:text-[#EA552E]' : 'text-white group-hover:text-blue-500'
-                  }`}>
+                  <span className={`text-xl sm:text-2xl font-black tracking-[0.3em] uppercase transition-colors ${isLight ? 'text-[#2A2118] group-hover:text-[#EA552E]' : 'text-white group-hover:text-blue-500'
+                    }`}>
                     ZEN<span className={isLight ? 'font-extralight text-[#EA552E]' : 'font-extralight text-blue-500'}>TRIXS</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black font-mono border ${
-                    isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black font-mono border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                    }`}>
                     SUPER ADMIN
                   </span>
                 </div>
@@ -566,66 +564,59 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
           {/* Navigation Pill Tabs, Theme Switcher & Logout */}
           <div className="flex items-center gap-3">
-            <div className={`flex flex-nowrap overflow-x-auto no-scrollbar p-1 rounded-2xl border text-xs font-bold transition-colors ${
-              isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/5 border-white/10 text-slate-400'
-            }`}>
+            <div className={`flex flex-nowrap overflow-x-auto no-scrollbar p-1 rounded-2xl border text-xs font-bold transition-colors ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/5 border-white/10 text-slate-400'
+              }`}>
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                  activeTab === 'overview'
-                    ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'overview'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Dashboard
               </button>
               <button
                 onClick={() => setActiveTab('console')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                  activeTab === 'console'
-                    ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'console'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Tickets Console ({tasks.length})
               </button>
               <button
                 onClick={() => setActiveTab('employees')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                  activeTab === 'employees'
-                    ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'employees'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Employee Workload ({employees.length})
               </button>
               <button
                 onClick={() => setActiveTab('companies')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                  activeTab === 'companies'
-                    ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'companies'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Companies ({companies.length})
               </button>
               <button
                 onClick={() => setActiveTab('cms')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                  activeTab === 'cms'
-                    ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'cms'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Website CMS
               </button>
               <button
                 onClick={() => setActiveTab('whatsapp')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'whatsapp'
-                    ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center gap-1.5 cursor-pointer ${activeTab === 'whatsapp'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
                 <span>WhatsApp Settings</span>
@@ -643,11 +634,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 onLogout();
               }}
               title="Disconnect / Logout"
-              className={`flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${
-                isLight
-                  ? 'text-[#D14343] hover:bg-[#FBEAEA] border-[#F3D5D5]'
-                  : 'text-red-400 hover:text-white hover:bg-red-600/20 border-red-500/30'
-              }`}
+              className={`flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${isLight
+                ? 'text-[#D14343] hover:bg-[#FBEAEA] border-[#F3D5D5]'
+                : 'text-red-400 hover:text-white hover:bg-red-600/20 border-red-500/30'
+                }`}
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -674,9 +664,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               return (
                 <div
                   key={`${activeTab}-${tile.label}`}
-                  className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ring-1 ring-transparent ${p.ring} ${
-                    isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
-                  }`}
+                  className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ring-1 ring-transparent ${p.ring} ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
+                    }`}
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div
@@ -722,9 +711,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
         {activeTab === 'console' && (
           <div className="space-y-6">
             {/* Search and Multi-Filters Bar */}
-            <div className={`border rounded-2xl p-4 flex flex-col lg:flex-row items-center justify-between gap-4 transition-colors duration-300 ${
-              isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)]' : 'bg-[#0F172A]/90 border-white/10'
-            }`}>
+            <div className={`border rounded-2xl p-4 flex flex-col lg:flex-row items-center justify-between gap-4 transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)]' : 'bg-[#0F172A]/90 border-white/10'
+              }`}>
               {/* Search */}
               <div className="relative w-full lg:w-80">
                 <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-[#B5A892]' : 'text-slate-400'}`} />
@@ -733,11 +721,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by ticket, company, system..."
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs outline-none border transition-all duration-200 ${
-                    isLight
-                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/10'
-                      : 'bg-black/40 border-white/10 text-white placeholder:text-slate-500 focus:border-blue-500'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs outline-none border transition-all duration-200 ${isLight
+                    ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/10'
+                    : 'bg-black/40 border-white/10 text-white placeholder:text-slate-500 focus:border-blue-500'
+                    }`}
                 />
               </div>
 
@@ -804,9 +791,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                 <button
                   onClick={loadData}
-                  className={`p-2.5 rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer shadow-sm ${
-                    isLight ? 'bg-[#FDEEE7] text-[#EA552E] hover:bg-[#EA552E] hover:text-white border-[#F5D5C3]' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border-blue-500/30'
-                  }`}
+                  className={`p-2.5 rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer shadow-sm ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] hover:bg-[#EA552E] hover:text-white border-[#F5D5C3]' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border-blue-500/30'
+                    }`}
                   title="Refresh Data"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -815,15 +801,13 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
             </div>
 
             {/* Enterprise Task Table */}
-            <div className={`border rounded-2xl shadow-xl transition-colors duration-300 ${
-              isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0B0F19]/90 border-white/10'
-            }`}>
+            <div className={`border rounded-2xl shadow-xl transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0B0F19]/90 border-white/10'
+              }`}>
               <div className="overflow-x-auto min-h-[340px] pb-32">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                      isLight ? 'bg-[#FBF5EC]/90 border-[#EDE2D3] text-[#8A7B68]' : 'border-white/10 bg-white/[0.02] text-slate-400'
-                    }`}>
+                    <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${isLight ? 'bg-[#FBF5EC]/90 border-[#EDE2D3] text-[#8A7B68]' : 'border-white/10 bg-white/[0.02] text-slate-400'
+                      }`}>
                       <th className="py-4 px-4">Ticket & Date</th>
                       <th className="py-4 px-4">Company (Client)</th>
                       <th className="py-4 px-4">Person & System</th>
@@ -872,9 +856,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                           {/* Description & Type */}
                           <td className="py-4 px-4">
-                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mb-1 border ${
-                              isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/5'
-                            }`}>
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mb-1 border ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/5'
+                              }`}>
                               {t.typeOfWork}
                             </span>
                             <div className={`leading-snug line-clamp-2 ${isLight ? 'text-[#5C5244]' : 'text-slate-300'}`}>
@@ -884,13 +867,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                           {/* Priority */}
                           <td className="py-4 px-3 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
-                              t.priorityInCustomer === 'Urgent'
-                                ? isLight ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                : t.priorityInCustomer === 'High'
+                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${t.priorityInCustomer === 'Urgent'
+                              ? isLight ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              : t.priorityInCustomer === 'High'
                                 ? isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                                 : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border border-[#EDE2D3]' : 'bg-slate-700/40 text-slate-300 border border-white/10'
-                            }`}>
+                              }`}>
                               {t.priorityInCustomer}
                             </span>
                           </td>
@@ -1047,149 +1029,337 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               }
 
               return (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredEmployees.map((emp) => {
-                    const assignedTasks = tasks.filter((t) => t.assignedTo === emp.name);
-                    const active = assignedTasks.filter((t) => t.status !== 'Completed');
-                    const completed = assignedTasks.filter((t) => t.status === 'Completed');
+                <div className="space-y-6">
+                  {/* 1. WHATSAPP / INSTAGRAM STORY CIRCULAR AVATARS ROW */}
+                  <div className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border shadow-sm ${
+                    isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#EA552E] animate-pulse"></span>
+                        <h3 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${
+                          isLight ? 'text-[#2A2118]' : 'text-white'
+                        }`}>
+                          Team Stories & Quick Profiles
+                        </h3>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isLight ? 'bg-[#FDF3E7] text-[#EA552E]' : 'bg-cyan-500/10 text-cyan-400'
+                        }`}>
+                          {employees.length} Engineers
+                        </span>
+                      </div>
+                      <span className={`text-[11px] font-medium hidden sm:inline ${
+                        isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+                      }`}>
+                        Click circle to view full profile details
+                      </span>
+                    </div>
 
-                    return (
-                      <div key={emp.id} className={`stagger-item border rounded-3xl p-6 shadow-xl space-y-4 transition-all duration-300 flex flex-col justify-between ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_28px_rgba(234,85,46,0.08)] hover:border-[#EA552E]/30' : 'bg-[#0F172A] border-white/10 hover:border-white/20'}`}>
-                        <div className="space-y-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div
-                                onClick={() => openEditEmployeeModal(emp)}
-                                title="Click to edit photo & profile"
-                                className={`relative group/empavatar w-12 h-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] rounded-2xl flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 border shadow-sm cursor-pointer transition-all ${
-                                  isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] hover:border-[#EA552E]' : 'bg-white/5 border-white/10 hover:border-cyan-400'
-                                }`}
-                              >
-                                {emp.avatar ? (
-                                  <img
-                                    src={emp.avatar}
-                                    alt={emp.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      // Fallback on image load error to UI Avatars
-                                      (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=EA552E&color=fff&bold=true`;
-                                    }}
-                                  />
-                                ) : (
-                                  <div className={`w-full h-full flex items-center justify-center ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-blue-600/20 text-blue-400'}`}>
-                                    {emp.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/empavatar:opacity-100 transition-opacity">
-                                  <Camera className="w-4 h-4 text-white" />
-                                </div>
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <h3 className={`font-bold text-base truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{emp.name}</h3>
-                                  <button
-                                    type="button"
-                                    onClick={() => openEditEmployeeModal(emp)}
-                                    title="Edit Profile"
-                                    className={`p-1 rounded-md transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#EA552E] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-cyan-400 hover:bg-white/5'}`}
-                                  >
-                                    <Pencil className="w-3 h-3" />
-                                  </button>
-                                </div>
-                                <p className={`text-xs font-semibold flex items-center gap-1 mt-0.5 ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>
-                                  <Briefcase className="w-3 h-3 shrink-0" />
-                                  <span className="truncate">{emp.role}</span>
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border border-[#EDE2D3]' : 'bg-white/5 text-slate-300'}`}>
-                                {assignedTasks.length} Assigned
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => openEditEmployeeModal(emp)}
-                                title="Edit Profile Details"
-                                className={`p-1.5 rounded-lg transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#EA552E] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10'}`}
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteEmployee(emp.id, emp.name)}
-                                title="Delete / Remove Engineer"
-                                className={`p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors`}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Contact Details (Phone & Email) */}
-                          <div className={`p-3 rounded-2xl border space-y-1.5 text-xs ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/30 border-white/5'}`}>
-                            <div className="flex items-center gap-2">
-                              <Phone className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
-                              <span className={`font-mono ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                                {emp.phone ? (
-                                  <a href={`tel:${emp.phone}`} className="hover:underline font-bold">
-                                    {emp.phone}
-                                  </a>
-                                ) : (
-                                  <span className="italic opacity-60">No phone provided</span>
-                                )}
-                              </span>
-                            </div>
-                            {emp.email && (
-                              <div className="flex items-center gap-2">
-                                <Mail className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`} />
-                                <span className={`truncate ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                                  <a href={`mailto:${emp.email}`} className="hover:underline">
-                                    {emp.email}
-                                  </a>
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className={`rounded-xl p-3 border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
-                              <div className={`text-[10px] font-bold uppercase ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Active Backlog</div>
-                              <div className="text-xl font-black text-amber-500">{active.length}</div>
-                            </div>
-                            <div className={`rounded-xl p-3 border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
-                              <div className={`text-[10px] font-bold uppercase ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Closed</div>
-                              <div className="text-xl font-black text-emerald-500">{completed.length}</div>
-                            </div>
-                          </div>
-
-                          {/* Task list for this employee */}
-                          <div className={`space-y-2 pt-2 border-t ${isLight ? 'border-[#F3EADC]' : 'border-white/5'}`}>
-                            <div className={`text-[10px] font-bold uppercase ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Current Assigned Tickets:</div>
-                            {active.length === 0 ? (
-                              <div className={`text-xs italic ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>No pending tasks. Available for new tickets.</div>
-                            ) : (
-                              active.slice(0, 3).map((t) => (
-                                <div key={t.id} className={`p-2.5 border rounded-xl text-xs flex items-center justify-between ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/5'}`}>
-                                  <div className="overflow-hidden pr-2">
-                                    <span className={`font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{t.partyName.split(' ')[0]}: </span>
-                                    <span className={isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}>{t.systemName}</span>
-                                  </div>
-                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold shrink-0 ${
-                                    t.priorityInCustomer === 'High' || t.priorityInCustomer === 'Urgent'
-                                      ? isLight ? 'bg-red-50 text-red-600' : 'bg-red-500/20 text-red-400'
-                                      : isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/20 text-blue-400'
-                                  }`}>
-                                    {t.priorityInCustomer}
-                                  </span>
-                                </div>
-                              ))
-                            )}
+                    <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
+                      {/* Add New Story Circle */}
+                      <div
+                        onClick={() => setShowAddEmpModal(true)}
+                        className="flex flex-col items-center shrink-0 cursor-pointer group"
+                      >
+                        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-[#EA552E] shadow-sm ${
+                          isLight ? 'border-[#C8BAA7] bg-[#FDF8F2] text-[#8A7B68]' : 'border-white/20 bg-white/5 text-slate-300'
+                        }`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                            isLight ? 'bg-[#EA552E] text-white group-hover:bg-[#D9481F]' : 'bg-cyan-500 text-slate-950 group-hover:bg-cyan-400'
+                          }`}>
+                            <Plus className="w-5 h-5" />
                           </div>
                         </div>
+                        <span className={`text-xs font-bold mt-2 truncate max-w-[76px] text-center ${
+                          isLight ? 'text-[#2A2118]' : 'text-white'
+                        }`}>
+                          Add New
+                        </span>
+                        <span className={`text-[10px] truncate max-w-[76px] text-center ${
+                          isLight ? 'text-[#8A7B68]' : 'text-slate-500'
+                        }`}>
+                          Engineer
+                        </span>
                       </div>
-                    );
-                  })}
+
+                      {/* Employee Story Circles */}
+                      {filteredEmployees.map((emp) => {
+                        const assignedTasks = tasks.filter((t) => t.assignedTo === emp.name);
+                        const active = assignedTasks.filter((t) => t.status !== 'Completed');
+                        const hasActive = active.length > 0;
+
+                        return (
+                          <div
+                            key={emp.id}
+                            onClick={() => setViewingEmployee(emp)}
+                            title={`Click to view ${emp.name}'s profile and tickets`}
+                            className="flex flex-col items-center shrink-0 cursor-pointer group"
+                          >
+                            {/* Instagram/WhatsApp Story Gradient Ring */}
+                            <div className={`p-[2.5px] rounded-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg ${
+                              hasActive
+                                ? 'bg-gradient-to-tr from-amber-500 via-[#EA552E] to-rose-500 shadow-sm'
+                                : isLight ? 'bg-gradient-to-tr from-emerald-400 to-teal-500' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
+                            }`}>
+                              <div className={`p-[2px] rounded-full ${
+                                isLight ? 'bg-white' : 'bg-[#0F172A]'
+                              }`}>
+                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-slate-900">
+                                  {emp.avatar ? (
+                                    <img
+                                      src={emp.avatar}
+                                      alt={emp.name}
+                                      className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-110"
+                                      onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=EA552E&color=fff&bold=true&size=160`;
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className={`w-full h-full flex items-center justify-center font-bold text-lg sm:text-xl ${
+                                      isLight ? 'bg-gradient-to-br from-[#EA552E] to-[#D9481F] text-white' : 'bg-blue-600 text-white'
+                                    }`}>
+                                      {emp.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+
+                                  {/* Task count pill or online badge */}
+                                  <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white ring-2 ${
+                                    isLight ? 'ring-white' : 'ring-[#0F172A]'
+                                  } ${hasActive ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                                    {active.length}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Name & Role below circle */}
+                            <span className={`text-xs font-bold mt-1.5 truncate max-w-[80px] text-center group-hover:text-[#EA552E] transition-colors ${
+                              isLight ? 'text-[#2A2118]' : 'text-white'
+                            }`}>
+                              {emp.name.split(' ')[0]}
+                            </span>
+                            <span className={`text-[10px] truncate max-w-[80px] text-center ${
+                              isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+                            }`}>
+                              {emp.role.split(' ')[0]}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. TABLE FORM DATA VIEW */}
+                  <div className={`border rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm ${
+                    isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+                  }`}>
+                    <div className={`p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/5'
+                    }`}>
+                      <div>
+                        <h3 className={`font-bold text-sm sm:text-base ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                          All Engineers & Team Workload
+                        </h3>
+                        <p className={`text-xs ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                          Complete overview of contact details, active backlog tasks, and current ticket assignments.
+                        </p>
+                      </div>
+                      <span className={`text-xs font-bold px-3 py-1 rounded-xl self-start sm:self-auto border ${
+                        isLight ? 'bg-white text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'
+                      }`}>
+                        Showing {filteredEmployees.length} of {employees.length}
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                            isLight ? 'bg-[#FBF5EC] text-[#8A7B68] border-[#EDE2D3]' : 'bg-black/30 text-slate-400 border-white/10'
+                          }`}>
+                            <th className="py-3 px-4">Engineer / Profile</th>
+                            <th className="py-3 px-4">Role & Designation</th>
+                            <th className="py-3 px-4">Contact Info</th>
+                            <th className="py-3 px-4 text-center">Active Backlog</th>
+                            <th className="py-3 px-4 text-center">Completed</th>
+                            <th className="py-3 px-4">Current Task</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className={`divide-y ${isLight ? 'divide-[#EDE2D3]' : 'divide-white/5'}`}>
+                          {filteredEmployees.map((emp) => {
+                            const assignedTasks = tasks.filter((t) => t.assignedTo === emp.name);
+                            const active = assignedTasks.filter((t) => t.status !== 'Completed');
+                            const completed = assignedTasks.filter((t) => t.status === 'Completed');
+                            const latestActiveTask = active[0];
+
+                            return (
+                              <tr
+                                key={emp.id}
+                                className={`transition-colors ${
+                                  isLight ? 'hover:bg-[#FDF8F2]' : 'hover:bg-white/[0.02]'
+                                }`}
+                              >
+                                {/* Profile / Name */}
+                                <td className="py-3.5 px-4">
+                                  <div
+                                    onClick={() => setViewingEmployee(emp)}
+                                    className="flex items-center gap-3 cursor-pointer group"
+                                  >
+                                    <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-black/10 dark:border-white/10 shadow-sm">
+                                      {emp.avatar ? (
+                                        <img
+                                          src={emp.avatar}
+                                          alt={emp.name}
+                                          className="w-full h-full object-cover object-top"
+                                          onError={(e) => {
+                                            (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=EA552E&color=fff&bold=true&size=100`;
+                                          }}
+                                        />
+                                      ) : (
+                                        <div className={`w-full h-full flex items-center justify-center font-bold text-xs ${
+                                          isLight ? 'bg-[#EA552E] text-white' : 'bg-blue-600 text-white'
+                                        }`}>
+                                          {emp.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                        </div>
+                                      )}
+                                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-1 ring-white"></span>
+                                    </div>
+                                    <div>
+                                      <div className={`font-bold text-xs sm:text-sm group-hover:underline ${
+                                        isLight ? 'text-[#2A2118]' : 'text-white'
+                                      }`}>
+                                        {emp.name}
+                                      </div>
+                                      <div className={`text-[11px] font-mono ${
+                                        isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+                                      }`}>
+                                        {emp.phone || 'No phone'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Role */}
+                                <td className="py-3.5 px-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold border ${
+                                    isLight ? 'bg-[#FDF3E7] text-[#EA552E] border-[#EDE2D3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                                  }`}>
+                                    <Briefcase className="w-3 h-3 shrink-0" />
+                                    <span>{emp.role}</span>
+                                  </span>
+                                </td>
+
+                                {/* Contact Details */}
+                                <td className="py-3.5 px-4 space-y-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <Phone className={`w-3 h-3 shrink-0 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                                    {emp.phone ? (
+                                      <a href={`tel:${emp.phone}`} className="font-mono hover:underline font-medium">
+                                        {emp.phone}
+                                      </a>
+                                    ) : (
+                                      <span className="italic opacity-50">N/A</span>
+                                    )}
+                                  </div>
+                                  {emp.email && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Mail className={`w-3 h-3 shrink-0 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`} />
+                                      <a href={`mailto:${emp.email}`} className="hover:underline truncate max-w-[160px] opacity-80">
+                                        {emp.email}
+                                      </a>
+                                    </div>
+                                  )}
+                                </td>
+
+                                {/* Active Tasks Count */}
+                                <td className="py-3.5 px-4 text-center">
+                                  <span className={`inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-full text-xs font-black ${
+                                    active.length > 0
+                                      ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 font-mono'
+                                      : isLight ? 'bg-zinc-100 text-zinc-400' : 'bg-white/5 text-slate-500'
+                                  }`}>
+                                    {active.length}
+                                  </span>
+                                </td>
+
+                                {/* Closed Tasks Count */}
+                                <td className="py-3.5 px-4 text-center">
+                                  <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 font-mono">
+                                    {completed.length}
+                                  </span>
+                                </td>
+
+                                {/* Current Task Preview */}
+                                <td className="py-3.5 px-4 max-w-[200px]">
+                                  {latestActiveTask ? (
+                                    <div
+                                      onClick={() => setViewingEmployee(emp)}
+                                      className={`p-1.5 rounded-lg border text-[11px] truncate cursor-pointer transition-colors ${
+                                        isLight
+                                          ? 'bg-[#FDF8F2] border-[#EDE2D3] hover:border-[#EA552E]'
+                                          : 'bg-white/[0.02] border-white/10 hover:border-cyan-400'
+                                      }`}
+                                      title={`${latestActiveTask.ticketNumber} - ${latestActiveTask.partyName}`}
+                                    >
+                                      <span className={`font-mono font-bold mr-1.5 ${
+                                        isLight ? 'text-[#EA552E]' : 'text-cyan-400'
+                                      }`}>
+                                        {latestActiveTask.ticketNumber}
+                                      </span>
+                                      <span className="truncate">{latestActiveTask.systemName}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[11px] italic text-emerald-500 font-medium">
+                                      ✓ Available for tasks
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Actions */}
+                                <td className="py-3.5 px-4 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setViewingEmployee(emp)}
+                                      title="View Full Details"
+                                      className={`p-1.5 rounded-lg transition-colors border ${
+                                        isLight
+                                          ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#EA552E] border-[#EDE2D3]'
+                                          : 'bg-white/5 hover:bg-white/10 text-cyan-400 border-white/10'
+                                      }`}
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditEmployeeModal(emp)}
+                                      title="Edit Engineer"
+                                      className={`p-1.5 rounded-lg transition-colors border ${
+                                        isLight
+                                          ? 'bg-white hover:bg-[#FDF8F2] text-[#8A7B68] hover:text-[#EA552E] border-[#EDE2D3]'
+                                          : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10'
+                                      }`}
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                                      title="Delete Engineer"
+                                      className="p-1.5 rounded-lg transition-colors border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               );
             })()}
@@ -1225,11 +1395,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   <button
                     type="button"
                     onClick={() => setCompanyViewMode('list')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      companyViewMode === 'list'
-                        ? isLight ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${companyViewMode === 'list'
+                      ? isLight ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                      : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                      }`}
                     title="List View (Default)"
                   >
                     <LayoutList className="w-3.5 h-3.5" />
@@ -1238,11 +1407,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   <button
                     type="button"
                     onClick={() => setCompanyViewMode('grid')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      companyViewMode === 'grid'
-                        ? isLight ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                        : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${companyViewMode === 'grid'
+                      ? isLight ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                      : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                      }`}
                     title="Grid View"
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
@@ -1282,7 +1450,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 );
               }
 
-              {/* LIST VIEW (DEFAULT) */}
+              {/* LIST VIEW (DEFAULT) */ }
               if (companyViewMode === 'list') {
                 return (
                   <div className={`border rounded-3xl overflow-hidden shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10'}`}>
@@ -1372,11 +1540,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                 </td>
 
                                 <td className="py-4 px-3 text-center whitespace-nowrap">
-                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                                    compTasks.length > 0
-                                      ? isLight ? 'bg-[#FDEEE7] text-[#D9481F] border border-[#F5D5C3]' : 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
-                                      : isLight ? 'bg-[#FDF3E7] text-[#9C8F7D] border border-[#EDE2D3]' : 'bg-white/5 text-slate-400'
-                                  }`}>
+                                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${compTasks.length > 0
+                                    ? isLight ? 'bg-[#FDEEE7] text-[#D9481F] border border-[#F5D5C3]' : 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
+                                    : isLight ? 'bg-[#FDF3E7] text-[#9C8F7D] border border-[#EDE2D3]' : 'bg-white/5 text-slate-400'
+                                    }`}>
                                     {compTasks.length} Tickets
                                   </span>
                                 </td>
@@ -1417,7 +1584,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 );
               }
 
-              {/* GRID VIEW (Card View) */}
+              {/* GRID VIEW (Card View) */ }
               return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {filteredComps.map((c) => {
@@ -1593,20 +1760,20 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
             {selectedTask.uploadFileUrl && (
               <div>
-                <label className="block text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>
                   <Paperclip className="w-3.5 h-3.5" />
                   Cloudinary Attachment / Uploaded File
                 </label>
-                <div className="bg-cyan-950/30 border border-cyan-500/30 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div className={`rounded-2xl p-4 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
+                    <div className={`p-2.5 rounded-xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
                       <Paperclip className="w-4 h-4" />
                     </div>
                     <div className="overflow-hidden">
-                      <div className="text-xs font-bold text-white truncate font-mono">
+                      <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
                         {selectedTask.uploadFileName || 'Uploaded Attachment'}
                       </div>
-                      <div className="text-[10px] text-cyan-400 truncate">
+                      <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
                         Cloudinary CDN: dfbllmnld / zentrixs
                       </div>
                     </div>
@@ -1615,7 +1782,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     href={selectedTask.uploadFileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-cyan-500/20 shrink-0 flex items-center gap-1.5"
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/20'}`}
                   >
                     <span>Open in Cloudinary</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -2010,11 +2177,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </label>
                 <div className={`flex items-center gap-4 p-3.5 border rounded-2xl ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/40 border-white/10'}`}>
                   {/* Clickable Image Box */}
-                  <div 
+                  <div
                     onClick={() => document.getElementById('new-emp-avatar-input')?.click()}
-                    className={`relative w-16 h-16 min-w-[64px] min-h-[64px] max-w-[64px] max-h-[64px] rounded-2xl overflow-hidden border flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all ${
-                      isLight ? 'border-[#EDE2D3] bg-[#FDF3E7] hover:border-[#EA552E]' : 'border-cyan-500/40 bg-[#162032] hover:border-cyan-400'
-                    }`}
+                    className={`relative w-16 h-16 min-w-[64px] min-h-[64px] max-w-[64px] max-h-[64px] rounded-2xl overflow-hidden border flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all ${isLight ? 'border-[#EDE2D3] bg-[#FDF3E7] hover:border-[#EA552E]' : 'border-cyan-500/40 bg-[#162032] hover:border-cyan-400'
+                      }`}
                     title="Click to upload or change profile photo"
                   >
                     {uploadingNewAvatar ? (
@@ -2024,11 +2190,11 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       </div>
                     ) : newEmpAvatarDisplay ? (
                       <div className="relative w-full h-full">
-                        <img 
+                        <img
                           key={newEmpAvatarDisplay}
-                          src={newEmpAvatarDisplay} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover rounded-2xl block" 
+                          src={newEmpAvatarDisplay}
+                          alt="Preview"
+                          className="w-full h-full object-cover rounded-2xl block"
                         />
                         <div className="absolute bottom-0 inset-x-0 bg-black/75 py-0.5 text-[8px] text-white font-bold text-center">
                           Change
@@ -2049,11 +2215,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                         type="button"
                         disabled={uploadingNewAvatar}
                         onClick={() => document.getElementById('new-emp-avatar-input')?.click()}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          isLight
-                            ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#2A2118] border border-[#EDE2D3]'
-                            : 'bg-white/10 hover:bg-white/20 text-white'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isLight
+                          ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#2A2118] border border-[#EDE2D3]'
+                          : 'bg-white/10 hover:bg-white/20 text-white'
+                          }`}
                       >
                         {uploadingNewAvatar ? (
                           <>
@@ -2210,11 +2375,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       key={role}
                       type="button"
                       onClick={() => setNewEmpDesignation(role)}
-                      className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${
-                        newEmpDesignation === role
-                          ? isLight ? 'bg-[#EA552E] text-white border-[#EA552E]' : 'bg-cyan-500 text-slate-950 border-cyan-400'
-                          : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3] hover:border-[#EA552E]' : 'bg-white/5 text-slate-300 border-white/10 hover:border-white/30'
-                      }`}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${newEmpDesignation === role
+                        ? isLight ? 'bg-[#EA552E] text-white border-[#EA552E]' : 'bg-cyan-500 text-slate-950 border-cyan-400'
+                        : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3] hover:border-[#EA552E]' : 'bg-white/5 text-slate-300 border-white/10 hover:border-white/30'
+                        }`}
                     >
                       {role}
                     </button>
@@ -2246,6 +2410,190 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
           </div>
         </div>
       )}
+
+      {/* VIEW ENGINEER / USER PROFILE DETAILS MODAL */}
+      {viewingEmployee && (() => {
+        const empTasks = tasks.filter((t) => (t.assignedTo || '').toLowerCase().trim() === viewingEmployee.name.toLowerCase().trim() || (t.assignedTo || '').toLowerCase().trim() === viewingEmployee.id.toLowerCase().trim());
+        const empActive = empTasks.filter((t) => t.status !== 'Completed');
+        const empCompleted = empTasks.filter((t) => t.status === 'Completed');
+
+        return (
+          <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 ${isLight ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/85 backdrop-blur-md'} animate-in fade-in duration-200`}>
+            <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-[#0F172A] border-white/20 text-white'}`}>
+
+              {/* Profile Header & Large Avatar */}
+              <div className={`flex items-start justify-between pb-5 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border-2 shadow-lg ${isLight ? 'border-[#EA552E]/30 bg-[#FDF3E7]' : 'border-cyan-400/40 bg-white/5'
+                    }`}>
+                    {viewingEmployee.avatar ? (
+                      <img
+                        src={viewingEmployee.avatar}
+                        alt={viewingEmployee.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(viewingEmployee.name)}&background=EA552E&color=fff&bold=true`;
+                        }}
+                      />
+                    ) : (
+                      <div className={`w-full h-full flex items-center justify-center font-bold text-2xl ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-blue-600/30 text-blue-400'}`}>
+                        {viewingEmployee.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-xl sm:text-2xl font-black ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                        {viewingEmployee.name}
+                      </h3>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isLight ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}>
+                        Active
+                      </span>
+                    </div>
+                    <p className={`text-xs font-semibold flex items-center gap-1.5 mt-1 ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>
+                      <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                      <span>{viewingEmployee.designation || viewingEmployee.role}</span>
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A]' : 'bg-white/5 text-slate-400'}`}>
+                        ID: {viewingEmployee.id}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingEmployee(null)}
+                  className={`text-2xl font-bold p-1 rounded-xl transition-colors ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Contact Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className={`p-3.5 rounded-2xl border space-y-1 ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/30 border-white/5'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Phone Number</span>
+                  <div className="flex items-center gap-2">
+                    <Phone className={`w-3.5 h-3.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                    {viewingEmployee.phone ? (
+                      <a href={`tel:${viewingEmployee.phone}`} className="font-mono font-bold hover:underline">
+                        {viewingEmployee.phone}
+                      </a>
+                    ) : (
+                      <span className="italic opacity-60">Not provided</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className={`p-3.5 rounded-2xl border space-y-1 ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/30 border-white/5'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Email Address</span>
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <Mail className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                    {viewingEmployee.email ? (
+                      <a href={`mailto:${viewingEmployee.email}`} className="font-medium hover:underline truncate">
+                        {viewingEmployee.email}
+                      </a>
+                    ) : (
+                      <span className="italic opacity-60">Not provided</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Workload Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className={`p-3 rounded-2xl border text-center ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <div className={`text-[10px] font-bold uppercase ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Total Tasks</div>
+                  <div className={`text-2xl font-black mt-1 ${isLight ? 'text-[#0E7490]' : 'text-cyan-400'}`}>{empTasks.length}</div>
+                </div>
+                <div className={`p-3 rounded-2xl border text-center ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <div className={`text-[10px] font-bold uppercase ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Active Backlog</div>
+                  <div className="text-2xl font-black mt-1 text-amber-500">{empActive.length}</div>
+                </div>
+                <div className={`p-3 rounded-2xl border text-center ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <div className={`text-[10px] font-bold uppercase ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Closed Done</div>
+                  <div className="text-2xl font-black mt-1 text-emerald-500">{empCompleted.length}</div>
+                </div>
+              </div>
+
+              {/* Assigned Tickets */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                    Assigned Tickets ({empTasks.length})
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {empTasks.length === 0 ? (
+                    <div className={`p-4 rounded-2xl border text-center text-xs italic ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/[0.02] border-white/5 text-slate-500'}`}>
+                      No tickets currently assigned to this engineer.
+                    </div>
+                  ) : (
+                    empTasks.map((t) => (
+                      <div key={t.id} className={`p-3 rounded-2xl border text-xs flex items-center justify-between gap-3 ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/5'}`}>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`font-mono font-bold text-[11px] ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{t.ticketNumber}</span>
+                            <span className={`font-bold truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{t.partyName}</span>
+                          </div>
+                          <div className={`text-[11px] truncate mt-0.5 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-400'}`}>{t.systemName} - {t.typeOfWork}</div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${t.priorityInCustomer === 'High' || t.priorityInCustomer === 'Urgent'
+                            ? isLight ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            : isLight ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                            {t.priorityInCustomer}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${t.status === 'Completed'
+                            ? isLight ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-500/20 text-emerald-400'
+                            : isLight ? 'bg-amber-50 text-amber-700' : 'bg-amber-500/20 text-amber-400'
+                            }`}>
+                            {t.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className={`flex items-center justify-between pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = viewingEmployee;
+                    setViewingEmployee(null);
+                    openEditEmployeeModal(target);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer ${isLight
+                    ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#2A2118] border-[#EDE2D3]'
+                    : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
+                    }`}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewingEmployee(null)}
+                  className={`px-6 py-2 rounded-xl text-xs font-bold transition-all text-white cursor-pointer ${isLight
+                    ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25'
+                    : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'
+                    }`}
+                >
+                  Close
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
       {/* EDIT ENGINEER / USER PROFILE MODAL */}
       {editingEmployee && (
@@ -2282,11 +2630,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </label>
                 <div className={`flex items-center gap-4 p-3.5 border rounded-2xl ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/40 border-white/10'}`}>
                   {/* Clickable Image Box */}
-                  <div 
+                  <div
                     onClick={() => document.getElementById('edit-emp-avatar-input')?.click()}
-                    className={`relative w-16 h-16 min-w-[64px] min-h-[64px] max-w-[64px] max-h-[64px] rounded-2xl overflow-hidden border flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all ${
-                      isLight ? 'border-[#EDE2D3] bg-[#FDF3E7] hover:border-[#EA552E]' : 'border-cyan-500/40 bg-[#162032] hover:border-cyan-400'
-                    }`}
+                    className={`relative w-16 h-16 min-w-[64px] min-h-[64px] max-w-[64px] max-h-[64px] rounded-2xl overflow-hidden border flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all ${isLight ? 'border-[#EDE2D3] bg-[#FDF3E7] hover:border-[#EA552E]' : 'border-cyan-500/40 bg-[#162032] hover:border-cyan-400'
+                      }`}
                     title="Click to upload or change profile photo"
                   >
                     {uploadingEditAvatar ? (
@@ -2296,11 +2643,11 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       </div>
                     ) : editEmpAvatarDisplay ? (
                       <div className="relative w-full h-full">
-                        <img 
+                        <img
                           key={editEmpAvatarDisplay}
-                          src={editEmpAvatarDisplay} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover rounded-2xl block" 
+                          src={editEmpAvatarDisplay}
+                          alt="Preview"
+                          className="w-full h-full object-cover rounded-2xl block"
                         />
                         <div className="absolute bottom-0 inset-x-0 bg-black/75 py-0.5 text-[8px] text-white font-bold text-center">
                           Change
@@ -2321,11 +2668,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                         type="button"
                         disabled={uploadingEditAvatar}
                         onClick={() => document.getElementById('edit-emp-avatar-input')?.click()}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          isLight
-                            ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#2A2118] border border-[#EDE2D3]'
-                            : 'bg-white/10 hover:bg-white/20 text-white'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isLight
+                          ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#2A2118] border border-[#EDE2D3]'
+                          : 'bg-white/10 hover:bg-white/20 text-white'
+                          }`}
                       >
                         {uploadingEditAvatar ? (
                           <>
@@ -2482,11 +2828,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       key={role}
                       type="button"
                       onClick={() => setEditEmpDesignation(role)}
-                      className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${
-                        editEmpDesignation === role
-                          ? isLight ? 'bg-[#EA552E] text-white border-[#EA552E]' : 'bg-cyan-500 text-slate-950 border-cyan-400'
-                          : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3] hover:border-[#EA552E]' : 'bg-white/5 text-slate-300 border-white/10 hover:border-white/30'
-                      }`}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${editEmpDesignation === role
+                        ? isLight ? 'bg-[#EA552E] text-white border-[#EA552E]' : 'bg-cyan-500 text-slate-950 border-cyan-400'
+                        : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3] hover:border-[#EA552E]' : 'bg-white/5 text-slate-300 border-white/10 hover:border-white/30'
+                        }`}
                     >
                       {role}
                     </button>

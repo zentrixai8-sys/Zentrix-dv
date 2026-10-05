@@ -27,17 +27,23 @@ import {
   ArrowUpRight,
   Sparkles,
   Zap,
-  Shield
+  Shield,
+  Cloud,
+  Database
 } from 'lucide-react';
 import { 
   WhatsAppConfig, 
   WhatsAppTemplate, 
   WhatsAppLogEntry,
   getWhatsAppConfig, 
+  getStoredCloudflareConfig,
   saveWhatsAppConfig, 
   fetchMetaTemplates, 
+  getStoredCloudflareTemplates,
+  syncTemplatesToCloudflare,
   sendTicketWhatsAppNotification,
   getWhatsAppLogs,
+  getStoredCloudflareLogs,
   clearWhatsAppLogs,
   DEFAULT_META_TEMPLATES
 } from '../services/whatsappService';
@@ -83,6 +89,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
   const [fetchingTemplates, setFetchingTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(DEFAULT_META_TEMPLATES[0]);
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
+  const [templatesSource, setTemplatesSource] = useState<'cloudflare' | 'meta' | 'fallback' | 'default'>('cloudflare');
 
   // Logs state
   const [logs, setLogs] = useState<WhatsAppLogEntry[]>([]);
@@ -108,7 +115,41 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
     if (loaded.testPhoneNumber) {
       setTestNumber(loaded.testPhoneNumber);
     }
+
+    // Automatically load stored credentials & config from Cloudflare D1
+    getStoredCloudflareConfig().then((d1Config) => {
+      if (d1Config) {
+        setConfig(d1Config);
+        if (d1Config.testPhoneNumber) {
+          setTestNumber(d1Config.testPhoneNumber);
+        }
+      }
+    }).catch((err) => {
+      console.warn('Error loading initial Cloudflare WhatsApp config:', err);
+    });
+
     setLogs(getWhatsAppLogs());
+
+    // Automatically load stored dispatch logs from Cloudflare D1
+    getStoredCloudflareLogs().then((res) => {
+      if (res.logs && res.logs.length > 0) {
+        setLogs(res.logs);
+      }
+    }).catch((err) => {
+      console.warn('Error loading initial Cloudflare logs:', err);
+    });
+
+    // Automatically load stored templates from Cloudflare D1
+    getStoredCloudflareTemplates().then((res) => {
+      if (res.templates && res.templates.length > 0) {
+        setTemplates(res.templates);
+        setTemplatesSource(res.source);
+        const match = res.templates.find((t) => t.name === (loaded.templateName || 'help_ticket')) || res.templates[0];
+        if (match) setSelectedTemplate(match);
+      }
+    }).catch((err) => {
+      console.warn('Error loading initial Cloudflare templates:', err);
+    });
   }, []);
 
   const handleVerifyPin = (e: React.FormEvent) => {
@@ -174,11 +215,15 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
     try {
       const res = await fetchMetaTemplates(config);
       setTemplates(res.templates);
+      setTemplatesSource(res.source);
       if (res.templates.length > 0) {
-        setSelectedTemplate(res.templates[0]);
+        const match = res.templates.find((t) => t.name === (config.templateName || 'help_ticket')) || res.templates[0];
+        if (match) setSelectedTemplate(match);
       }
       if (res.source === 'meta') {
-        setTemplateNotice('Templates fetched live from your Meta WhatsApp Business Account (WABA)!');
+        setTemplateNotice('Templates fetched live from your Meta WhatsApp Business Account (WABA) & stored in Cloudflare D1!');
+      } else if (res.source === 'cloudflare') {
+        setTemplateNotice('Templates loaded from Cloudflare D1 database.');
       } else {
         setTemplateNotice(res.error || 'Displaying pre-configured templates.');
       }
@@ -385,7 +430,15 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
               Credentials & API
             </button>
             <button
-              onClick={() => setSettingsTab('templates')}
+              onClick={() => {
+                setSettingsTab('templates');
+                getStoredCloudflareTemplates().then((res) => {
+                  if (res.templates && res.templates.length > 0) {
+                    setTemplates(res.templates);
+                    setTemplatesSource(res.source);
+                  }
+                }).catch(() => {});
+              }}
               className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
                 settingsTab === 'templates'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
@@ -1166,7 +1219,10 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <button
                 type="button"
-                onClick={() => setLogs(getWhatsAppLogs())}
+                onClick={async () => {
+                  const res = await getStoredCloudflareLogs();
+                  setLogs(res.logs);
+                }}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   isLight
                     ? 'bg-[#EDE2D3]/60 hover:bg-[#EDE2D3] text-[#2A2118]'
