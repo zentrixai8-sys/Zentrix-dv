@@ -148,6 +148,10 @@ app.get('/api/tasks', async (c) => {
       status: row.status,
       assignedTo: row.assigned_to,
       notes: row.notes,
+      completionRemark: row.completion_remark || row.notes,
+      completionFileUrl: row.completion_file_url,
+      completionFileName: row.completion_file_name,
+      completedAt: row.completed_at,
       uploadFileUrl: row.upload_file_url,
       uploadFileName: row.upload_file_name,
       createdAt: row.created_at,
@@ -264,14 +268,37 @@ app.put('/api/tasks/:id/status', async (c) => {
   try {
     const db = c.env.DB;
     const taskId = c.req.param('id');
-    const { status, notes, performedBy } = await c.req.json();
+    const { status, notes, performedBy, completionRemark, completionFileUrl, completionFileName } = await c.req.json();
 
     const now = new Date().toISOString();
+    const finalRemark = completionRemark || notes;
+
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_remark TEXT').run(); } catch (_) {}
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_file_url TEXT').run(); } catch (_) {}
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_file_name TEXT').run(); } catch (_) {}
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN completed_at TEXT').run(); } catch (_) {}
+
     await db.prepare(`
       UPDATE tasks 
-      SET status = COALESCE(?, status), notes = COALESCE(?, notes), updated_at = ?
+      SET status = COALESCE(?, status), 
+          notes = COALESCE(?, notes),
+          completion_remark = COALESCE(?, completion_remark),
+          completion_file_url = COALESCE(?, completion_file_url),
+          completion_file_name = COALESCE(?, completion_file_name),
+          completed_at = CASE WHEN ? = 'Completed' THEN ? ELSE completed_at END,
+          updated_at = ?
       WHERE id = ?
-    `).bind(status || null, notes || null, now, taskId).run();
+    `).bind(
+      status || null, 
+      finalRemark || null, 
+      completionRemark || finalRemark || null,
+      completionFileUrl || null,
+      completionFileName || null,
+      status || '',
+      now,
+      now, 
+      taskId
+    ).run();
 
     return c.json({ success: true, message: 'Status updated successfully' });
   } catch (err: any) {

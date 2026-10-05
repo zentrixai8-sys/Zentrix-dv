@@ -25,6 +25,10 @@ export interface Task {
   uploadFileName?: string;
   assignedTo?: string; // Zentrix employee / engineer
   status: TaskStatus;
+  completionRemark?: string;
+  completionFileUrl?: string;
+  completionFileName?: string;
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

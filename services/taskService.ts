@@ -805,15 +805,27 @@ export const assignTask = async (taskId: string, employeeName: string): Promise<
 export const updateTaskStatus = async (
   taskId: string,
   status: TaskStatus,
-  notes?: string
+  notes?: string,
+  completionData?: {
+    completionRemark?: string;
+    completionFileUrl?: string;
+    completionFileName?: string;
+  }
 ): Promise<{ success: boolean; error?: string }> => {
   invalidateTaskCache();
+  const finalRemark = completionData?.completionRemark || notes;
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/tasks/${taskId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, notes })
+        body: JSON.stringify({
+          status,
+          notes: finalRemark,
+          completionRemark: completionData?.completionRemark,
+          completionFileUrl: completionData?.completionFileUrl,
+          completionFileName: completionData?.completionFileName
+        })
       });
       if (res.ok) {
         // continue
@@ -827,8 +839,22 @@ export const updateTaskStatus = async (
   const index = tasks.findIndex(t => t.id === taskId);
   if (index !== -1) {
     tasks[index].status = status;
-    if (notes !== undefined) {
-      tasks[index].notes = notes;
+    if (finalRemark !== undefined) {
+      tasks[index].notes = finalRemark;
+    }
+    if (completionData) {
+      if (completionData.completionRemark !== undefined) {
+        tasks[index].completionRemark = completionData.completionRemark;
+      }
+      if (completionData.completionFileUrl !== undefined) {
+        tasks[index].completionFileUrl = completionData.completionFileUrl;
+      }
+      if (completionData.completionFileName !== undefined) {
+        tasks[index].completionFileName = completionData.completionFileName;
+      }
+      if (status === 'Completed') {
+        tasks[index].completedAt = new Date().toLocaleString();
+      }
     }
     tasks[index].updatedAt = new Date().toLocaleString();
     saveTasks(tasks);

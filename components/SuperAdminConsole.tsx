@@ -6,6 +6,7 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   Search,
   Filter,
   UserCheck,
@@ -160,6 +161,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [editEmpCloudUrl, setEditEmpCloudUrl] = useState<string>('');
   const [uploadingEditAvatar, setUploadingEditAvatar] = useState(false);
   const [savingEditEmp, setSavingEditEmp] = useState(false);
+
+  // Task Completion & Resolution Proof Modal
+  const [completingTask, setCompletingTask] = useState<Task | null>(null);
+  const [completionRemark, setCompletionRemark] = useState('');
+  const [completionFile, setCompletionFile] = useState<File | null>(null);
+  const [completionFileUrl, setCompletionFileUrl] = useState('');
+  const [completionFileName, setCompletionFileName] = useState('');
+  const [uploadingCompletionFile, setUploadingCompletionFile] = useState(false);
+  const [savingCompletion, setSavingCompletion] = useState(false);
 
   const openEditEmployeeModal = (emp: Employee) => {
     setEditingEmployee(emp);
@@ -392,6 +402,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   };
 
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    if (newStatus === 'Completed') {
+      const target = tasks.find((t) => t.id === taskId);
+      if (target) {
+        setCompletingTask(target);
+        setCompletionRemark(target.completionRemark || target.notes || '');
+        setCompletionFileUrl(target.completionFileUrl || '');
+        setCompletionFileName(target.completionFileName || '');
+        setCompletionFile(null);
+        return;
+      }
+    }
     const res = await updateTaskStatus(taskId, newStatus);
     if (res.success) {
       showToast(`Status updated to ${newStatus}`);
@@ -399,10 +420,58 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     }
   };
 
+  const handleConfirmCompletion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!completingTask) return;
+    setSavingCompletion(true);
+    let fileUrl = completionFileUrl;
+    let fileName = completionFileName;
+
+    if (completionFile && !fileUrl) {
+      setUploadingCompletionFile(true);
+      const uploadRes = await uploadFileToCloudinary(completionFile);
+      setUploadingCompletionFile(false);
+      if (uploadRes.success && uploadRes.url) {
+        fileUrl = uploadRes.url;
+        fileName = completionFile.name;
+      }
+    }
+
+    const res = await updateTaskStatus(completingTask.id, 'Completed', completionRemark, {
+      completionRemark: completionRemark.trim() || 'Work completed successfully.',
+      completionFileUrl: fileUrl,
+      completionFileName: fileName
+    });
+
+    setSavingCompletion(false);
+    if (res.success) {
+      showToast('Task marked as Completed with resolution remark & attachment!');
+      setCompletingTask(null);
+      setCompletionRemark('');
+      setCompletionFile(null);
+      setCompletionFileUrl('');
+      setCompletionFileName('');
+      await loadData();
+    } else {
+      showToast('Failed to update status');
+    }
+  };
+
   const handleSaveModal = async () => {
     if (!selectedTask) return;
     setSavingNote(true);
-    const res = await updateTaskStatus(selectedTask.id, statusEdit, noteEdit);
+    const res = await updateTaskStatus(
+      selectedTask.id,
+      statusEdit,
+      noteEdit,
+      statusEdit === 'Completed'
+        ? {
+            completionRemark: noteEdit,
+            completionFileUrl: selectedTask.completionFileUrl,
+            completionFileName: selectedTask.completionFileName
+          }
+        : undefined
+    );
     setSavingNote(false);
     if (res.success) {
       showToast('Task details & internal notes updated!');
@@ -940,6 +1009,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                   title={`Cloudinary Attachment: ${t.uploadFileName || 'View File'}`}
                                 >
                                   <Paperclip className="w-3.5 h-3.5" />
+                                </a>
+                              )}
+                              {t.completionFileUrl && (
+                                <a
+                                  href={t.completionFileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 rounded-xl transition-colors"
+                                  title={`Completion Proof: ${t.completionFileName || 'View Resolution Attachment'}`}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
                                 </a>
                               )}
                               {t.linkOfSystem && (
@@ -1790,6 +1870,53 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
               </div>
             )}
+            {/* Completion Remark & Attachment Display */}
+            {(selectedTask.completionRemark || selectedTask.completionFileUrl) && (
+              <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Completion & Resolution Proof</span>
+                  </div>
+                  {selectedTask.completedAt && (
+                    <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
+                      {new Date(selectedTask.completedAt).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                {selectedTask.completionRemark && (
+                  <p className={`text-xs leading-relaxed p-3 rounded-xl ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'}`}>
+                    {selectedTask.completionRemark}
+                  </p>
+                )}
+                {selectedTask.completionFileUrl && (
+                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'}`}>
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                        <Paperclip className="w-4 h-4" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                          {selectedTask.completionFileName || 'Completion Attachment / Proof'}
+                        </div>
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                          Uploaded resolution proof
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={selectedTask.completionFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20"
+                    >
+                      <span>View Proof</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1863,6 +1990,152 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 {savingNote ? 'Saving Changes...' : 'Save Changes'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* COMPLETION & RESOLUTION REMARK / ATTACHMENT MODAL */}
+      {completingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+          <div className={`w-full max-w-xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      {completingTask.ticketNumber}
+                    </span>
+                    <span className={`text-xs ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>for {completingTask.partyName}</span>
+                  </div>
+                  <h3 className={`text-lg font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    Mark Task as Completed
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCompletingTask(null)}
+                className={`text-lg font-bold p-2 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCompletion} className="space-y-4">
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-between ${isLight ? 'text-[#8A7B68]' : 'text-slate-300'}`}>
+                  <span>Resolution Remark / Work Done *</span>
+                  <span className="text-[10px] lowercase font-normal opacity-75">(visible to client)</span>
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={completionRemark}
+                  onChange={(e) => setCompletionRemark(e.target.value)}
+                  placeholder="Describe the solution, updates made, fixes implemented, or remarks..."
+                  className={`w-full border rounded-2xl p-3 text-xs focus:outline-none transition-colors ${
+                    isLight 
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-emerald-500' 
+                      : 'bg-black/50 border-white/20 text-white focus:border-emerald-500'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-between ${isLight ? 'text-[#8A7B68]' : 'text-slate-300'}`}>
+                  <span>Completion Proof / Attachment</span>
+                  <span className="text-[10px] lowercase font-normal opacity-75">(optional - image, pdf, zip)</span>
+                </label>
+                <div className={`p-4 border-2 border-dashed rounded-2xl text-center transition-all ${
+                  isLight ? 'border-[#EDE2D3] bg-[#FBF5EC]' : 'border-white/10 bg-black/30'
+                }`}>
+                  <input
+                    type="file"
+                    id="completion-file-input"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const file = e.target.files[0];
+                        setCompletionFile(file);
+                        setCompletionFileName(file.name);
+                        setCompletionFileUrl('');
+                      }
+                    }}
+                  />
+                  {completionFile || completionFileName ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center gap-2 overflow-hidden text-left">
+                        <Paperclip className="w-4 h-4 shrink-0" />
+                        <span className="text-xs font-mono font-bold truncate">{completionFileName || completionFile?.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompletionFile(null);
+                          setCompletionFileName('');
+                          setCompletionFileUrl('');
+                        }}
+                        className="text-xs font-bold text-red-500 hover:underline ml-2 shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="completion-file-input"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-1.5 py-2"
+                    >
+                      <UploadCloud className={`w-8 h-8 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                      <div className={`text-xs font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                        Click to upload resolution screenshot or proof
+                      </div>
+                      <div className={`text-[11px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                        Supports PNG, JPG, PDF, ZIP (stored via Cloudinary)
+                      </div>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className={`p-3 rounded-xl border text-xs flex items-center gap-2.5 ${
+                isLight ? 'bg-amber-50/70 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+              }`}>
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Marking this as Completed will make the resolution remarks and proof attachment accessible directly in the client&apos;s ticket dashboard.</span>
+              </div>
+
+              <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+                <button
+                  type="button"
+                  onClick={() => setCompletingTask(null)}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCompletion || uploadingCompletionFile}
+                  className="px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25"
+                >
+                  {savingCompletion || uploadingCompletionFile ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>{uploadingCompletionFile ? 'Uploading File...' : 'Completing...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Confirm & Mark Completed</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

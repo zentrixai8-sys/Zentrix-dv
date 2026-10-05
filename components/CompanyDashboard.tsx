@@ -875,6 +875,21 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                           {/* Action (View detail modal & Cloudinary file) */}
                           <td className="py-4 px-3 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
+                              {t.completionFileUrl && (
+                                <a
+                                  href={t.completionFileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`p-1.5 rounded-lg border transition-colors ${
+                                    isLight
+                                      ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'
+                                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                  }`}
+                                  title={`Resolution Proof: ${t.completionFileName || 'View Proof'}`}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                </a>
+                              )}
                               {t.uploadFileUrl && (
                                 <a
                                   href={t.uploadFileUrl}
@@ -1328,6 +1343,70 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 </span>
               </div>
             </div>
+
+            {/* Resolution & Completion Proof (Visible to Client Who Raised Ticket) */}
+            {(viewingTask.status === 'Completed' || viewingTask.completionRemark || viewingTask.completionFileUrl) && (
+              <div className={`p-4 rounded-2xl border space-y-3 ${
+                isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                    <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-emerald-800' : 'text-emerald-400'}`}>
+                      Resolution Remark & Work Summary
+                    </span>
+                  </div>
+                  {viewingTask.completedAt && (
+                    <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
+                      {new Date(viewingTask.completedAt).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+
+                {viewingTask.completionRemark ? (
+                  <div className={`text-xs leading-relaxed p-3 rounded-xl ${
+                    isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'
+                  }`}>
+                    {viewingTask.completionRemark}
+                  </div>
+                ) : (
+                  <p className={`text-xs italic ${isLight ? 'text-emerald-700' : 'text-emerald-300/80'}`}>
+                    Task has been verified and marked as Completed.
+                  </p>
+                )}
+
+                {viewingTask.completionFileUrl && (
+                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${
+                    isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                  }`}>
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                        <Paperclip className="w-4 h-4" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                          {viewingTask.completionFileName || 'Completion Attachment / Proof'}
+                        </div>
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                          Verification document from engineering team
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={viewingTask.completionFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20"
+                    >
+                      <span>View / Download</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             {viewingTask.uploadFileUrl && (
               <div>

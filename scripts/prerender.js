@@ -155,6 +155,20 @@ async function prerender() {
     fs.copyFileSync(publicSitemap, distSitemap);
   }
 
+  // Ensure /dashboard fallback static file exists to prevent 404 on refresh
+  const dashboardDir = path.resolve(distDir, 'dashboard');
+  if (!fs.existsSync(dashboardDir)) {
+    fs.mkdirSync(dashboardDir, { recursive: true });
+  }
+  fs.copyFileSync(templatePath, path.resolve(dashboardDir, 'index.html'));
+  console.log('    ✅ Wrote static fallback for client route: dist/dashboard/index.html');
+
+  // Copy _redirects if exists
+  const publicRedirects = path.resolve(rootDir, 'public', '_redirects');
+  if (fs.existsSync(publicRedirects)) {
+    fs.copyFileSync(publicRedirects, path.resolve(distDir, '_redirects'));
+  }
+
   // Clean up temporary SSR bundle
   if (fs.existsSync(distSsrDir)) {
     fs.rmSync(distSsrDir, { recursive: true, force: true });
