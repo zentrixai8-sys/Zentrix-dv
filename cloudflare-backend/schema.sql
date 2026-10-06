@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS tasks (
     status TEXT NOT NULL DEFAULT 'Pending', -- Pending, In Progress, In Review, Completed, Rejected
     assigned_to TEXT DEFAULT 'Unassigned',
     notes TEXT DEFAULT '-',
+    completion_remark TEXT,
+    completion_file_url TEXT,
+    completion_file_name TEXT,
+    completion_files TEXT,                -- JSON string: [{"name":"...","url":"..."}]
+    completed_at DATETIME,
+    is_delegation INTEGER DEFAULT 0,      -- 1 for Admin internal delegation, 0 for client ticket
     upload_file_url TEXT,
     upload_file_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -53,9 +59,37 @@ CREATE TABLE IF NOT EXISTS users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- TABLE 4: DELEGATION (Stores Admin Task Delegations Assigned Directly to Employees)
+CREATE TABLE IF NOT EXISTS delegation (
+    id TEXT PRIMARY KEY,
+    delegation_number TEXT UNIQUE NOT NULL, -- e.g. DLG-2026-101
+    title TEXT NOT NULL,
+    description TEXT,
+    assigned_to TEXT NOT NULL,             -- Employee / Engineer name
+    assigned_by TEXT DEFAULT 'Super Admin',
+    category TEXT DEFAULT 'Workflow Automation',
+    priority TEXT NOT NULL DEFAULT 'High', -- Low, Medium, High, Urgent
+    target_date TEXT NOT NULL,             -- Target Completion Date (YYYY-MM-DD)
+    status TEXT NOT NULL DEFAULT 'Pending', -- Pending, In Progress, In Review, Completed, Rejected
+    link_url TEXT,
+    completion_remark TEXT,
+    completion_file_url TEXT,
+    completion_file_name TEXT,
+    completion_files TEXT,                 -- JSON Array string: [{"name":"...","url":"..."}]
+    completed_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- =========================================================================
--- RUN THESE ALTER QUERIES IN D1 CONSOLE IF TABLE ALREADY EXISTS:
+-- RUN THESE ALTER QUERIES IN D1 CONSOLE IF TABLES ALREADY EXIST:
 -- =========================================================================
+-- ALTER TABLE tasks ADD COLUMN completion_remark TEXT;
+-- ALTER TABLE tasks ADD COLUMN completion_file_url TEXT;
+-- ALTER TABLE tasks ADD COLUMN completion_file_name TEXT;
+-- ALTER TABLE tasks ADD COLUMN completion_files TEXT;
+-- ALTER TABLE tasks ADD COLUMN completed_at DATETIME;
+-- ALTER TABLE tasks ADD COLUMN is_delegation INTEGER DEFAULT 0;
 -- ALTER TABLE users ADD COLUMN designation TEXT;
 -- ALTER TABLE users ADD COLUMN dp_url TEXT;
 -- ALTER TABLE users ADD COLUMN phone TEXT;

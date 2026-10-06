@@ -133,30 +133,41 @@ app.get('/api/tasks', async (c) => {
     const result = await db.prepare(query).bind(...params).all();
 
     // Map column snake_case to frontend camelCase
-    const tasks = (result.results || []).map((row: any) => ({
-      id: row.id,
-      ticketNumber: row.ticket_number,
-      companyId: row.company_id,
-      partyName: row.party_name,
-      personName: row.person_name,
-      typeOfWork: row.type_of_work,
-      systemName: row.system_name,
-      descriptionOfWork: row.description_of_work,
-      linkOfSystem: row.link_of_system,
-      priorityInCustomer: row.priority_in_customer,
-      expectedDateToClose: row.expected_date_to_close,
-      status: row.status,
-      assignedTo: row.assigned_to,
-      notes: row.notes,
-      completionRemark: row.completion_remark || row.notes,
-      completionFileUrl: row.completion_file_url,
-      completionFileName: row.completion_file_name,
-      completedAt: row.completed_at,
-      uploadFileUrl: row.upload_file_url,
-      uploadFileName: row.upload_file_name,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
-    }));
+    const tasks = (result.results || []).map((row: any) => {
+      let parsedCompletionFiles = undefined;
+      if (row.completion_files) {
+        try {
+          parsedCompletionFiles = typeof row.completion_files === 'string' ? JSON.parse(row.completion_files) : row.completion_files;
+        } catch (_) {}
+      }
+
+      return {
+        id: row.id,
+        ticketNumber: row.ticket_number,
+        companyId: row.company_id,
+        partyName: row.party_name,
+        personName: row.person_name,
+        typeOfWork: row.type_of_work,
+        systemName: row.system_name,
+        descriptionOfWork: row.description_of_work,
+        linkOfSystem: row.link_of_system,
+        priorityInCustomer: row.priority_in_customer,
+        expectedDateToClose: row.expected_date_to_close,
+        status: row.status,
+        assignedTo: row.assigned_to,
+        notes: row.notes,
+        completionRemark: row.completion_remark || row.notes,
+        completionFileUrl: row.completion_file_url,
+        completionFileName: row.completion_file_name,
+        completionFiles: parsedCompletionFiles,
+        completedAt: row.completed_at,
+        isDelegation: row.is_delegation === 1 || row.is_delegation === true || row.party_name === 'Internal Admin Task' || (row.ticket_number && row.ticket_number.startsWith('DLG')),
+        uploadFileUrl: row.upload_file_url,
+        uploadFileName: row.upload_file_name,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    });
 
     return c.json({ success: true, count: tasks.length, tasks });
   } catch (err: any) {
@@ -164,31 +175,35 @@ app.get('/api/tasks', async (c) => {
   }
 });
 
-// POST /api/tasks - Company raises a new task
+// POST /api/tasks - Company raises a new task or Admin creates delegation
 app.post('/api/tasks', async (c) => {
   try {
     const db = c.env.DB;
     const body = await c.req.json();
 
+    const isDelegation = body.isDelegation || body.partyName === 'Internal Admin Task' || (body.ticketNumber && body.ticketNumber.startsWith('DLG'));
     const id = body.id || `tsk_${Date.now()}`;
-    const ticketNumber = body.ticketNumber || `TCK-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const ticketNumber = body.ticketNumber || `${isDelegation ? 'DLG-2026' : 'TCK-2026'}-${Math.floor(100 + Math.random() * 900)}`;
     const now = new Date().toISOString();
+
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN is_delegation INTEGER DEFAULT 0').run(); } catch (_) {}
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_files TEXT').run(); } catch (_) {}
 
     await db.prepare(`
       INSERT INTO tasks (
         id, ticket_number, company_id, party_name, person_name,
         type_of_work, system_name, description_of_work, link_of_system,
         priority_in_customer, expected_date_to_close, status,
-        assigned_to, notes, upload_file_url, upload_file_name, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        assigned_to, notes, is_delegation, upload_file_url, upload_file_name, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       ticketNumber,
-      body.companyId || 'comp_general',
-      body.partyName || 'Company Client',
-      body.personName || 'Authorized User',
+      body.companyId || (isDelegation ? 'comp_zentrix_internal' : 'comp_general'),
+      body.partyName || (isDelegation ? 'Internal Admin Task' : 'Company Client'),
+      body.personName || (isDelegation ? 'Super Admin' : 'Authorized User'),
       body.typeOfWork || 'Existing System Edit & Update',
-      body.systemName || 'General System',
+      body.systemName || (isDelegation ? 'Internal Delegation' : 'General System'),
       body.descriptionOfWork || '',
       body.linkOfSystem || '',
       body.priorityInCustomer || 'Medium',
@@ -196,6 +211,7 @@ app.post('/api/tasks', async (c) => {
       body.status || 'Pending',
       body.assignedTo || 'Unassigned',
       body.notes || '-',
+      isDelegation ? 1 : 0,
       body.uploadFileUrl || null,
       body.uploadFileName || null,
       now,
@@ -219,6 +235,7 @@ app.post('/api/tasks', async (c) => {
         id,
         ticketNumber,
         ...body,
+        isDelegation,
         status: 'Pending',
         createdAt: now,
         updatedAt: now
@@ -268,14 +285,16 @@ app.put('/api/tasks/:id/status', async (c) => {
   try {
     const db = c.env.DB;
     const taskId = c.req.param('id');
-    const { status, notes, performedBy, completionRemark, completionFileUrl, completionFileName } = await c.req.json();
+    const { status, notes, performedBy, completionRemark, completionFileUrl, completionFileName, completionFiles } = await c.req.json();
 
     const now = new Date().toISOString();
     const finalRemark = completionRemark || notes;
+    const completionFilesJson = completionFiles ? JSON.stringify(completionFiles) : null;
 
     try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_remark TEXT').run(); } catch (_) {}
     try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_file_url TEXT').run(); } catch (_) {}
     try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_file_name TEXT').run(); } catch (_) {}
+    try { await db.prepare('ALTER TABLE tasks ADD COLUMN completion_files TEXT').run(); } catch (_) {}
     try { await db.prepare('ALTER TABLE tasks ADD COLUMN completed_at TEXT').run(); } catch (_) {}
 
     await db.prepare(`
@@ -285,6 +304,7 @@ app.put('/api/tasks/:id/status', async (c) => {
           completion_remark = COALESCE(?, completion_remark),
           completion_file_url = COALESCE(?, completion_file_url),
           completion_file_name = COALESCE(?, completion_file_name),
+          completion_files = COALESCE(?, completion_files),
           completed_at = CASE WHEN ? = 'Completed' THEN ? ELSE completed_at END,
           updated_at = ?
       WHERE id = ?
@@ -294,6 +314,7 @@ app.put('/api/tasks/:id/status', async (c) => {
       completionRemark || finalRemark || null,
       completionFileUrl || null,
       completionFileName || null,
+      completionFilesJson,
       status || '',
       now,
       now, 
@@ -301,6 +322,196 @@ app.put('/api/tasks/:id/status', async (c) => {
     ).run();
 
     return c.json({ success: true, message: 'Status updated successfully' });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// =========================================================================
+// DELEGATION TABLE API (Direct Admin Tasks)
+// =========================================================================
+
+// Auto-create delegation table if not exists
+const ensureDelegationTable = async (db: any) => {
+  try {
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS delegation (
+        id TEXT PRIMARY KEY,
+        delegation_number TEXT UNIQUE NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        assigned_to TEXT NOT NULL,
+        assigned_by TEXT DEFAULT 'Super Admin',
+        category TEXT DEFAULT 'Workflow Automation',
+        priority TEXT NOT NULL DEFAULT 'High',
+        target_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        link_url TEXT,
+        completion_remark TEXT,
+        completion_file_url TEXT,
+        completion_file_name TEXT,
+        completion_files TEXT,
+        completed_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+  } catch (_) {}
+};
+
+// GET /api/delegations - Fetch all delegations
+app.get('/api/delegations', async (c) => {
+  try {
+    const db = c.env.DB;
+    await ensureDelegationTable(db);
+    const { assignedTo, status } = c.req.query();
+
+    let query = 'SELECT * FROM delegation WHERE 1=1';
+    const params: any[] = [];
+
+    if (assignedTo && assignedTo !== 'All') {
+      query += ' AND assigned_to = ?';
+      params.push(assignedTo);
+    }
+    if (status && status !== 'All') {
+      query += ' AND status = ?';
+      params.push(status);
+    }
+
+    query += ' ORDER BY created_at DESC';
+    const result = await db.prepare(query).bind(...params).all();
+
+    const delegations = (result.results || []).map((row: any) => {
+      let parsedFiles = undefined;
+      if (row.completion_files) {
+        try {
+          parsedFiles = typeof row.completion_files === 'string' ? JSON.parse(row.completion_files) : row.completion_files;
+        } catch (_) {}
+      }
+      return {
+        id: row.id,
+        delegationNumber: row.delegation_number,
+        title: row.title,
+        description: row.description || '',
+        assignedTo: row.assigned_to,
+        assignedBy: row.assigned_by || 'Super Admin',
+        category: row.category || 'General',
+        priority: row.priority || 'High',
+        targetDate: row.target_date,
+        status: row.status || 'Pending',
+        linkUrl: row.link_url,
+        completionRemark: row.completion_remark,
+        completionFileUrl: row.completion_file_url,
+        completionFileName: row.completion_file_name,
+        completionFiles: parsedFiles,
+        completedAt: row.completed_at,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    });
+
+    return c.json({ success: true, count: delegations.length, delegations });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// POST /api/delegations - Create a direct delegation task
+app.post('/api/delegations', async (c) => {
+  try {
+    const db = c.env.DB;
+    await ensureDelegationTable(db);
+    const body = await c.req.json();
+
+    const id = body.id || `dlg_${Date.now()}`;
+    const delegationNumber = body.delegationNumber || `DLG-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const now = new Date().toISOString();
+
+    await db.prepare(`
+      INSERT INTO delegation (
+        id, delegation_number, title, description, assigned_to, assigned_by,
+        category, priority, target_date, status, link_url, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      delegationNumber,
+      body.title,
+      body.description || '',
+      body.assignedTo,
+      body.assignedBy || 'Super Admin',
+      body.category || 'Workflow Automation',
+      body.priority || 'High',
+      body.targetDate || '2026-03-31',
+      body.status || 'Pending',
+      body.linkUrl || null,
+      now,
+      now
+    ).run();
+
+    return c.json({
+      success: true,
+      delegation: {
+        id,
+        delegationNumber,
+        ...body,
+        status: 'Pending',
+        createdAt: now,
+        updatedAt: now
+      }
+    }, 201);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// PUT /api/delegations/:id/status - Update delegation status and multi-proofs
+app.put('/api/delegations/:id/status', async (c) => {
+  try {
+    const db = c.env.DB;
+    await ensureDelegationTable(db);
+    const delegationId = c.req.param('id');
+    const { status, notes, completionRemark, completionFileUrl, completionFileName, completionFiles } = await c.req.json();
+
+    const now = new Date().toISOString();
+    const finalRemark = completionRemark || notes;
+    const filesJson = completionFiles ? JSON.stringify(completionFiles) : null;
+
+    await db.prepare(`
+      UPDATE delegation 
+      SET status = COALESCE(?, status), 
+          completion_remark = COALESCE(?, completion_remark),
+          completion_file_url = COALESCE(?, completion_file_url),
+          completion_file_name = COALESCE(?, completion_file_name),
+          completion_files = COALESCE(?, completion_files),
+          completed_at = CASE WHEN ? = 'Completed' THEN ? ELSE completed_at END,
+          updated_at = ?
+      WHERE id = ?
+    `).bind(
+      status || null, 
+      finalRemark || null, 
+      completionFileUrl || null,
+      completionFileName || null,
+      filesJson,
+      status || '',
+      now,
+      now, 
+      delegationId
+    ).run();
+
+    return c.json({ success: true, message: 'Delegation status updated' });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// DELETE /api/delegations/:id
+app.delete('/api/delegations/:id', async (c) => {
+  try {
+    const db = c.env.DB;
+    await ensureDelegationTable(db);
+    const delegationId = c.req.param('id');
+    await db.prepare('DELETE FROM delegation WHERE id = ?').bind(delegationId).run();
+    return c.json({ success: true, message: 'Delegation deleted' });
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
   }
