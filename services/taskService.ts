@@ -67,8 +67,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'admin@cirticare.com',
     phone: '+91 98765 11223',
     activeSystemsCount: 3,
-    avatar: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&auto=format&fit=crop&q=60',
-    logoUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&auto=format&fit=crop&q=60'
+    avatar: '',
+    logoUrl: ''
   },
   {
     id: 'comp_piramal',
@@ -79,8 +79,8 @@ export const DEFAULT_COMPANIES: Company[] = [
     email: 'vaibhav@piramalpetroleum.com',
     phone: '+91 98765 43210',
     activeSystemsCount: 7,
-    avatar: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60',
-    logoUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
+    avatar: '',
+    logoUrl: ''
   },
   {
     id: 'comp_popular',
@@ -393,13 +393,15 @@ const getStoredCompanies = (): Company[] => {
     if (!list.some((c: any) => c.code?.toUpperCase() === 'CIRTICARE01' || c.name?.toLowerCase() === 'cirti care')) {
       list.unshift(DEFAULT_COMPANIES[0]);
     }
-    // Normalize logoUrl and avatar for all companies
+    // Normalize logoUrl and avatar for all companies without assigning random stock photos
+    const isUnsplash = (url?: string) => Boolean(url && url.includes('images.unsplash.com'));
     const normalized = list.map(c => {
-      const logo = c.logoUrl || c.avatar || '';
+      const rawLogo = c.logoUrl || c.avatar || '';
+      const logo = isUnsplash(rawLogo) ? '' : rawLogo;
       return {
         ...c,
         logoUrl: logo,
-        avatar: logo || 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
+        avatar: logo
       };
     });
     localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(normalized));
@@ -420,7 +422,8 @@ const saveCompanies = (comps: Company[]) => {
 
 export const createCompany = async (compInput: Partial<Company>): Promise<{ success: boolean; company?: Company; error?: string }> => {
   const companies = getStoredCompanies();
-  const logoUrl = compInput.logoUrl || compInput.avatar || '';
+  const rawLogo = compInput.logoUrl || compInput.avatar || '';
+  const logoUrl = rawLogo.includes('images.unsplash.com') ? '' : rawLogo;
   const newCompany: Company = {
     id: `comp_${Date.now()}`,
     name: compInput.name || 'New Client Company',
@@ -430,7 +433,7 @@ export const createCompany = async (compInput: Partial<Company>): Promise<{ succ
     email: compInput.email || '',
     phone: compInput.phone || '',
     activeSystemsCount: 1,
-    avatar: logoUrl || 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60',
+    avatar: logoUrl,
     logoUrl: logoUrl
   };
 
@@ -470,6 +473,10 @@ export const updateCompanyLogo = async (companyId: string, logoUrl: string): Pro
     saveCompanies(companies);
   }
 
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('zentrix_company_logo_updated', { detail: { companyId, logoUrl } }));
+  }
+
   if (CLOUDFLARE_API_URL) {
     try {
       await fetch(`${CLOUDFLARE_API_URL}/api/companies/${encodeURIComponent(companyId)}/logo`, {
@@ -494,10 +501,11 @@ export const fetchCompanies = async (): Promise<Company[]> => {
           const stored = getStoredCompanies();
           data.companies.forEach((rc: any) => {
             const idx = stored.findIndex(c => c.id === rc.id || c.code === rc.code || c.name?.toLowerCase() === rc.name?.toLowerCase());
+            const validLogo = (rc.logo_url && !rc.logo_url.includes('images.unsplash.com')) ? rc.logo_url : '';
             if (idx !== -1) {
-              if (rc.logo_url) {
-                stored[idx].logoUrl = rc.logo_url;
-                stored[idx].avatar = rc.logo_url;
+              if (validLogo) {
+                stored[idx].logoUrl = validLogo;
+                stored[idx].avatar = validLogo;
               }
               if (rc.password) stored[idx].password = rc.password;
               if (rc.contact_person) stored[idx].contactPerson = rc.contact_person;
@@ -513,8 +521,8 @@ export const fetchCompanies = async (): Promise<Company[]> => {
                 email: rc.email || '',
                 phone: rc.phone || '',
                 activeSystemsCount: 1,
-                logoUrl: rc.logo_url || '',
-                avatar: rc.logo_url || 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&auto=format&fit=crop&q=60'
+                logoUrl: validLogo,
+                avatar: validLogo
               });
             }
           });

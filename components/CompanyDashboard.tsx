@@ -41,6 +41,7 @@ import {
   uploadFileToCloudinary,
   getSystemsForCompany, 
   getCompanies,
+  fetchCompanies,
   getAuthSession, 
   clearAuthSession 
 } from '../services/taskService';
@@ -60,8 +61,18 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
   const companyName = session?.companyName || 'Piramal Petroleum Private Limited';
   const userName = session?.user || 'Vaibhav1';
   const companyId = session?.companyId || 'comp_piramal';
-  const compRecord = getCompanies().find(c => c.id === companyId || c.code === companyId || c.name === companyName);
-  const companyLogo = compRecord?.logoUrl || compRecord?.avatar;
+
+  const [currentCompany, setCurrentCompany] = useState<Company | undefined>(() => {
+    const list = getCompanies();
+    return list.find(c => 
+      (c.id && c.id.toLowerCase() === companyId.toLowerCase()) || 
+      (c.code && c.code.toLowerCase() === companyId.toLowerCase()) || 
+      (c.name && c.name.toLowerCase() === companyName.toLowerCase())
+    );
+  });
+
+  const rawLogo = (currentCompany?.logoUrl || currentCompany?.avatar || '').trim();
+  const companyLogo = (rawLogo && !rawLogo.includes('images.unsplash.com')) ? rawLogo : '';
   const companyInitials = companyName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   // Portal Theme: 'dark' | 'light'
@@ -69,9 +80,27 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
   useEffect(() => {
     const handleThemeEvent = () => setTheme(getStoredTheme());
+    const handleLogoUpdate = () => {
+      const list = getCompanies();
+      const matched = list.find(c => 
+        (c.id && c.id.toLowerCase() === companyId.toLowerCase()) || 
+        (c.code && c.code.toLowerCase() === companyId.toLowerCase()) || 
+        (c.name && c.name.toLowerCase() === companyName.toLowerCase())
+      );
+      if (matched) {
+        setCurrentCompany(matched);
+        setCompanyLogoError(false);
+      }
+    };
     window.addEventListener('zentrix_theme_change', handleThemeEvent);
-    return () => window.removeEventListener('zentrix_theme_change', handleThemeEvent);
-  }, []);
+    window.addEventListener('zentrix_company_logo_updated', handleLogoUpdate);
+    window.addEventListener('storage', handleLogoUpdate);
+    return () => {
+      window.removeEventListener('zentrix_theme_change', handleThemeEvent);
+      window.removeEventListener('zentrix_company_logo_updated', handleLogoUpdate);
+      window.removeEventListener('storage', handleLogoUpdate);
+    };
+  }, [companyId, companyName]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -157,15 +186,24 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await fetchTasks({ companyId });
+      const [data, compList] = await Promise.all([
+        fetchTasks({ companyId }),
+        fetchCompanies()
+      ]);
       setTasks(data);
       const sysList = getSystemsForCompany(companyId);
       setSystems(sysList);
 
-      // Pre-fill phone if available from company records
-      const comp = getCompanies().find(c => c.id === companyId || c.code === companyId || c.name === companyName);
-      if (comp?.phone && !formPhone) {
-        setFormPhone(comp.phone);
+      const comp = compList.find(c => 
+        (c.id && c.id.toLowerCase() === companyId.toLowerCase()) || 
+        (c.code && c.code.toLowerCase() === companyId.toLowerCase()) || 
+        (c.name && c.name.toLowerCase() === companyName.toLowerCase())
+      );
+      if (comp) {
+        setCurrentCompany(comp);
+        if (comp.phone && !formPhone) {
+          setFormPhone(comp.phone);
+        }
       }
     } catch (err) {
       console.error('Failed to load company tasks', err);
