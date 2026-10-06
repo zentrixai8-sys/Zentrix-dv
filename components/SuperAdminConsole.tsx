@@ -138,7 +138,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [showAddEmpModal, setShowAddEmpModal] = useState(false);
   const [newEmpName, setNewEmpName] = useState('');
   const [newEmpPhone, setNewEmpPhone] = useState('');
-  const [newEmpUserRole, setNewEmpUserRole] = useState<'support_engineer' | 'employee' | 'admin' | 'manager'>('support_engineer');
+  const [newEmpUserRole, setNewEmpUserRole] = useState<'admin' | 'user' | string>('admin');
   const [newEmpDesignation, setNewEmpDesignation] = useState('');
   const [newEmpEmail, setNewEmpEmail] = useState('');
   const [newEmpAvatarDisplay, setNewEmpAvatarDisplay] = useState<string>('');
@@ -154,7 +154,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [editEmpName, setEditEmpName] = useState('');
   const [editEmpPhone, setEditEmpPhone] = useState('');
-  const [editEmpUserRole, setEditEmpUserRole] = useState<'support_engineer' | 'employee' | 'admin' | 'manager'>('support_engineer');
+  const [editEmpUserRole, setEditEmpUserRole] = useState<'admin' | 'user' | string>('admin');
   const [editEmpDesignation, setEditEmpDesignation] = useState('');
   const [editEmpEmail, setEditEmpEmail] = useState('');
   const [editEmpAvatarDisplay, setEditEmpAvatarDisplay] = useState<string>('');
@@ -175,7 +175,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     setEditingEmployee(emp);
     setEditEmpName(emp.name);
     setEditEmpPhone(emp.phone || '');
-    setEditEmpUserRole((emp.role as any) || 'support_engineer');
+    setEditEmpUserRole((emp.role as any) || 'admin');
     setEditEmpDesignation(emp.designation || emp.role || '');
     setEditEmpEmail(emp.email || '');
     setEditEmpAvatarDisplay(emp.avatar || '');
@@ -281,7 +281,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       setShowAddEmpModal(false);
       setNewEmpName('');
       setNewEmpPhone('');
-      setNewEmpUserRole('support_engineer');
+      setNewEmpUserRole('admin');
       setNewEmpDesignation('');
       setNewEmpEmail('');
       setNewEmpAvatarDisplay('');
@@ -2417,8 +2417,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       )}
       {/* REGISTER NEW ENGINEER / USER MODAL */}
       {showAddEmpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className={`w-full max-w-lg border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto precision-scrollbar border rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
             <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className="flex items-center gap-3">
                 <div className={`p-2.5 rounded-2xl border ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
@@ -2594,10 +2594,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       onChange={(e) => setNewEmpUserRole(e.target.value as any)}
                       className={`w-full border rounded-xl pl-9 pr-8 py-3 focus:outline-none transition-colors appearance-none cursor-pointer ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-[#0F172A] border-white/10 text-white focus:border-cyan-400'}`}
                     >
-                      <option value="support_engineer">Support Engineer</option>
-                      <option value="employee">Systems Engineer / Developer</option>
-                      <option value="admin">Admin / Director</option>
-                      <option value="manager">Operations Manager</option>
+                      <option value="admin">Admin</option>
+                      <option value="user">User</option>
                     </select>
                     <ChevronDown className={`w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
                   </div>
@@ -2870,8 +2868,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* EDIT ENGINEER / USER PROFILE MODAL */}
       {editingEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className={`w-full max-w-lg border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto precision-scrollbar border rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
             <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className="flex items-center gap-3">
                 <div className={`p-2.5 rounded-2xl border ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
@@ -3047,10 +3045,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       onChange={(e) => setEditEmpUserRole(e.target.value as any)}
                       className={`w-full border rounded-xl pl-9 pr-8 py-3 focus:outline-none transition-colors appearance-none cursor-pointer ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-[#0F172A] border-white/10 text-white focus:border-cyan-400'}`}
                     >
-                      <option value="support_engineer">Support Engineer</option>
-                      <option value="employee">Systems Engineer / Developer</option>
-                      <option value="admin">Admin / Director</option>
-                      <option value="manager">Operations Manager</option>
+                      <option value="admin">Admin</option>
+                      <option value="user">User</option>
                     </select>
                     <ChevronDown className={`w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
                   </div>
