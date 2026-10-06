@@ -49,7 +49,11 @@ import {
   Download,
   FileUp,
   FileCheck2,
-  CalendarClock
+  CalendarClock,
+  Bell,
+  BellRing,
+  CheckCheck,
+  Inbox
 } from 'lucide-react';
 import { Task, TaskStatus, Company, Employee, TaskPriority, Delegation } from '../types/taskTypes';
 import {
@@ -116,6 +120,40 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
   // Portal Theme: 'dark' | 'light'
   const [theme, setTheme] = useState<PortalTheme>(getStoredTheme);
+
+  // Client Ticket Notification Panel State
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+  const [readTicketIds, setReadTicketIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('zentrix_admin_read_tickets_v1');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const markTicketAsRead = (ticketId: string) => {
+    setReadTicketIds(prev => {
+      if (prev.includes(ticketId)) return prev;
+      const updated = [...prev, ticketId];
+      try {
+        localStorage.setItem('zentrix_admin_read_tickets_v1', JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
+
+  const markAllTicketsAsRead = () => {
+    const allIds = tasks.map(t => t.id);
+    setReadTicketIds(allIds);
+    try {
+      localStorage.setItem('zentrix_admin_read_tickets_v1', JSON.stringify(allIds));
+    } catch (_) {}
+    showToast('All notifications marked as read');
+  };
+
+  const unreadTickets = tasks.filter(t => !readTicketIds.includes(t.id));
+  const unreadCount = unreadTickets.length;
 
   useEffect(() => {
     const handleThemeEvent = () => setTheme(getStoredTheme());
@@ -432,6 +470,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
   useEffect(() => {
     loadData();
+    // Live polling for incoming client tickets every 15 seconds
+    const interval = setInterval(() => {
+      fetchTasks().then(latestTasks => {
+        if (Array.isArray(latestTasks) && latestTasks.length > 0) {
+          setTasks(latestTasks);
+        }
+      }).catch(() => {});
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleAssign = async (taskId: string, employeeName: string) => {
@@ -892,6 +939,171 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
             {/* Theme Selector (Light / Dark) */}
             <ThemeSelector theme={theme} onChange={setTheme} size="sm" />
+
+            {/* Notification Bell Icon & Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+                title="Client Ticket Notifications"
+                className={`relative flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${
+                  showNotificationPanel
+                    ? isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+                    : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3] hover:text-[#2A2118]' : 'bg-white/5 text-slate-300 border-white/10 hover:text-white'
+                }`}
+              >
+                {unreadCount > 0 ? (
+                  <BellRing className={`w-4 h-4 animate-bounce ${isLight ? 'text-[#EA552E]' : 'text-blue-400'}`} />
+                ) : (
+                  <Bell className="w-4 h-4" />
+                )}
+                
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 animate-pulse border-2 border-white dark:border-black">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown Panel */}
+              {showNotificationPanel && (
+                <>
+                  {/* Backdrop for closing */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowNotificationPanel(false)}
+                  />
+                  
+                  <div className={`absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl border shadow-2xl z-50 overflow-hidden backdrop-blur-xl transition-all duration-200 ${
+                    isLight ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118] shadow-orange-950/10' : 'bg-[#0B1120]/95 border-white/10 text-white shadow-black/80'
+                  }`}>
+                    {/* Header */}
+                    <div className={`p-4 border-b flex items-center justify-between ${
+                      isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg ${isLight ? 'bg-[#FDEEE7] text-[#EA552E]' : 'bg-blue-600/20 text-blue-400'}`}>
+                          <Bell className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-xs">Client Ticket Alerts</h4>
+                          <p className={`text-[10px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                            {unreadCount > 0 ? `${unreadCount} new unread tickets` : 'All tickets caught up'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllTicketsAsRead}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer ${
+                            isLight ? 'text-[#EA552E] hover:bg-[#FDEEE7]' : 'text-blue-400 hover:bg-blue-600/20'
+                          }`}
+                        >
+                          <CheckCheck className="w-3 h-3" />
+                          <span>Mark all read</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="max-h-[380px] overflow-y-auto divide-y divide-inherit">
+                      {tasks.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <Inbox className={`w-8 h-8 mx-auto mb-2 opacity-30 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`} />
+                          <p className={`text-xs font-bold ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>No client tickets yet</p>
+                        </div>
+                      ) : (
+                        tasks.slice(0, 15).map(task => {
+                          const isUnread = !readTicketIds.includes(task.id);
+                          return (
+                            <div
+                              key={task.id}
+                              onClick={() => {
+                                markTicketAsRead(task.id);
+                                setSelectedTask(task);
+                                setStatusEdit(task.status);
+                                setNoteEdit(task.notes || '');
+                                setActiveTab('console');
+                                setShowNotificationPanel(false);
+                              }}
+                              className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 relative group ${
+                                isUnread
+                                  ? isLight ? 'bg-[#FDF3E7]/60 hover:bg-[#FDF3E7]' : 'bg-blue-950/30 hover:bg-blue-900/40'
+                                  : isLight ? 'hover:bg-[#FBF5EC]' : 'hover:bg-white/[0.03]'
+                              }`}
+                            >
+                              {/* Unread Indicator Dot */}
+                              {isUnread && (
+                                <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 animate-pulse ${
+                                  isLight ? 'bg-[#EA552E]' : 'bg-blue-500'
+                                }`} />
+                              )}
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                                    isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                  }`}>
+                                    {task.ticketNumber}
+                                  </span>
+                                  
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                                    task.priorityInCustomer === 'Urgent'
+                                      ? 'bg-red-500/15 text-red-500 border-red-500/30'
+                                      : task.priorityInCustomer === 'High'
+                                      ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+                                      : 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                                  }`}>
+                                    {task.priorityInCustomer || 'Medium'}
+                                  </span>
+                                </div>
+
+                                <h5 className={`font-bold text-xs truncate mb-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                  {task.partyName}
+                                </h5>
+
+                                <p className={`text-[11px] line-clamp-2 leading-relaxed mb-1.5 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                                  {task.descriptionOfWork}
+                                </p>
+
+                                <div className="flex items-center justify-between text-[9px] text-slate-400">
+                                  <span className="flex items-center gap-1">
+                                    <User className="w-2.5 h-2.5" />
+                                    {task.personName}
+                                  </span>
+                                  <span className="font-mono">
+                                    {formatDateDDMMYYYY(task.createdAt || task.expectedDateToClose)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    {tasks.length > 0 && (
+                      <div className={`p-2.5 text-center border-t ${
+                        isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
+                      }`}>
+                        <button
+                          onClick={() => {
+                            setActiveTab('console');
+                            setShowNotificationPanel(false);
+                          }}
+                          className={`text-xs font-bold transition-colors cursor-pointer ${
+                            isLight ? 'text-[#EA552E] hover:text-[#D9481F]' : 'text-blue-400 hover:text-blue-300'
+                          }`}
+                        >
+                          View all in Tickets Console →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Disconnect Button (Icon Only) */}
             <button
