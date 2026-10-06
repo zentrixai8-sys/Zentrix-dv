@@ -1,10 +1,11 @@
-import { Task, Company, Employee, SystemItem, AuthSession, TaskStatus } from '../types/taskTypes';
+import { Task, Company, Employee, SystemItem, AuthSession, TaskStatus, Delegation } from '../types/taskTypes';
 
 const STORAGE_KEYS = {
   TASKS: 'zentrix_portal_tasks_v1',
   COMPANIES: 'zentrix_portal_companies_v1',
   AUTH: 'zentrix_portal_auth_session_v1',
-  EMPLOYEES: 'zentrix_portal_employees_v1'
+  EMPLOYEES: 'zentrix_portal_employees_v1',
+  DELEGATIONS: 'zentrix_portal_delegations_v1'
 };
 
 // Configurable Cloudflare Worker API URL
@@ -725,7 +726,7 @@ export const fetchTasks = async (
 
 export const createTask = async (taskInput: Partial<Task>): Promise<{ success: boolean; task?: Task; error?: string }> => {
   const currentSession = getAuthSession();
-  const ticketNumber = `TCK-2026-${Math.floor(100 + Math.random() * 900)}`;
+  const ticketNumber = taskInput.ticketNumber || `TCK-2026-${Math.floor(100 + Math.random() * 900)}`;
 
   const now = new Date();
   const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -745,6 +746,7 @@ export const createTask = async (taskInput: Partial<Task>): Promise<{ success: b
     expectedDateToClose: taskInput.expectedDateToClose || '2026-03-15',
     uploadFileUrl: taskInput.uploadFileUrl,
     uploadFileName: taskInput.uploadFileName,
+    uploadFiles: taskInput.uploadFiles,
     assignedTo: taskInput.assignedTo || 'Unassigned',
     status: 'Pending',
     createdAt: formattedDate,
@@ -818,6 +820,7 @@ export const updateTaskStatus = async (
     completionRemark?: string;
     completionFileUrl?: string;
     completionFileName?: string;
+    completionFiles?: { name: string; url: string }[];
   }
 ): Promise<{ success: boolean; error?: string }> => {
   invalidateTaskCache();
@@ -832,7 +835,8 @@ export const updateTaskStatus = async (
           notes: finalRemark,
           completionRemark: completionData?.completionRemark,
           completionFileUrl: completionData?.completionFileUrl,
-          completionFileName: completionData?.completionFileName
+          completionFileName: completionData?.completionFileName,
+          completionFiles: completionData?.completionFiles
         })
       });
       if (res.ok) {
@@ -859,6 +863,9 @@ export const updateTaskStatus = async (
       }
       if (completionData.completionFileName !== undefined) {
         tasks[index].completionFileName = completionData.completionFileName;
+      }
+      if (completionData.completionFiles !== undefined) {
+        tasks[index].completionFiles = completionData.completionFiles;
       }
       if (status === 'Completed') {
         tasks[index].completedAt = new Date().toLocaleString();
@@ -1085,3 +1092,199 @@ export const getSystemsForCompany = (companyId?: string): SystemItem[] => {
   if (!companyId) return SYSTEM_LIST;
   return SYSTEM_LIST.filter(s => s.companyId === companyId);
 };
+
+// ==========================================
+// DELEGATION TABLE SERVICES (Admin Direct Task Assignment)
+// ==========================================
+
+export const DEFAULT_DELEGATIONS: Delegation[] = [
+  {
+    id: 'dlg_1',
+    delegationNumber: 'DLG-2026-101',
+    title: 'Multi-Factor Authentication (MFA) & Cloudflare Tunnel hardening',
+    description: 'Setup session security, verify 2FA TOTP flow for Super Admin and engineer portals, and document setup.',
+    assignedTo: 'Vaibhav Sharma',
+    assignedBy: 'Super Admin',
+    category: 'Workflow Automation',
+    priority: 'High',
+    targetDate: '2026-03-20',
+    linkUrl: 'https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/',
+    status: 'In Progress',
+    createdAt: '2026-03-01 10:00 AM',
+    updatedAt: '2026-03-01 10:00 AM'
+  },
+  {
+    id: 'dlg_2',
+    delegationNumber: 'DLG-2026-102',
+    title: 'Audit D1 SQLite Database backup automation script',
+    description: 'Ensure nightly cron triggers dump backups to Cloudflare R2 bucket with automated retry and notification.',
+    assignedTo: 'Robert Vance',
+    assignedBy: 'Super Admin',
+    category: 'Infrastructure',
+    priority: 'Urgent',
+    targetDate: '2026-03-18',
+    status: 'Pending',
+    createdAt: '2026-03-02 02:30 PM',
+    updatedAt: '2026-03-02 02:30 PM'
+  }
+];
+
+export const getStoredDelegations = (): Delegation[] => {
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return DEFAULT_DELEGATIONS;
+    }
+    const raw = localStorage.getItem(STORAGE_KEYS.DELEGATIONS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.DELEGATIONS, JSON.stringify(DEFAULT_DELEGATIONS));
+      return DEFAULT_DELEGATIONS;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : DEFAULT_DELEGATIONS;
+  } catch {
+    return DEFAULT_DELEGATIONS;
+  }
+};
+
+export const saveDelegations = (delegations: Delegation[]): void => {
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    localStorage.setItem(STORAGE_KEYS.DELEGATIONS, JSON.stringify(delegations));
+  } catch (e) {
+    console.error('Failed to save delegations to localStorage', e);
+  }
+};
+
+export const fetchDelegations = async (): Promise<Delegation[]> => {
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/delegations`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.delegations)) {
+          saveDelegations(data.delegations);
+          return data.delegations;
+        }
+      }
+    } catch (e) {
+      console.warn('Cloudflare fetch delegations failed, fallback to local', e);
+    }
+  }
+  return getStoredDelegations();
+};
+
+export const createDelegation = async (input: Partial<Delegation>): Promise<{ success: boolean; delegation?: Delegation; error?: string }> => {
+  if (!input.title?.trim() || !input.assignedTo?.trim()) {
+    return { success: false, error: 'Title and Assignee are required' };
+  }
+
+  const delegationNumber = input.delegationNumber || `DLG-2026-${Math.floor(100 + Math.random() * 900)}`;
+  const now = new Date();
+  const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+  const newDelegation: Delegation = {
+    id: `dlg_${Date.now()}`,
+    delegationNumber,
+    title: input.title.trim(),
+    description: input.description?.trim() || '',
+    assignedTo: input.assignedTo.trim(),
+    assignedBy: input.assignedBy || 'Super Admin',
+    category: input.category || 'Workflow Automation',
+    priority: input.priority || 'High',
+    targetDate: input.targetDate || '2026-03-31',
+    linkUrl: input.linkUrl?.trim() || undefined,
+    status: 'Pending',
+    createdAt: formattedDate,
+    updatedAt: formattedDate
+  };
+
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/delegations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDelegation)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const stored = getStoredDelegations();
+        stored.unshift(data.delegation || newDelegation);
+        saveDelegations(stored);
+        return { success: true, delegation: data.delegation || newDelegation };
+      }
+    } catch (e) {
+      console.warn('Cloudflare create delegation failed, saving locally', e);
+    }
+  }
+
+  const stored = getStoredDelegations();
+  stored.unshift(newDelegation);
+  saveDelegations(stored);
+  return { success: true, delegation: newDelegation };
+};
+
+export const updateDelegationStatus = async (
+  delegationId: string,
+  status: TaskStatus,
+  notes?: string,
+  completionData?: {
+    completionRemark?: string;
+    completionFileUrl?: string;
+    completionFileName?: string;
+    completionFiles?: { name: string; url: string }[];
+  }
+): Promise<{ success: boolean; error?: string }> => {
+  const finalRemark = completionData?.completionRemark || notes;
+
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/delegations/${delegationId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          notes: finalRemark,
+          completionRemark: completionData?.completionRemark,
+          completionFileUrl: completionData?.completionFileUrl,
+          completionFileName: completionData?.completionFileName,
+          completionFiles: completionData?.completionFiles
+        })
+      });
+      if (res.ok) {
+        // continue
+      }
+    } catch (e) {
+      console.warn('Cloudflare update delegation status failed, updating local', e);
+    }
+  }
+
+  const list = getStoredDelegations();
+  const index = list.findIndex(d => d.id === delegationId);
+  if (index !== -1) {
+    list[index].status = status;
+    if (finalRemark) list[index].completionRemark = finalRemark;
+    if (completionData?.completionFileUrl) list[index].completionFileUrl = completionData.completionFileUrl;
+    if (completionData?.completionFileName) list[index].completionFileName = completionData.completionFileName;
+    if (completionData?.completionFiles !== undefined) list[index].completionFiles = completionData.completionFiles;
+    if (status === 'Completed') list[index].completedAt = new Date().toLocaleString();
+    list[index].updatedAt = new Date().toLocaleString();
+    saveDelegations(list);
+    return { success: true };
+  }
+  return { success: false, error: 'Delegation task not found' };
+};
+
+export const deleteDelegation = async (delegationId: string): Promise<boolean> => {
+  if (CLOUDFLARE_API_URL) {
+    try {
+      await fetch(`${CLOUDFLARE_API_URL}/api/delegations/${delegationId}`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Cloudflare delete delegation failed, updating local', e);
+    }
+  }
+  const list = getStoredDelegations();
+  const filtered = list.filter(d => d.id !== delegationId);
+  saveDelegations(filtered);
+  return true;
+};
+

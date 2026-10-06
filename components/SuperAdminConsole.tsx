@@ -41,11 +41,20 @@ import {
   Briefcase,
   UserPlus,
   Edit3,
-  Pencil
+  Pencil,
+  ListTodo,
+  CheckSquare,
+  Sparkles,
+  FolderPlus,
+  Download,
+  FileUp,
+  FileCheck2,
+  CalendarClock
 } from 'lucide-react';
-import { Task, TaskStatus, Company, Employee } from '../types/taskTypes';
+import { Task, TaskStatus, Company, Employee, TaskPriority, Delegation } from '../types/taskTypes';
 import {
   fetchTasks,
+  createTask,
   assignTask,
   updateTaskStatus,
   deleteTask,
@@ -59,7 +68,11 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
-  clearAuthSession
+  clearAuthSession,
+  fetchDelegations,
+  createDelegation,
+  updateDelegationStatus,
+  deleteDelegation
 } from '../services/taskService';
 import AdminDashboard from './AdminDashboard';
 import AdminAnalyticsOverview from './AdminAnalyticsOverview';
@@ -75,8 +88,9 @@ interface SuperAdminConsoleProps {
 }
 
 export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'console' | 'employees' | 'companies' | 'cms' | 'whatsapp'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'console' | 'delegation' | 'employees' | 'companies' | 'cms' | 'whatsapp'>('overview');
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [delegations, setDelegations] = useState<Delegation[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -162,14 +176,38 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [uploadingEditAvatar, setUploadingEditAvatar] = useState(false);
   const [savingEditEmp, setSavingEditEmp] = useState(false);
 
-  // Task Completion & Resolution Proof Modal
+  // Task & Delegation Completion & Resolution Proof Modal
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
+  const [completingDelegation, setCompletingDelegation] = useState<Delegation | null>(null);
+  const [selectedDelegation, setSelectedDelegation] = useState<Delegation | null>(null);
   const [completionRemark, setCompletionRemark] = useState('');
   const [completionFile, setCompletionFile] = useState<File | null>(null);
   const [completionFileUrl, setCompletionFileUrl] = useState('');
   const [completionFileName, setCompletionFileName] = useState('');
+  const [completionFilesList, setCompletionFilesList] = useState<{ file?: File; name: string; url?: string; preview?: string }[]>([]);
   const [uploadingCompletionFile, setUploadingCompletionFile] = useState(false);
   const [savingCompletion, setSavingCompletion] = useState(false);
+
+  // Delegation Task Management State
+  const [showAddDelegationModal, setShowAddDelegationModal] = useState(false);
+  const [delegationTitle, setDelegationTitle] = useState('');
+  const [delegationDesc, setDelegationDesc] = useState('');
+  const [delegationAssignee, setDelegationAssignee] = useState('');
+  const [delegationDeadline, setDelegationDeadline] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [delegationPriority, setDelegationPriority] = useState<TaskPriority>('High');
+  const [delegationCategory, setDelegationCategory] = useState('Workflow Automation');
+  const [delegationLink, setDelegationLink] = useState('');
+  const [creatingDelegation, setCreatingDelegation] = useState(false);
+
+  // Delegation Tab Filter States
+  const [delegationFilterEmployee, setDelegationFilterEmployee] = useState('All');
+  const [delegationFilterStatus, setDelegationFilterStatus] = useState('All');
+  const [delegationFilterPriority, setDelegationFilterPriority] = useState('All');
+  const [delegationSearch, setDelegationSearch] = useState('');
 
   const openEditEmployeeModal = (emp: Employee) => {
     setEditingEmployee(emp);
@@ -374,14 +412,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const loadData = async () => {
     setLoading(true);
     try {
-      const [data, compList, empList] = await Promise.all([
+      const [data, compList, empList, dlgList] = await Promise.all([
         fetchTasks(),
         fetchCompanies(),
-        fetchEmployees()
+        fetchEmployees(),
+        fetchDelegations()
       ]);
       setTasks(data);
       setCompanies(compList);
       setEmployees(empList);
+      setDelegations(dlgList);
     } catch (err) {
       console.error('Failed to load admin data', err);
     } finally {
@@ -401,15 +441,72 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     }
   };
 
+  const openCompletionModal = (target: Task) => {
+    setCompletingTask(target);
+    setCompletingDelegation(null);
+    setCompletionRemark(target.completionRemark || target.notes || '');
+    
+    // Populate existing completion files if any
+    const existing: { file?: File; name: string; url?: string; preview?: string }[] = [];
+    if (target.completionFiles && Array.isArray(target.completionFiles) && target.completionFiles.length > 0) {
+      target.completionFiles.forEach(cf => existing.push({ name: cf.name, url: cf.url, preview: cf.url }));
+    } else if (target.completionFileUrl) {
+      existing.push({
+        name: target.completionFileName || 'Completion Attachment',
+        url: target.completionFileUrl,
+        preview: target.completionFileUrl
+      });
+    }
+    setCompletionFilesList(existing);
+    setCompletionFile(null);
+    setCompletionFileUrl('');
+    setCompletionFileName('');
+  };
+
+  const openDelegationCompletionModal = (target: Delegation) => {
+    setCompletingDelegation(target);
+    setCompletingTask(null);
+    setCompletionRemark(target.completionRemark || '');
+    
+    // Populate existing completion files if any
+    const existing: { file?: File; name: string; url?: string; preview?: string }[] = [];
+    if (target.completionFiles && Array.isArray(target.completionFiles) && target.completionFiles.length > 0) {
+      target.completionFiles.forEach(cf => existing.push({ name: cf.name, url: cf.url, preview: cf.url }));
+    } else if (target.completionFileUrl) {
+      existing.push({
+        name: target.completionFileName || 'Completion Attachment',
+        url: target.completionFileUrl,
+        preview: target.completionFileUrl
+      });
+    }
+    setCompletionFilesList(existing);
+    setCompletionFile(null);
+    setCompletionFileUrl('');
+    setCompletionFileName('');
+  };
+
+  const handleMultipleCompletionFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newItems: { file: File; name: string; preview: string }[] = [];
+      const fileList = Array.from(e.target.files) as File[];
+      fileList.forEach((file: File) => {
+        const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : '';
+        newItems.push({ file, name: file.name, preview });
+      });
+      setCompletionFilesList(prev => [...prev, ...newItems]);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveCompletionFileItem = (index: number) => {
+    setCompletionFilesList(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     if (newStatus === 'Completed') {
       const target = tasks.find((t) => t.id === taskId);
       if (target) {
-        setCompletingTask(target);
-        setCompletionRemark(target.completionRemark || target.notes || '');
-        setCompletionFileUrl(target.completionFileUrl || '');
-        setCompletionFileName(target.completionFileName || '');
-        setCompletionFile(null);
+        openCompletionModal(target);
         return;
       }
     }
@@ -420,40 +517,129 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     }
   };
 
-  const handleConfirmCompletion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!completingTask) return;
-    setSavingCompletion(true);
-    let fileUrl = completionFileUrl;
-    let fileName = completionFileName;
-
-    if (completionFile && !fileUrl) {
-      setUploadingCompletionFile(true);
-      const uploadRes = await uploadFileToCloudinary(completionFile);
-      setUploadingCompletionFile(false);
-      if (uploadRes.success && uploadRes.url) {
-        fileUrl = uploadRes.url;
-        fileName = completionFile.name;
+  const handleDelegationStatusChange = async (delegationId: string, newStatus: TaskStatus) => {
+    if (newStatus === 'Completed') {
+      const target = delegations.find((d) => d.id === delegationId);
+      if (target) {
+        openDelegationCompletionModal(target);
+        return;
       }
     }
+    const res = await updateDelegationStatus(delegationId, newStatus);
+    if (res.success) {
+      showToast(`Delegation status updated to ${newStatus}`);
+      await loadData();
+    }
+  };
 
-    const res = await updateTaskStatus(completingTask.id, 'Completed', completionRemark, {
-      completionRemark: completionRemark.trim() || 'Work completed successfully.',
-      completionFileUrl: fileUrl,
-      completionFileName: fileName
+  const handleDeleteDelegationTask = async (delegationId: string, title: string) => {
+    if (window.confirm(`Are you sure you want to delete delegation: "${title}"?`)) {
+      await deleteDelegation(delegationId);
+      showToast('Delegation deleted successfully');
+      await loadData();
+    }
+  };
+
+  const handleConfirmCompletion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!completingTask && !completingDelegation) return;
+    setSavingCompletion(true);
+
+    const finalFiles: { name: string; url: string }[] = [];
+
+    // Upload any new selected files to Cloudinary
+    for (const item of completionFilesList) {
+      if (item.url) {
+        finalFiles.push({ name: item.name, url: item.url });
+      } else if (item.file) {
+        setUploadingCompletionFile(true);
+        const upRes = await uploadFileToCloudinary(item.file);
+        if (upRes.success && upRes.url) {
+          finalFiles.push({ name: item.name, url: upRes.url });
+        }
+      }
+    }
+    setUploadingCompletionFile(false);
+
+    const firstFile = finalFiles[0];
+
+    if (completingDelegation) {
+      const res = await updateDelegationStatus(completingDelegation.id, 'Completed', completionRemark, {
+        completionRemark: completionRemark.trim() || 'Work completed successfully.',
+        completionFileUrl: firstFile?.url || '',
+        completionFileName: firstFile?.name || '',
+        completionFiles: finalFiles
+      });
+      setSavingCompletion(false);
+      if (res.success) {
+        showToast('Delegation marked as Completed with resolution proofs!');
+        setCompletingDelegation(null);
+        setCompletionRemark('');
+        setCompletionFilesList([]);
+        await loadData();
+      } else {
+        showToast(res.error || 'Failed to update status');
+      }
+      return;
+    }
+
+    if (completingTask) {
+      const res = await updateTaskStatus(completingTask.id, 'Completed', completionRemark, {
+        completionRemark: completionRemark.trim() || 'Work completed successfully.',
+        completionFileUrl: firstFile?.url || '',
+        completionFileName: firstFile?.name || '',
+        completionFiles: finalFiles
+      });
+
+      setSavingCompletion(false);
+      if (res.success) {
+        showToast('Task marked as Completed with multiple resolution attachments!');
+        setCompletingTask(null);
+        setCompletionRemark('');
+        setCompletionFilesList([]);
+        await loadData();
+      } else {
+        showToast(res.error || 'Failed to update status');
+      }
+    }
+  };
+
+  const handleCreateDelegationTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!delegationTitle.trim() || !delegationAssignee) {
+      showToast('Please provide task description and assign an engineer');
+      return;
+    }
+
+    setCreatingDelegation(true);
+    const fullDesc = delegationDesc.trim() 
+      ? `${delegationTitle.trim()}\n\nScope & Briefing:\n${delegationDesc.trim()}`
+      : delegationTitle.trim();
+
+    // 100% separate: Saves ONLY to delegation table
+    const res = await createDelegation({
+      title: delegationTitle.trim(),
+      description: fullDesc,
+      category: delegationCategory || 'Workflow Automation',
+      priority: delegationPriority,
+      targetDate: delegationDeadline || '2026-03-31',
+      assignedTo: delegationAssignee,
+      linkUrl: delegationLink.trim() || undefined,
+      status: 'Pending'
     });
 
-    setSavingCompletion(false);
+    setCreatingDelegation(false);
     if (res.success) {
-      showToast('Task marked as Completed with resolution remark & attachment!');
-      setCompletingTask(null);
-      setCompletionRemark('');
-      setCompletionFile(null);
-      setCompletionFileUrl('');
-      setCompletionFileName('');
+      showToast(`Task successfully delegated to ${delegationAssignee}!`);
+      setShowAddDelegationModal(false);
+      setDelegationTitle('');
+      setDelegationDesc('');
+      setDelegationAssignee('');
+      setDelegationLink('');
+      setDelegationPriority('High');
       await loadData();
     } else {
-      showToast('Failed to update status');
+      showToast(res.error || 'Failed to create delegation task');
     }
   };
 
@@ -654,6 +840,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 Tickets Console ({tasks.length})
               </button>
               <button
+                onClick={() => setActiveTab('delegation')}
+                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer flex items-center gap-1.5 ${activeTab === 'delegation'
+                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
+              >
+                <ListTodo className="w-3.5 h-3.5" />
+                <span>Task Delegation ({delegations.length})</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('employees')}
                 className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'employees'
                   ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
@@ -717,7 +913,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       {/* Main Body - Full Canvas Width */}
       <div className="w-full px-4 sm:px-8 py-6 space-y-6">
         {/* Dynamic Contextual KPI Tiles per Page/Tab */}
-        {activeTab !== 'cms' && activeTab !== 'whatsapp' && (
+        {activeTab !== 'cms' && activeTab !== 'whatsapp' && activeTab !== 'delegation' && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {getPageKpis().map((tile, idx) => {
               const palette: Record<string, { rgb: string; iconGrad: string; meterLight: string; meterDark: string; numLight: string; numDark: string; subLight: string; subDark: string; ring: string }> = {
@@ -1051,6 +1247,466 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
             </div>
           </div>
         )}
+
+        {/* TAB: TASK DELEGATION (Admin assigning internal tasks to employees) */}
+        {activeTab === 'delegation' && (() => {
+          const allDelegations = delegations;
+          const pendingDelegations = allDelegations.filter(t => t.status !== 'Completed' && t.status !== 'Rejected');
+          const completedDelegations = allDelegations.filter(t => t.status === 'Completed');
+          const urgentDelegations = allDelegations.filter(t => (t.priority === 'Urgent' || t.priority === 'High') && t.status !== 'Completed');
+
+          const filteredDelegations = allDelegations.filter(t => {
+            if (delegationFilterEmployee !== 'All' && (t.assignedTo || '').toLowerCase().trim() !== delegationFilterEmployee.toLowerCase().trim()) {
+              return false;
+            }
+            if (delegationFilterStatus !== 'All' && t.status !== delegationFilterStatus) {
+              return false;
+            }
+            if (delegationFilterPriority !== 'All' && t.priority !== delegationFilterPriority) {
+              return false;
+            }
+            if (delegationSearch.trim()) {
+              const q = delegationSearch.toLowerCase();
+              const matchText = `${t.delegationNumber} ${t.title} ${t.description} ${t.assignedTo || ''} ${t.category || ''}`.toLowerCase();
+              if (!matchText.includes(q)) return false;
+            }
+            return true;
+          });
+
+          return (
+            <div className="space-y-6">
+              {/* Hero Banner with Create Button */}
+              <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all ${
+                isLight 
+                  ? 'bg-gradient-to-r from-white via-[#FDFBF7] to-[#FBF5EC] border-[#EDE2D3]' 
+                  : 'bg-gradient-to-r from-[#0F172A] via-[#0B1120] to-[#070D18] border-white/10'
+              }`}>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${
+                      isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                    }`}>
+                      INTERNAL TASK MANAGEMENT
+                    </span>
+                    <span className="text-xs text-emerald-500 font-bold flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Live Delegation Active
+                    </span>
+                  </div>
+                  <h2 className={`text-2xl font-black tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    Admin Task & Work Delegation
+                  </h2>
+                  <p className={`text-xs ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                    Directly assign tasks to engineers, set completion deadlines, track real-time resolution and verify multiple image/document proofs.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddDelegationModal(true)}
+                  className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-white shadow-xl transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
+                    isLight 
+                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30' 
+                      : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/30'
+                  }`}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Assign New Task / Delegation</span>
+                </button>
+              </div>
+
+              {/* KPI Metric Summary Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className={`p-5 rounded-2xl border transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Total Delegated</span>
+                    <ListTodo className={`w-4 h-4 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                  </div>
+                  <div className={`text-2xl font-black mt-2 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    {allDelegations.length}
+                  </div>
+                  <span className={`text-[10px] font-semibold mt-1 block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                    Internal work assignments
+                  </span>
+                </div>
+
+                <div className={`p-5 rounded-2xl border transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>In Progress / Pending</span>
+                    <Clock className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="text-2xl font-black mt-2 text-amber-500">
+                    {pendingDelegations.length}
+                  </div>
+                  <span className={`text-[10px] font-semibold mt-1 block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                    Active engineer execution
+                  </span>
+                </div>
+
+                <div className={`p-5 rounded-2xl border transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Urgent / High Priority</span>
+                    <Flame className="w-4 h-4 text-red-500" />
+                  </div>
+                  <div className="text-2xl font-black mt-2 text-red-500">
+                    {urgentDelegations.length}
+                  </div>
+                  <span className={`text-[10px] font-semibold mt-1 block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                    Requires immediate action
+                  </span>
+                </div>
+
+                <div className={`p-5 rounded-2xl border transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Completed & Resolved</span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="text-2xl font-black mt-2 text-emerald-500">
+                    {completedDelegations.length}
+                  </div>
+                  <span className={`text-[10px] font-semibold mt-1 block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                    With resolution proofs
+                  </span>
+                </div>
+              </div>
+
+              {/* Filters & Search Control Bar */}
+              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-3 ${
+                isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+              }`}>
+                {/* Search Box */}
+                <div className="relative w-full md:w-72">
+                  <Search className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-400'}`} />
+                  <input
+                    type="text"
+                    value={delegationSearch}
+                    onChange={(e) => setDelegationSearch(e.target.value)}
+                    placeholder="Search task, engineer, system..."
+                    className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl outline-none border transition-all ${
+                      isLight 
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                        : 'bg-black/40 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
+                    }`}
+                  />
+                </div>
+
+                {/* Dropdown Filters */}
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  {/* Filter by Employee */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className={`font-bold hidden sm:inline ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Engineer:</span>
+                    <select
+                      value={delegationFilterEmployee}
+                      onChange={(e) => setDelegationFilterEmployee(e.target.value)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${
+                        isLight 
+                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]' 
+                          : 'bg-[#1E293B] border-white/10 text-white'
+                      }`}
+                    >
+                      <option value="All">All Engineers ({employees.length})</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.name}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filter by Status */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className={`font-bold hidden sm:inline ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Status:</span>
+                    <select
+                      value={delegationFilterStatus}
+                      onChange={(e) => setDelegationFilterStatus(e.target.value)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${
+                        isLight 
+                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]' 
+                          : 'bg-[#1E293B] border-white/10 text-white'
+                      }`}
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Pending">Pending</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="In Review">In Review</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+
+                  {/* Filter by Priority */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className={`font-bold hidden sm:inline ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Priority:</span>
+                    <select
+                      value={delegationFilterPriority}
+                      onChange={(e) => setDelegationFilterPriority(e.target.value)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${
+                        isLight 
+                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]' 
+                          : 'bg-[#1E293B] border-white/10 text-white'
+                      }`}
+                    >
+                      <option value="All">All Priorities</option>
+                      <option value="Urgent">Urgent</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delegated Tasks List Table */}
+              <div className={`rounded-3xl border overflow-hidden shadow-xl ${
+                isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+              }`}>
+                {filteredDelegations.length === 0 ? (
+                  <div className="py-16 px-6 text-center space-y-4">
+                    <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto ${
+                      isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/5 border-white/10 text-slate-400'
+                    }`}>
+                      <ListTodo className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className={`text-base font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                        No delegated tasks match your filters
+                      </h3>
+                      <p className={`text-xs mt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                        Assign your first internal task or adjust search criteria to see active delegations.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddDelegationModal(true)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 cursor-pointer ${
+                        isLight ? 'bg-[#EA552E] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 shadow-md shadow-blue-600/30'
+                      }`}
+                    >
+                      + Assign Task Now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className={`border-b font-mono font-bold uppercase tracking-wider text-[10px] ${
+                          isLight ? 'bg-[#FDF8F2] text-[#8A7B68] border-[#EDE2D3]' : 'bg-white/[0.02] text-slate-400 border-white/10'
+                        }`}>
+                          <th className="py-3.5 px-4">Task Details & Scope</th>
+                          <th className="py-3.5 px-4">Assigned Engineer</th>
+                          <th className="py-3.5 px-4">Target Deadline</th>
+                          <th className="py-3.5 px-4">Priority</th>
+                          <th className="py-3.5 px-4">Status</th>
+                          <th className="py-3.5 px-4">Resolution Proofs</th>
+                          <th className="py-3.5 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-inherit">
+                        {filteredDelegations.map((dlg) => {
+                          const assignedEmp = employees.find(e => e.name.toLowerCase().trim() === (dlg.assignedTo || '').toLowerCase().trim());
+                          const proofFilesCount = (dlg.completionFiles && dlg.completionFiles.length) || (dlg.completionFileUrl ? 1 : 0);
+
+                          return (
+                            <tr
+                              key={dlg.id}
+                              className={`transition-colors duration-150 ${
+                                isLight ? 'hover:bg-[#FDFBF7]' : 'hover:bg-white/[0.02]'
+                              }`}
+                            >
+                              {/* Task Details */}
+                              <td className="py-4 px-4 max-w-xs sm:max-w-sm">
+                                <div className="flex items-start gap-2.5">
+                                  <div className={`p-2 rounded-xl border shrink-0 mt-0.5 ${
+                                    dlg.status === 'Completed'
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                                      : isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/10 border-blue-500/30 text-blue-400'
+                                  }`}>
+                                    <ListTodo className="w-4 h-4" />
+                                  </div>
+                                  <div className="space-y-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-md border ${
+                                        isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                      }`}>
+                                        {dlg.delegationNumber}
+                                      </span>
+                                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md border ${
+                                        isLight ? 'bg-[#F5EFE6] text-[#7A6B58] border-[#E8DEC8]' : 'bg-white/5 text-slate-400 border-white/10'
+                                      }`}>
+                                        {dlg.category || 'Internal Task'}
+                                      </span>
+                                    </div>
+                                    <h4 className={`font-bold text-xs truncate leading-relaxed ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                      {dlg.title}
+                                    </h4>
+                                    {dlg.description && (
+                                      <p className={`text-[11px] line-clamp-2 leading-relaxed ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                                        {dlg.description}
+                                      </p>
+                                    )}
+                                    {dlg.linkUrl && (
+                                      <a
+                                        href={dlg.linkUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] text-blue-500 hover:underline flex items-center gap-1 mt-0.5"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                        <span>Reference / Docs Link</span>
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Assigned Engineer */}
+                              <td className="py-4 px-4 whitespace-nowrap">
+                                <div className="flex items-center gap-2.5">
+                                  <div className={`w-8 h-8 rounded-xl overflow-hidden border shrink-0 flex items-center justify-center font-bold text-xs ${
+                                    isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-white/5 border-white/10 text-cyan-400'
+                                  }`}>
+                                    {assignedEmp?.avatar ? (
+                                      <img src={assignedEmp.avatar} alt={dlg.assignedTo || 'Unassigned'} className="w-full h-full object-cover" />
+                                    ) : (
+                                      (dlg.assignedTo || 'U').substring(0, 2).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className={`font-bold text-xs truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                      {dlg.assignedTo || 'Unassigned'}
+                                    </div>
+                                    <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                                      {assignedEmp?.designation || assignedEmp?.role || 'Support Engineer'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Target Deadline */}
+                              <td className="py-4 px-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1.5 font-mono text-xs">
+                                  <Calendar className={`w-3.5 h-3.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                                  <span className={`font-bold ${isLight ? 'text-[#2A2118]' : 'text-slate-200'}`}>
+                                    {dlg.targetDate || 'No Date'}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Priority */}
+                              <td className="py-4 px-4 whitespace-nowrap">
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
+                                  dlg.priority === 'Urgent'
+                                    ? 'bg-red-500/15 text-red-500 border-red-500/30'
+                                    : dlg.priority === 'High'
+                                      ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+                                      : 'bg-blue-500/15 text-blue-500 border-blue-500/30'
+                                }`}>
+                                  {dlg.priority === 'Urgent' && <Flame className="w-3 h-3" />}
+                                  {dlg.priority}
+                                </span>
+                              </td>
+
+                              {/* Status Dropdown */}
+                              <td className="py-4 px-4 whitespace-nowrap">
+                                <select
+                                  value={dlg.status}
+                                  onChange={(e) => handleDelegationStatusChange(dlg.id, e.target.value as TaskStatus)}
+                                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border outline-none cursor-pointer ${
+                                    dlg.status === 'Completed'
+                                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                      : dlg.status === 'In Progress'
+                                        ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                  }`}
+                                >
+                                  <option value="Pending">Pending</option>
+                                  <option value="In Progress">In Progress</option>
+                                  <option value="In Review">In Review</option>
+                                  <option value="Completed">Completed</option>
+                                  <option value="Rejected">Rejected</option>
+                                </select>
+                              </td>
+
+                              {/* Resolution Proofs Count */}
+                              <td className="py-4 px-4 whitespace-nowrap">
+                                {proofFilesCount > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedDelegation(dlg)}
+                                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border inline-flex items-center gap-1.5 transition-all hover:scale-105 cursor-pointer ${
+                                      isLight 
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
+                                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    }`}
+                                  >
+                                    <Paperclip className="w-3 h-3" />
+                                    <span>{proofFilesCount} Proof file{proofFilesCount > 1 ? 's' : ''}</span>
+                                  </button>
+                                ) : (
+                                  <span className={`text-[10px] italic ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                                    No proof yet
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Action Buttons */}
+                              <td className="py-4 px-4 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {dlg.status !== 'Completed' ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openDelegationCompletionModal(dlg)}
+                                      className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20 flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>Mark Done</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedDelegation(dlg)}
+                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1 cursor-pointer ${
+                                        isLight 
+                                          ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#EA552E] border-[#EDE2D3]' 
+                                          : 'bg-white/5 hover:bg-white/10 text-cyan-400 border-white/10'
+                                      }`}
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span>View Proof</span>
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedDelegation(dlg)}
+                                    title="View Delegation Details"
+                                    className={`p-1.5 rounded-xl border transition-colors ${
+                                      isLight 
+                                        ? 'bg-[#FBF5EC] hover:bg-[#F0E6D6] text-[#6B5D4A] border-[#EDE2D3]' 
+                                        : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10'
+                                    }`}
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteDelegationTask(dlg.id, dlg.title)}
+                                    title="Delete Delegation"
+                                    className="p-1.5 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* TAB 2: EMPLOYEE WORKLOAD (Company Employee tracking & management) */}
         {activeTab === 'employees' && (
@@ -1889,30 +2545,75 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     {selectedTask.completionRemark}
                   </p>
                 )}
-                {selectedTask.completionFileUrl && (
-                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'}`}>
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
-                        <Paperclip className="w-4 h-4" />
-                      </div>
-                      <div className="overflow-hidden">
-                        <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                          {selectedTask.completionFileName || 'Completion Attachment / Proof'}
+
+                {/* Multiple Completion Proofs Gallery */}
+                {((selectedTask.completionFiles && selectedTask.completionFiles.length > 0) || selectedTask.completionFileUrl) && (
+                  <div className="space-y-2">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                      Resolution Attachments & Proofs ({selectedTask.completionFiles?.length || 1})
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {selectedTask.completionFiles && selectedTask.completionFiles.length > 0 ? (
+                        selectedTask.completionFiles.map((fileItem, idx) => (
+                          <div
+                            key={idx}
+                            className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
+                              isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                                <Paperclip className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                  {fileItem.name}
+                                </div>
+                                <div className="text-[9px] text-emerald-600 dark:text-emerald-400">
+                                  Proof #{idx + 1}
+                                </div>
+                              </div>
+                            </div>
+                            <a
+                              href={fileItem.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
+                            >
+                              <span>Open</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </div>
+                        ))
+                      ) : selectedTask.completionFileUrl ? (
+                        <div className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
+                          isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                        }`}>
+                          <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                              <Paperclip className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="overflow-hidden">
+                              <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                {selectedTask.completionFileName || 'Completion Proof'}
+                              </div>
+                              <div className="text-[9px] text-emerald-600 dark:text-emerald-400">
+                                Uploaded resolution proof
+                              </div>
+                            </div>
+                          </div>
+                          <a
+                            href={selectedTask.completionFileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
+                          >
+                            <span>Open</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
                         </div>
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                          Uploaded resolution proof
-                        </div>
-                      </div>
+                      ) : null}
                     </div>
-                    <a
-                      href={selectedTask.completionFileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20"
-                    >
-                      <span>View Proof</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
                   </div>
                 )}
               </div>
@@ -1995,7 +2696,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       )}
 
       {/* COMPLETION & RESOLUTION REMARK / ATTACHMENT MODAL */}
-      {completingTask && (
+      {(completingTask || completingDelegation) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
           <div className={`w-full max-w-xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
             <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
@@ -2006,18 +2707,24 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      {completingTask.ticketNumber}
+                      {completingDelegation ? completingDelegation.delegationNumber : completingTask?.ticketNumber}
                     </span>
-                    <span className={`text-xs ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>for {completingTask.partyName}</span>
+                    <span className={`text-xs ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                      {completingDelegation ? `Assigned to ${completingDelegation.assignedTo}` : `for ${completingTask?.partyName}`}
+                    </span>
                   </div>
                   <h3 className={`text-lg font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                    Mark Task as Completed
+                    {completingDelegation ? 'Mark Delegation as Completed' : 'Mark Task as Completed'}
                   </h3>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setCompletingTask(null)}
+                onClick={() => {
+                  setCompletingTask(null);
+                  setCompletingDelegation(null);
+                  setCompletionFilesList([]);
+                }}
                 className={`text-lg font-bold p-2 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
               >
                 &times;
@@ -2028,7 +2735,9 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-between ${isLight ? 'text-[#8A7B68]' : 'text-slate-300'}`}>
                   <span>Resolution Remark / Work Done *</span>
-                  <span className="text-[10px] lowercase font-normal opacity-75">(visible to client)</span>
+                  <span className="text-[10px] lowercase font-normal opacity-75">
+                    {completingDelegation ? '(Admin work verification)' : '(visible to client)'}
+                  </span>
                 </label>
                 <textarea
                   required
@@ -2046,71 +2755,84 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-between ${isLight ? 'text-[#8A7B68]' : 'text-slate-300'}`}>
-                  <span>Completion Proof / Attachment</span>
-                  <span className="text-[10px] lowercase font-normal opacity-75">(optional - image, pdf, zip)</span>
+                  <span>Resolution Proofs & Attachments (Multiple Files)</span>
+                  <span className="text-[10px] lowercase font-normal opacity-75">(Images, Screenshots, PDFs, ZIPs)</span>
                 </label>
-                <div className={`p-4 border-2 border-dashed rounded-2xl text-center transition-all ${
+                
+                {/* Upload Box */}
+                <div className={`p-4 border-2 border-dashed rounded-2xl transition-all ${
                   isLight ? 'border-[#EDE2D3] bg-[#FBF5EC]' : 'border-white/10 bg-black/30'
                 }`}>
                   <input
                     type="file"
-                    id="completion-file-input"
+                    id="multiple-completion-files-input"
+                    multiple
                     className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const file = e.target.files[0];
-                        setCompletionFile(file);
-                        setCompletionFileName(file.name);
-                        setCompletionFileUrl('');
-                      }
-                    }}
+                    onChange={handleMultipleCompletionFilesSelected}
                   />
-                  {completionFile || completionFileName ? (
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                      <div className="flex items-center gap-2 overflow-hidden text-left">
-                        <Paperclip className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-mono font-bold truncate">{completionFileName || completionFile?.name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCompletionFile(null);
-                          setCompletionFileName('');
-                          setCompletionFileUrl('');
-                        }}
-                        className="text-xs font-bold text-red-500 hover:underline ml-2 shrink-0"
-                      >
-                        Remove
-                      </button>
+                  <label
+                    htmlFor="multiple-completion-files-input"
+                    className="cursor-pointer flex flex-col items-center justify-center gap-1.5 py-2 text-center"
+                  >
+                    <UploadCloud className={`w-8 h-8 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                    <div className={`text-xs font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                      Click to upload one or multiple resolution screenshots / files
                     </div>
-                  ) : (
-                    <label
-                      htmlFor="completion-file-input"
-                      className="cursor-pointer flex flex-col items-center justify-center gap-1.5 py-2"
-                    >
-                      <UploadCloud className={`w-8 h-8 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
-                      <div className={`text-xs font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                        Click to upload resolution screenshot or proof
-                      </div>
-                      <div className={`text-[11px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
-                        Supports PNG, JPG, PDF, ZIP (stored via Cloudinary)
-                      </div>
-                    </label>
-                  )}
+                    <div className={`text-[11px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                      Select multiple images, PDFs or documents simultaneously
+                    </div>
+                  </label>
                 </div>
+
+                {/* Selected Files List & Previews */}
+                {completionFilesList.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                      Selected Files ({completionFilesList.length})
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {completionFilesList.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                            {item.preview ? (
+                              <img src={item.preview} alt="Preview" className="w-8 h-8 rounded-lg object-cover border border-emerald-500/30 shrink-0" />
+                            ) : (
+                              <Paperclip className="w-4 h-4 shrink-0" />
+                            )}
+                            <span className="font-mono font-bold truncate text-[11px]">{item.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCompletionFileItem(idx)}
+                            className="text-[11px] font-bold text-red-500 hover:underline ml-2 shrink-0 cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className={`p-3 rounded-xl border text-xs flex items-center gap-2.5 ${
                 isLight ? 'bg-amber-50/70 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
               }`}>
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>Marking this as Completed will make the resolution remarks and proof attachment accessible directly in the client&apos;s ticket dashboard.</span>
+                <span>Marking this as Completed will record the resolution remarks and all uploaded multiple proofs into database records.</span>
               </div>
 
               <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
                 <button
                   type="button"
-                  onClick={() => setCompletingTask(null)}
+                  onClick={() => {
+                    setCompletingTask(null);
+                    setCompletingDelegation(null);
+                    setCompletionFilesList([]);
+                  }}
                   className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
@@ -2120,17 +2842,450 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <button
                   type="submit"
                   disabled={savingCompletion || uploadingCompletionFile}
-                  className="px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25"
+                  className="px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25 cursor-pointer"
                 >
                   {savingCompletion || uploadingCompletionFile ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>{uploadingCompletionFile ? 'Uploading File...' : 'Completing...'}</span>
+                      <span>{uploadingCompletionFile ? 'Uploading Attachments...' : 'Completing...'}</span>
                     </>
                   ) : (
                     <>
                       <Check className="w-3.5 h-3.5" />
                       <span>Confirm & Mark Completed</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW DELEGATION DETAILS & PROOFS MODAL */}
+      {selectedDelegation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+          <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                  <ListTodo className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                      {selectedDelegation.delegationNumber}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${isLight ? 'bg-[#FDF3E7] text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/10'}`}>
+                      {selectedDelegation.category || 'Internal Task'}
+                    </span>
+                  </div>
+                  <h3 className={`text-xl font-bold mt-1 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    {selectedDelegation.title}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDelegation(null)}
+                className={`text-lg font-bold p-2 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Scope & Briefing */}
+              {selectedDelegation.description && (
+                <div className={`p-4 rounded-2xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/10'}`}>
+                  <span className={`font-bold uppercase tracking-wider block mb-1.5 text-[10px] ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                    Task Scope & Instructions:
+                  </span>
+                  <p className={`whitespace-pre-wrap leading-relaxed ${isLight ? 'text-[#2A2118]' : 'text-slate-200'}`}>
+                    {selectedDelegation.description}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={`p-3 rounded-2xl border ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-black/30 border-white/10'}`}>
+                  <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Assigned Engineer</span>
+                  <span className={`font-bold text-xs mt-1 block truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    {selectedDelegation.assignedTo}
+                  </span>
+                </div>
+                <div className={`p-3 rounded-2xl border ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-black/30 border-white/10'}`}>
+                  <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Target Deadline</span>
+                  <span className={`font-bold text-xs font-mono mt-1 block ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    {selectedDelegation.targetDate}
+                  </span>
+                </div>
+                <div className={`p-3 rounded-2xl border ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-black/30 border-white/10'}`}>
+                  <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Priority</span>
+                  <span className="font-bold text-xs mt-1 block text-amber-500">
+                    {selectedDelegation.priority}
+                  </span>
+                </div>
+                <div className={`p-3 rounded-2xl border ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-black/30 border-white/10'}`}>
+                  <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Status</span>
+                  <span className={`font-bold text-xs mt-1 block ${selectedDelegation.status === 'Completed' ? 'text-emerald-500' : 'text-blue-400'}`}>
+                    {selectedDelegation.status}
+                  </span>
+                </div>
+              </div>
+
+              {selectedDelegation.linkUrl && (
+                <div className={`p-3 rounded-2xl border flex items-center justify-between ${isLight ? 'bg-blue-50/60 border-blue-200' : 'bg-blue-950/20 border-blue-500/30'}`}>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">Reference / Spec Link</span>
+                  <a
+                    href={selectedDelegation.linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors flex items-center gap-1.5"
+                  >
+                    <span>Open Reference</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              {/* Resolution Proofs & Remarks */}
+              {(selectedDelegation.completionRemark || selectedDelegation.completionFileUrl || (selectedDelegation.completionFiles && selectedDelegation.completionFiles.length > 0)) && (
+                <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Completion & Resolution Proofs</span>
+                    </div>
+                    {selectedDelegation.completedAt && (
+                      <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
+                        {selectedDelegation.completedAt}
+                      </span>
+                    )}
+                  </div>
+                  {selectedDelegation.completionRemark && (
+                    <p className={`text-xs leading-relaxed p-3 rounded-xl ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'}`}>
+                      {selectedDelegation.completionRemark}
+                    </p>
+                  )}
+
+                  {/* Multiple Resolution Proofs Gallery */}
+                  {((selectedDelegation.completionFiles && selectedDelegation.completionFiles.length > 0) || selectedDelegation.completionFileUrl) && (
+                    <div className="space-y-2">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                        Resolution Attachments ({selectedDelegation.completionFiles?.length || 1})
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {selectedDelegation.completionFiles && selectedDelegation.completionFiles.length > 0 ? (
+                          selectedDelegation.completionFiles.map((fileItem, idx) => (
+                            <div
+                              key={idx}
+                              className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
+                                isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                                  <Paperclip className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="overflow-hidden">
+                                  <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                    {fileItem.name}
+                                  </div>
+                                  <div className="text-[9px] text-emerald-600 dark:text-emerald-400">
+                                    Proof #{idx + 1}
+                                  </div>
+                                </div>
+                              </div>
+                              <a
+                                href={fileItem.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
+                              >
+                                <span>Open</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </div>
+                          ))
+                        ) : selectedDelegation.completionFileUrl ? (
+                          <div className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
+                            isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                          }`}>
+                            <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                                <Paperclip className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                  {selectedDelegation.completionFileName || 'Completion Proof'}
+                                </div>
+                              </div>
+                            </div>
+                            <a
+                              href={selectedDelegation.completionFileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
+                            >
+                              <span>Open</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              <button
+                type="button"
+                onClick={() => setSelectedDelegation(null)}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                Close
+              </button>
+              {selectedDelegation.status !== 'Completed' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = selectedDelegation;
+                    setSelectedDelegation(null);
+                    openDelegationCompletionModal(d);
+                  }}
+                  className="px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25 cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Mark Done with Proofs</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ASSIGN NEW INTERNAL TASK / DELEGATION MODAL */}
+      {showAddDelegationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto ${
+            isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'
+          }`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border ${
+                  isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/20 border-blue-500/30 text-blue-400'
+                }`}>
+                  <ListTodo className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className={`font-mono font-bold text-[10px] tracking-widest uppercase ${
+                    isLight ? 'text-[#D9481F]' : 'text-cyan-400'
+                  }`}>
+                    DIRECT TASK DELEGATION
+                  </span>
+                  <h3 className={`text-xl font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    Assign Task to Employee / Engineer
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddDelegationModal(false)}
+                className={`text-2xl font-bold p-1 leading-none rounded-lg transition-colors ${
+                  isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDelegationTask} className="space-y-4 text-xs">
+              {/* Task Title */}
+              <div>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                  isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                }`}>
+                  Task Title / Objective <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={delegationTitle}
+                  onChange={(e) => setDelegationTitle(e.target.value)}
+                  placeholder="e.g. Implement Multi-Factor Authentication (MFA) on ERP"
+                  className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none transition-colors ${
+                    isLight 
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                      : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
+                  }`}
+                />
+              </div>
+
+              {/* Task Briefing / Scope */}
+              <div>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                  isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                }`}>
+                  Task Briefing & Detailed Instructions
+                </label>
+                <textarea
+                  rows={3}
+                  value={delegationDesc}
+                  onChange={(e) => setDelegationDesc(e.target.value)}
+                  placeholder="Write clear steps, requirements, deliverables, and acceptance criteria for the assigned engineer..."
+                  className={`w-full border rounded-xl p-4 focus:outline-none transition-colors resize-none ${
+                    isLight 
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                      : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
+                  }`}
+                />
+              </div>
+
+              {/* Assignee & Deadline Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
+                    Assign To Employee / Engineer <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={delegationAssignee}
+                    onChange={(e) => setDelegationAssignee(e.target.value)}
+                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${
+                      isLight 
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' 
+                        : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
+                    }`}
+                  >
+                    <option value="">-- Select Engineer / Employee --</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.name}>
+                        {emp.name} ({emp.designation || emp.role || 'Engineer'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
+                    Target Completion Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={delegationDeadline}
+                    onChange={(e) => setDelegationDeadline(e.target.value)}
+                    className={`w-full border rounded-xl px-4 py-3 font-mono font-bold focus:outline-none transition-colors ${
+                      isLight 
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' 
+                        : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Priority & Category Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
+                    Priority Level <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={delegationPriority}
+                    onChange={(e) => setDelegationPriority(e.target.value as TaskPriority)}
+                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${
+                      isLight 
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' 
+                        : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
+                    }`}
+                  >
+                    <option value="Urgent">🔥 Urgent / Critical</option>
+                    <option value="High">⚡ High Priority</option>
+                    <option value="Medium">⚖️ Medium Priority</option>
+                    <option value="Low">🌱 Low Priority</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
+                    Category / Project Scope
+                  </label>
+                  <input
+                    type="text"
+                    value={delegationCategory}
+                    onChange={(e) => setDelegationCategory(e.target.value)}
+                    placeholder="e.g. Workflow Automation, Core API, UI/UX"
+                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none transition-colors ${
+                      isLight 
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                        : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Reference Link */}
+              <div>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
+                  isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                }`}>
+                  Reference URL / Spec Link (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={delegationLink}
+                  onChange={(e) => setDelegationLink(e.target.value)}
+                  placeholder="https://github.com/... or docs URL"
+                  className={`w-full border rounded-xl px-4 py-3 focus:outline-none transition-colors ${
+                    isLight 
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                      : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
+                  }`}
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddDelegationModal(false)}
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all ${
+                    isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingDelegation}
+                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 cursor-pointer ${
+                    isLight 
+                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' 
+                      : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
+                  }`}
+                >
+                  {creatingDelegation ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Delegating Task...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Assign Task to Employee</span>
                     </>
                   )}
                 </button>

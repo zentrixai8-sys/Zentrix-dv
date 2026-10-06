@@ -34,7 +34,7 @@ import {
   Server,
   LayoutDashboard
 } from 'lucide-react';
-import { Task, SystemItem, WorkType, TaskPriority } from '../types/taskTypes';
+import { Task, SystemItem, WorkType, TaskPriority, Company } from '../types/taskTypes';
 import { 
   fetchTasks, 
   createTask, 
