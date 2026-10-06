@@ -2669,229 +2669,240 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* DETAIL & NOTES MODAL */}
       {selectedTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-          <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedTask(null);
+          }}
+        >
+          <div className={`w-full max-w-lg max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl my-auto overflow-hidden ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            {/* Modal Header */}
+            <div className={`flex items-center justify-between px-5 py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
               <div>
-                <span className={`font-mono font-bold text-sm ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>{selectedTask.ticketNumber}</span>
-                <h3 className={`text-lg font-bold mt-1 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{selectedTask.systemName}</h3>
+                <span className={`font-mono font-bold text-xs ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>{selectedTask.ticketNumber}</span>
+                <h3 className={`text-base font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{selectedTask.systemName}</h3>
               </div>
               <button
                 onClick={() => setSelectedTask(null)}
-                className={`text-lg font-bold p-2 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                className={`text-lg font-bold p-1.5 rounded-xl transition-colors cursor-pointer ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
               >
                 &times;
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              {[
-                { label: 'Company:', value: selectedTask.partyName },
-                { label: 'Raised By:', value: selectedTask.personName },
-                { label: 'Type of Work:', value: selectedTask.typeOfWork },
-                { label: 'Expected Resolution Date:', value: selectedTask.expectedDateToClose, mono: true },
-              ].map((f, i) => (
-                <div key={i} className={`p-3 rounded-xl border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/30 border-white/5'}`}>
-                  <span className={isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}>{f.label}</span>
-                  <div className={`font-bold ${f.mono ? 'font-mono' : ''} ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{f.value}</div>
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                Work Description
-              </label>
-              <div className={`p-4 border rounded-2xl text-xs leading-relaxed max-h-36 overflow-y-auto ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#5C5244]' : 'bg-black/50 border-white/10 text-slate-200'}`}>
-                {selectedTask.descriptionOfWork}
+            {/* Modal Scrollable Body */}
+            <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                {[
+                  { label: 'Company:', value: selectedTask.partyName },
+                  { label: 'Raised By:', value: selectedTask.personName },
+                  { label: 'Type of Work:', value: selectedTask.typeOfWork },
+                  { label: 'Expected Resolution Date:', value: formatDateDDMMYYYY(selectedTask.expectedDateToClose), mono: true },
+                ].map((f, i) => (
+                  <div key={i} className={`p-2.5 rounded-xl border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-black/30 border-white/5'}`}>
+                    <span className={`text-[10px] block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{f.label}</span>
+                    <div className={`font-bold truncate mt-0.5 ${f.mono ? 'font-mono' : ''} ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{f.value}</div>
+                  </div>
+                ))}
               </div>
-            </div>
 
-            {selectedTask.uploadFileUrl && (
               <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>
-                  <Paperclip className="w-3.5 h-3.5" />
-                  Cloudinary Attachment / Uploaded File
+                <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                  Work Description
                 </label>
-                <div className={`rounded-2xl p-4 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className={`p-2.5 rounded-xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
-                      <Paperclip className="w-4 h-4" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                        {selectedTask.uploadFileName || 'Uploaded Attachment'}
-                      </div>
-                      <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
-                        Cloudinary CDN: dfbllmnld / zentrixs
-                      </div>
-                    </div>
-                  </div>
-                  <a
-                    href={selectedTask.uploadFileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/20'}`}
-                  >
-                    <span>Open in Cloudinary</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                <div className={`p-3 border rounded-xl text-xs leading-relaxed max-h-28 overflow-y-auto ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#5C5244]' : 'bg-black/50 border-white/10 text-slate-200'}`}>
+                  {selectedTask.descriptionOfWork}
                 </div>
               </div>
-            )}
-            {/* Completion Remark & Attachment Display */}
-            {(selectedTask.completionRemark || selectedTask.completionFileUrl) && (
-              <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Completion & Resolution Proof</span>
-                  </div>
-                  {selectedTask.completedAt && (
-                    <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
-                      {new Date(selectedTask.completedAt).toLocaleString()}
-                    </span>
-                  )}
-                </div>
-                {selectedTask.completionRemark && (
-                  <p className={`text-xs leading-relaxed p-3 rounded-xl ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'}`}>
-                    {selectedTask.completionRemark}
-                  </p>
-                )}
 
-                {/* Multiple Completion Proofs Gallery */}
-                {((selectedTask.completionFiles && selectedTask.completionFiles.length > 0) || selectedTask.completionFileUrl) && (
-                  <div className="space-y-2">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                      Resolution Attachments & Proofs ({selectedTask.completionFiles?.length || 1})
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {selectedTask.completionFiles && selectedTask.completionFiles.length > 0 ? (
-                        selectedTask.completionFiles.map((fileItem, idx) => (
-                          <div
-                            key={idx}
-                            className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
-                              isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 overflow-hidden min-w-0">
-                              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
-                                <Paperclip className="w-3.5 h-3.5" />
+              {selectedTask.uploadFileUrl && (
+                <div>
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>
+                    <Paperclip className="w-3.5 h-3.5" />
+                    Cloudinary Attachment / Uploaded File
+                  </label>
+                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className={`p-2 rounded-lg border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
+                        <Paperclip className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                          {selectedTask.uploadFileName || 'Uploaded Attachment'}
+                        </div>
+                        <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
+                          Cloudinary CDN: dfbllmnld / zentrixs
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={selectedTask.uploadFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/20'}`}
+                    >
+                      <span>Open in Cloudinary</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Completion Remark & Attachment Display */}
+              {(selectedTask.completionRemark || selectedTask.completionFileUrl) && (
+                <div className={`p-3.5 rounded-xl border space-y-2.5 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Completion & Resolution Proof</span>
+                    </div>
+                    {selectedTask.completedAt && (
+                      <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
+                        {new Date(selectedTask.completedAt).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                  {selectedTask.completionRemark && (
+                    <p className={`text-xs leading-relaxed p-2.5 rounded-lg ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'}`}>
+                      {selectedTask.completionRemark}
+                    </p>
+                  )}
+
+                  {/* Multiple Completion Proofs Gallery */}
+                  {((selectedTask.completionFiles && selectedTask.completionFiles.length > 0) || selectedTask.completionFileUrl) && (
+                    <div className="space-y-1.5">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider block ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                        Resolution Attachments & Proofs ({selectedTask.completionFiles?.length || 1})
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {selectedTask.completionFiles && selectedTask.completionFiles.length > 0 ? (
+                          selectedTask.completionFiles.map((fileItem, idx) => (
+                            <div
+                              key={idx}
+                              className={`rounded-lg p-2 flex items-center justify-between gap-2 border ${
+                                isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
+                                <div className="p-1 rounded bg-emerald-500/10 text-emerald-500 shrink-0">
+                                  <Paperclip className="w-3 h-3" />
+                                </div>
+                                <div className="overflow-hidden">
+                                  <div className={`text-[11px] font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                    {fileItem.name}
+                                  </div>
+                                  <div className="text-[8px] text-emerald-600 dark:text-emerald-400">
+                                    Proof #{idx + 1}
+                                  </div>
+                                </div>
+                              </div>
+                              <a
+                                href={fileItem.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-2 py-0.5 rounded text-[9px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
+                              >
+                                <span>Open</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </div>
+                          ))
+                        ) : selectedTask.completionFileUrl ? (
+                          <div className={`rounded-lg p-2 flex items-center justify-between gap-2 border ${
+                            isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                          }`}>
+                            <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
+                              <div className="p-1 rounded bg-emerald-500/10 text-emerald-500 shrink-0">
+                                <Paperclip className="w-3 h-3" />
                               </div>
                               <div className="overflow-hidden">
-                                <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                                  {fileItem.name}
+                                <div className={`text-[11px] font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                  {selectedTask.completionFileName || 'Completion Proof'}
                                 </div>
-                                <div className="text-[9px] text-emerald-600 dark:text-emerald-400">
-                                  Proof #{idx + 1}
+                                <div className="text-[8px] text-emerald-600 dark:text-emerald-400">
+                                  Uploaded resolution proof
                                 </div>
                               </div>
                             </div>
                             <a
-                              href={fileItem.url}
+                              href={selectedTask.completionFileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
+                              className="px-2 py-0.5 rounded text-[9px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
                             >
                               <span>Open</span>
                               <ExternalLink className="w-2.5 h-2.5" />
                             </a>
                           </div>
-                        ))
-                      ) : selectedTask.completionFileUrl ? (
-                        <div className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
-                          isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                        }`}>
-                          <div className="flex items-center gap-2 overflow-hidden min-w-0">
-                            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
-                              <Paperclip className="w-3.5 h-3.5" />
-                            </div>
-                            <div className="overflow-hidden">
-                              <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                                {selectedTask.completionFileName || 'Completion Proof'}
-                              </div>
-                              <div className="text-[9px] text-emerald-600 dark:text-emerald-400">
-                                Uploaded resolution proof
-                              </div>
-                            </div>
-                          </div>
-                          <a
-                            href={selectedTask.completionFileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white shrink-0 flex items-center gap-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-sm"
-                          >
-                            <span>Open</span>
-                            <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
-                        </div>
-                      ) : null}
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                  Update Status
-                </label>
-                <CustomDropdown
-                  options={[
-                    { value: 'Pending', label: 'Pending', dotColor: 'bg-amber-400' },
-                    { value: 'In Progress', label: 'In Progress', dotColor: 'bg-blue-400' },
-                    { value: 'In Review', label: 'In Review', dotColor: 'bg-purple-400' },
-                    { value: 'Completed', label: 'Completed', dotColor: 'bg-emerald-400' },
-                    { value: 'Rejected', label: 'Rejected', dotColor: 'bg-red-400' }
-                  ]}
-                  value={statusEdit}
-                  onChange={(val) => setStatusEdit(val as TaskStatus)}
-                  isLight={isLight}
-                  className="w-full"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                    Update Status
+                  </label>
+                  <CustomDropdown
+                    options={[
+                      { value: 'Pending', label: 'Pending', dotColor: 'bg-amber-400' },
+                      { value: 'In Progress', label: 'In Progress', dotColor: 'bg-blue-400' },
+                      { value: 'In Review', label: 'In Review', dotColor: 'bg-purple-400' },
+                      { value: 'Completed', label: 'Completed', dotColor: 'bg-emerald-400' },
+                      { value: 'Rejected', label: 'Rejected', dotColor: 'bg-red-400' }
+                    ]}
+                    value={statusEdit}
+                    onChange={(val) => setStatusEdit(val as TaskStatus)}
+                    isLight={isLight}
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                    Assign To Engineer
+                  </label>
+                  <CustomDropdown
+                    options={[
+                      { value: 'Unassigned', label: '-- Unassigned --' },
+                      ...employees.map((emp) => ({
+                        value: emp.name,
+                        label: emp.name,
+                        sublabel: emp.role,
+                        dotColor: 'bg-cyan-400'
+                      }))
+                    ]}
+                    value={selectedTask.assignedTo || 'Unassigned'}
+                    onChange={(val) => handleAssign(selectedTask.id, val)}
+                    isLight={isLight}
+                    className="w-full"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                  Assign To Engineer
+                <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                  Internal Engineer Notes & Resolution Remarks
                 </label>
-                <CustomDropdown
-                  options={[
-                    { value: 'Unassigned', label: '-- Unassigned --' },
-                    ...employees.map((emp) => ({
-                      value: emp.name,
-                      label: emp.name,
-                      sublabel: emp.role,
-                      dotColor: 'bg-cyan-400'
-                    }))
-                  ]}
-                  value={selectedTask.assignedTo || 'Unassigned'}
-                  onChange={(val) => handleAssign(selectedTask.id, val)}
-                  isLight={isLight}
-                  className="w-full"
+                <textarea
+                  rows={2}
+                  value={noteEdit}
+                  onChange={(e) => setNoteEdit(e.target.value)}
+                  placeholder="Add technical notes, git commit ref, or resolution comments..."
+                  className={`w-full border rounded-xl p-2.5 text-xs focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/20 text-white focus:border-blue-500'}`}
                 />
               </div>
             </div>
 
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                Internal Engineer Notes & Resolution Remarks
-              </label>
-              <textarea
-                rows={3}
-                value={noteEdit}
-                onChange={(e) => setNoteEdit(e.target.value)}
-                placeholder="Add technical notes, git commit ref, or resolution comments..."
-                className={`w-full border rounded-2xl p-3 text-xs focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/20 text-white focus:border-blue-500'}`}
-              />
-            </div>
-
-            <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+            {/* Modal Sticky Footer */}
+            <div className={`flex items-center justify-end gap-2.5 px-5 py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
               <button
                 type="button"
                 onClick={() => setSelectedTask(null)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
               >
                 Close
               </button>
@@ -2899,7 +2910,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 type="button"
                 disabled={savingNote}
                 onClick={handleSaveModal}
-                className={`px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'}`}
+                className={`px-5 py-2 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-95 cursor-pointer ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30'}`}
               >
                 {savingNote ? 'Saving Changes...' : 'Save Changes'}
               </button>
