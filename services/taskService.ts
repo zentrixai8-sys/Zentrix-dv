@@ -11,6 +11,28 @@ const STORAGE_KEYS = {
 // Configurable Cloudflare Worker API URL
 export const CLOUDFLARE_API_URL = (import.meta as any).env?.VITE_CLOUDFLARE_API_URL || '';
 
+// Standard DD-MM-YYYY Date Formatter
+export const formatDateDDMMYYYY = (dateStr?: string | null): string => {
+  if (!dateStr || dateStr === '-' || dateStr === 'No Date') return '-';
+  const trimmed = dateStr.trim();
+  if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) return trimmed;
+  const ymdMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (ymdMatch) {
+    const [, y, m, d] = ymdMatch;
+    return `${d.padStart(2, '0')}-${m.padStart(2, '0')}-${y}`;
+  }
+  try {
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  } catch (_) {}
+  return dateStr;
+};
+
 // Cloudinary Configuration from User's Cloudinary Account
 export const CLOUDINARY_CLOUD_NAME = 'dfbllmnld';
 export const CLOUDINARY_UPLOAD_PRESET = 'zentrixs';

@@ -72,7 +72,8 @@ import {
   fetchDelegations,
   createDelegation,
   updateDelegationStatus,
-  deleteDelegation
+  deleteDelegation,
+  formatDateDDMMYYYY
 } from '../services/taskService';
 import AdminDashboard from './AdminDashboard';
 import AdminAnalyticsOverview from './AdminAnalyticsOverview';
@@ -1584,7 +1585,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                 <div className="flex items-center gap-1.5 font-mono text-xs">
                                   <Calendar className={`w-3.5 h-3.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
                                   <span className={`font-bold ${isLight ? 'text-[#2A2118]' : 'text-slate-200'}`}>
-                                    {dlg.targetDate || 'No Date'}
+                                    {formatDateDDMMYYYY(dlg.targetDate)}
                                   </span>
                                 </div>
                               </td>
@@ -2917,7 +2918,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <div className={`p-3 rounded-2xl border ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-black/30 border-white/10'}`}>
                   <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Target Deadline</span>
                   <span className={`font-bold text-xs font-mono mt-1 block ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                    {selectedDelegation.targetDate}
+                    {formatDateDDMMYYYY(selectedDelegation.targetDate)}
                   </span>
                 </div>
                 <div className={`p-3 rounded-2xl border ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-black/30 border-white/10'}`}>

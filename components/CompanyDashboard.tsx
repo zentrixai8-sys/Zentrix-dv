@@ -43,7 +43,8 @@ import {
   getCompanies,
   fetchCompanies,
   getAuthSession, 
-  clearAuthSession 
+  clearAuthSession,
+  formatDateDDMMYYYY
 } from '../services/taskService';
 import { sendTicketWhatsAppNotification } from '../services/whatsappService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
@@ -889,7 +890,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
                           {/* Expected Date to Close */}
                           <td className={`py-4 px-4 font-mono whitespace-nowrap ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
-                            {t.expectedDateToClose}
+                            {formatDateDDMMYYYY(t.expectedDateToClose)}
                           </td>
 
                           {/* Status */}
@@ -1361,7 +1362,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               </div>
               <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
                 <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Target Resolution:</span>
-                <div className={`font-bold font-mono mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.expectedDateToClose}</div>
+                <div className={`font-bold font-mono mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{formatDateDDMMYYYY(viewingTask.expectedDateToClose)}</div>
               </div>
             </div>
 
