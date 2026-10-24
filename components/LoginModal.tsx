@@ -4,6 +4,7 @@ import { validateLogin } from '../services/sheetService';
 import { loginCompany, loginAdmin } from '../services/taskService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
 import ThemeSelector from './ThemeSelector';
+import { Capacitor } from '@capacitor/core';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -124,17 +125,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
               <span>Secure Gateway</span>
             </div>
 
-            <button
-              onClick={onClose}
-              title="Close modal"
-              className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${
-                isLight 
-                  ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#F0E6D6]' 
-                  : 'text-slate-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {!Capacitor.isNativePlatform() && (
+              <button
+                onClick={onClose}
+                title="Close modal"
+                className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                  isLight 
+                    ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#F0E6D6]' 
+                    : 'text-slate-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Segmented Dual Switcher Tabs */}

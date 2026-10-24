@@ -204,7 +204,7 @@ const AdminAnalyticsOverview: React.FC<AdminAnalyticsOverviewProps> = ({ tasks, 
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-full overflow-x-hidden">
       {/* ============ HERO: Ticket Activity ============ */}
       <div className={`stagger-item ${cardBase}`}>
         <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
@@ -217,7 +217,7 @@ const AdminAnalyticsOverview: React.FC<AdminAnalyticsOverviewProps> = ({ tasks, 
               {hasTrendData ? `All clients · tickets raised per month · ${year}` : `No tickets raised yet in ${year}`}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4 flex-wrap">
             <div className="text-right">
               <div className={`text-xl font-black ${inkText}`}>{companies.length}</div>
               <div className={`text-[9px] font-bold uppercase tracking-widest ${mutedText}`}>Clients</div>

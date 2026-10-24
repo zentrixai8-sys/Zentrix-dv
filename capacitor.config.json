@@ -1,0 +1,8 @@
+{
+  "appId": "com.zentrixs.app",
+  "appName": "Zentrixs",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

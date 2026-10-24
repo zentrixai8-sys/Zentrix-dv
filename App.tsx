@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import Header from './components/Header';
 import LoginModal from './components/LoginModal';
 import Hero from './components/Hero';
@@ -165,6 +166,35 @@ export const AppContent: React.FC = () => {
     setAuthRole(null);
     setCurrentUser('');
   };
+
+  const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+
+  // If running inside Native Android APK:
+  // Show ONLY Login Panel & SuperAdmin / Company Dashboards
+  if (isNativeApp) {
+    if (!authRole) {
+      return (
+        <div className="min-h-screen bg-[#06080E] flex flex-col items-center justify-center p-4">
+          <LoginModal
+            onClose={() => {}}
+            onSuccess={(user, role) => {
+              handleLoginSuccess(user, role);
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-[#010101] text-white">
+        {authRole === 'admin' ? (
+          <SuperAdminConsole onLogout={handleLogout} />
+        ) : (
+          <CompanyDashboard onLogout={handleLogout} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#010101] selection:bg-blue-600/40 text-white">

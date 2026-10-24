@@ -53,7 +53,8 @@ import {
   Bell,
   BellRing,
   CheckCheck,
-  Inbox
+  Inbox,
+  Menu
 } from 'lucide-react';
 import { Task, TaskStatus, Company, Employee, TaskPriority, Delegation } from '../types/taskTypes';
 import {
@@ -87,6 +88,9 @@ import { LOGO_URL, COMPANY_NAME } from '../constants';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
 import CustomDropdown from './CustomDropdown';
 import ThemeSelector from './ThemeSelector';
+import DashboardMobileBar from './DashboardMobileBar';
+import DashboardSidebarDrawer from './DashboardSidebarDrawer';
+import { startLiveTicketWatcher } from '../services/notificationService';
 
 interface SuperAdminConsoleProps {
   onLogout: () => void;
@@ -123,6 +127,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
   // Client Ticket Notification Panel State
   const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+  const [showMobileDrawer, setShowMobileDrawer] = useState(false);
   const [readTicketIds, setReadTicketIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('zentrix_admin_read_tickets_v1');
@@ -138,7 +143,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       const updated = [...prev, ticketId];
       try {
         localStorage.setItem('zentrix_admin_read_tickets_v1', JSON.stringify(updated));
-      } catch (_) {}
+      } catch (_) { }
       return updated;
     });
   };
@@ -148,7 +153,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     setReadTicketIds(allIds);
     try {
       localStorage.setItem('zentrix_admin_read_tickets_v1', JSON.stringify(allIds));
-    } catch (_) {}
+    } catch (_) { }
     showToast('All notifications marked as read');
   };
 
@@ -470,15 +475,13 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
   useEffect(() => {
     loadData();
-    // Live polling for incoming client tickets every 15 seconds
-    const interval = setInterval(() => {
-      fetchTasks().then(latestTasks => {
-        if (Array.isArray(latestTasks) && latestTasks.length > 0) {
-          setTasks(latestTasks);
-        }
-      }).catch(() => {});
-    }, 15000);
-    return () => clearInterval(interval);
+    // Live polling & native OS push notifications watcher while admin is logged in
+    const stopWatcher = startLiveTicketWatcher('admin', undefined, () => {
+      loadData();
+    });
+    return () => {
+      stopWatcher();
+    };
   }, []);
 
   const handleAssign = async (taskId: string, employeeName: string) => {
@@ -493,7 +496,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     setCompletingTask(target);
     setCompletingDelegation(null);
     setCompletionRemark(target.completionRemark || target.notes || '');
-    
+
     // Populate existing completion files if any
     const existing: { file?: File; name: string; url?: string; preview?: string }[] = [];
     if (target.completionFiles && Array.isArray(target.completionFiles) && target.completionFiles.length > 0) {
@@ -515,7 +518,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     setCompletingDelegation(target);
     setCompletingTask(null);
     setCompletionRemark(target.completionRemark || '');
-    
+
     // Populate existing completion files if any
     const existing: { file?: File; name: string; url?: string; preview?: string }[] = [];
     if (target.completionFiles && Array.isArray(target.completionFiles) && target.completionFiles.length > 0) {
@@ -660,7 +663,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     }
 
     setCreatingDelegation(true);
-    const fullDesc = delegationDesc.trim() 
+    const fullDesc = delegationDesc.trim()
       ? `${delegationTitle.trim()}\n\nScope & Briefing:\n${delegationDesc.trim()}`
       : delegationTitle.trim();
 
@@ -700,10 +703,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       noteEdit,
       statusEdit === 'Completed'
         ? {
-            completionRemark: noteEdit,
-            completionFileUrl: selectedTask.completionFileUrl,
-            completionFileName: selectedTask.completionFileName
-          }
+          completionRemark: noteEdit,
+          completionFileUrl: selectedTask.completionFileUrl,
+          completionFileName: selectedTask.completionFileName
+        }
         : undefined
     );
     setSavingNote(false);
@@ -814,7 +817,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   };
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 md:pb-8 overflow-x-hidden w-full max-w-full ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
       }`}>
       {/* Toast Notification */}
       {toastMessage && (
@@ -825,48 +828,97 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       )}
 
       {/* Website-Styled Admin Header */}
-      <header className={`border-b sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
+      <header className={`border-b sticky top-0 z-40 px-3 sm:px-8 py-3 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/95 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
         }`}>
         <div className="w-full flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          {/* Exact Brand Logo matching Website */}
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center space-x-3.5 group cursor-pointer" title="Go to Zentrixs Website">
-              <div className="relative">
-                <div className={`absolute inset-0 blur-xl opacity-20 group-hover:opacity-60 transition-opacity ${isLight ? 'bg-[#EA552E]' : 'bg-blue-500'}`}></div>
-                <div className={`relative w-11 h-11 overflow-hidden rounded-xl border group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shadow-lg ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-zinc-900 border-white/10'
-                  }`}>
-                  <img
-                    src={LOGO_URL}
-                    alt={`${COMPANY_NAME} Logo`}
-                    width="44"
-                    height="44"
-                    className="w-full h-full object-contain p-1.5"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d47353039331e11a6839.svg";
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xl sm:text-2xl font-black tracking-[0.3em] uppercase transition-colors ${isLight ? 'text-[#2A2118] group-hover:text-[#EA552E]' : 'text-white group-hover:text-blue-500'
+          {/* Exact Brand Logo matching Website + Mobile Hamburger */}
+          <div className="flex items-center justify-between w-full xl:w-auto min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              {/* Mobile Hamburger Drawer Trigger */}
+              <button
+                onClick={() => setShowMobileDrawer(true)}
+                className={`p-2 rounded-xl border xl:hidden active:scale-90 transition-transform shrink-0 ${
+                  isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-white/5 border-white/10 text-white'
+                }`}
+                aria-label="Open Navigation Menu"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+              <Link to="/" className="flex items-center space-x-2.5 sm:space-x-3.5 group cursor-pointer min-w-0" title="Go to Zentrixs Website">
+                <div className="relative shrink-0">
+                  <div className={`absolute inset-0 blur-xl opacity-20 group-hover:opacity-60 transition-opacity ${isLight ? 'bg-[#EA552E]' : 'bg-blue-500'}`}></div>
+                  <div className={`relative w-8 h-8 sm:w-11 sm:h-11 overflow-hidden rounded-xl border group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shadow-lg ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-zinc-900 border-white/10'
                     }`}>
-                    ZEN<span className={isLight ? 'font-extralight text-[#EA552E]' : 'font-extralight text-blue-500'}>TRIXS</span>
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black font-mono border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                    }`}>
-                    SUPER ADMIN
+                    <img
+                      src={LOGO_URL}
+                      alt={`${COMPANY_NAME} Logo`}
+                      width="44"
+                      height="44"
+                      className="w-full h-full object-contain p-1"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d47353039331e11a6839.svg";
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className={`text-base sm:text-2xl font-black tracking-[0.15em] sm:tracking-[0.3em] uppercase transition-colors truncate ${isLight ? 'text-[#2A2118] group-hover:text-[#EA552E]' : 'text-white group-hover:text-blue-500'
+                      }`}>
+                      ZEN<span className={isLight ? 'font-extralight text-[#EA552E]' : 'font-extralight text-blue-500'}>TRIXS</span>
+                    </span>
+                    <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black font-mono border shrink-0 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                      }`}>
+                      SUPER ADMIN
+                    </span>
+                  </div>
+                  <span className="hidden sm:block text-[8px] text-gray-400 font-bold uppercase tracking-[0.3em] sm:tracking-[0.5em] mt-[-2px] group-hover:text-gray-500 transition-colors truncate">
+                    Automation Command Center
                   </span>
                 </div>
-                <span className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.5em] mt-[-2px] group-hover:text-gray-500 transition-colors">
-                  Automation Command Center
-                </span>
-              </div>
-            </Link>
+              </Link>
+            </div>
+
+            {/* Mobile-only quick action: notifications & theme toggle */}
+            <div className="flex xl:hidden items-center gap-1.5 shrink-0 ml-2">
+              <button
+                onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+                title="Client Ticket Notifications"
+                aria-label="Ticket Notifications"
+                className={`relative flex items-center justify-center p-2 rounded-xl border transition-all active:scale-90 cursor-pointer ${
+                  showNotificationPanel
+                    ? isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+                    : isLight ? 'bg-white border-[#EDE2D3] text-[#EA552E]' : 'bg-white/5 border-white/10 text-cyan-400'
+                }`}
+              >
+                {unreadCount > 0 ? (
+                  <BellRing className="w-4 h-4 animate-bounce text-red-500" />
+                ) : (
+                  <Bell className="w-4 h-4" />
+                )}
+
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md shadow-red-500/40 animate-pulse border-2 border-white dark:border-black">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                title="Toggle Theme"
+                aria-label="Toggle Theme"
+                className={`p-2 rounded-xl border transition-all active:scale-90 cursor-pointer ${
+                  isLight ? 'bg-white border-[#EDE2D3] text-[#EA552E]' : 'bg-white/5 border-white/10 text-cyan-400'
+                }`}
+              >
+                {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {/* Navigation Pill Tabs, Theme Switcher & Logout */}
-          <div className="flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-3">
             <div className={`flex flex-nowrap overflow-x-auto no-scrollbar p-1 rounded-2xl border text-xs font-bold transition-colors ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/5 border-white/10 text-slate-400'
               }`}>
               <button
@@ -945,164 +997,23 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               <button
                 onClick={() => setShowNotificationPanel(!showNotificationPanel)}
                 title="Client Ticket Notifications"
-                className={`relative flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${
-                  showNotificationPanel
+                className={`relative flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${showNotificationPanel
                     ? isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-600/20 text-blue-400 border-blue-500/40'
                     : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3] hover:text-[#2A2118]' : 'bg-white/5 text-slate-300 border-white/10 hover:text-white'
-                }`}
+                  }`}
               >
                 {unreadCount > 0 ? (
                   <BellRing className={`w-4 h-4 animate-bounce ${isLight ? 'text-[#EA552E]' : 'text-blue-400'}`} />
                 ) : (
                   <Bell className="w-4 h-4" />
                 )}
-                
+
                 {unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/40 animate-pulse border-2 border-white dark:border-black">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </button>
-
-              {/* Notification Dropdown Panel */}
-              {showNotificationPanel && (
-                <>
-                  {/* Backdrop for closing */}
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setShowNotificationPanel(false)}
-                  />
-                  
-                  <div className={`absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl border shadow-2xl z-50 overflow-hidden backdrop-blur-xl transition-all duration-200 ${
-                    isLight ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118] shadow-orange-950/10' : 'bg-[#0B1120]/95 border-white/10 text-white shadow-black/80'
-                  }`}>
-                    {/* Header */}
-                    <div className={`p-4 border-b flex items-center justify-between ${
-                      isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
-                    }`}>
-                      <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-lg ${isLight ? 'bg-[#FDEEE7] text-[#EA552E]' : 'bg-blue-600/20 text-blue-400'}`}>
-                          <Bell className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-xs">Client Ticket Alerts</h4>
-                          <p className={`text-[10px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
-                            {unreadCount > 0 ? `${unreadCount} new unread tickets` : 'All tickets caught up'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={markAllTicketsAsRead}
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer ${
-                            isLight ? 'text-[#EA552E] hover:bg-[#FDEEE7]' : 'text-blue-400 hover:bg-blue-600/20'
-                          }`}
-                        >
-                          <CheckCheck className="w-3 h-3" />
-                          <span>Mark all read</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Notifications List */}
-                    <div className="max-h-[380px] overflow-y-auto divide-y divide-inherit">
-                      {tasks.length === 0 ? (
-                        <div className="p-8 text-center">
-                          <Inbox className={`w-8 h-8 mx-auto mb-2 opacity-30 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`} />
-                          <p className={`text-xs font-bold ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>No client tickets yet</p>
-                        </div>
-                      ) : (
-                        tasks.slice(0, 15).map(task => {
-                          const isUnread = !readTicketIds.includes(task.id);
-                          return (
-                            <div
-                              key={task.id}
-                              onClick={() => {
-                                markTicketAsRead(task.id);
-                                setSelectedTask(task);
-                                setStatusEdit(task.status);
-                                setNoteEdit(task.notes || '');
-                                setActiveTab('console');
-                                setShowNotificationPanel(false);
-                              }}
-                              className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 relative group ${
-                                isUnread
-                                  ? isLight ? 'bg-[#FDF3E7]/60 hover:bg-[#FDF3E7]' : 'bg-blue-950/30 hover:bg-blue-900/40'
-                                  : isLight ? 'hover:bg-[#FBF5EC]' : 'hover:bg-white/[0.03]'
-                              }`}
-                            >
-                              {/* Unread Indicator Dot */}
-                              {isUnread && (
-                                <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 animate-pulse ${
-                                  isLight ? 'bg-[#EA552E]' : 'bg-blue-500'
-                                }`} />
-                              )}
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center justify-between gap-2 mb-1">
-                                  <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                                    isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                                  }`}>
-                                    {task.ticketNumber}
-                                  </span>
-                                  
-                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
-                                    task.priorityInCustomer === 'Urgent'
-                                      ? 'bg-red-500/15 text-red-500 border-red-500/30'
-                                      : task.priorityInCustomer === 'High'
-                                      ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
-                                      : 'bg-blue-500/15 text-blue-400 border-blue-500/30'
-                                  }`}>
-                                    {task.priorityInCustomer || 'Medium'}
-                                  </span>
-                                </div>
-
-                                <h5 className={`font-bold text-xs truncate mb-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                                  {task.partyName}
-                                </h5>
-
-                                <p className={`text-[11px] line-clamp-2 leading-relaxed mb-1.5 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                                  {task.descriptionOfWork}
-                                </p>
-
-                                <div className="flex items-center justify-between text-[9px] text-slate-400">
-                                  <span className="flex items-center gap-1">
-                                    <User className="w-2.5 h-2.5" />
-                                    {task.personName}
-                                  </span>
-                                  <span className="font-mono">
-                                    {formatDateDDMMYYYY(task.createdAt || task.expectedDateToClose)}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    {tasks.length > 0 && (
-                      <div className={`p-2.5 text-center border-t ${
-                        isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
-                      }`}>
-                        <button
-                          onClick={() => {
-                            setActiveTab('console');
-                            setShowNotificationPanel(false);
-                          }}
-                          className={`text-xs font-bold transition-colors cursor-pointer ${
-                            isLight ? 'text-[#EA552E] hover:text-[#D9481F]' : 'text-blue-400 hover:text-blue-300'
-                          }`}
-                        >
-                          View all in Tickets Console →
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
             </div>
 
             {/* Disconnect Button (Icon Only) */}
@@ -1121,13 +1032,144 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
             </button>
           </div>
         </div>
+
+        {/* Global Notification Dropdown Panel (renders for both Mobile & Desktop) */}
+        {showNotificationPanel && (
+          <>
+            {/* Backdrop for closing */}
+            <div
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs"
+              onClick={() => setShowNotificationPanel(false)}
+            />
+
+            <div className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-6 sm:w-96 rounded-2xl border shadow-2xl z-50 overflow-hidden backdrop-blur-xl transition-all duration-200 ${isLight ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118] shadow-orange-950/10' : 'bg-[#0B1120]/95 border-white/10 text-white shadow-black/80'
+              }`}>
+              {/* Header */}
+              <div className={`p-4 border-b flex items-center justify-between ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
+                }`}>
+                <div className="flex items-center gap-2">
+                  <div className={`p-2 rounded-lg ${isLight ? 'bg-[#FDEEE7] text-[#EA552E]' : 'bg-blue-600/20 text-blue-400'}`}>
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-xs">Client Ticket Alerts</h4>
+                    <p className={`text-[10px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                      {unreadCount > 0 ? `${unreadCount} new unread tickets` : 'All tickets caught up'}
+                    </p>
+                  </div>
+                </div>
+
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllTicketsAsRead}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer ${isLight ? 'text-[#EA552E] hover:bg-[#FDEEE7]' : 'text-blue-400 hover:bg-blue-600/20'
+                      }`}
+                  >
+                    <CheckCheck className="w-3 h-3" />
+                    <span>Mark all read</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Notifications List */}
+              <div className="max-h-[380px] overflow-y-auto divide-y divide-inherit">
+                {tasks.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Inbox className={`w-8 h-8 mx-auto mb-2 opacity-30 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`} />
+                    <p className={`text-xs font-bold ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>No client tickets yet</p>
+                  </div>
+                ) : (
+                  tasks.slice(0, 15).map(task => {
+                    const isUnread = !readTicketIds.includes(task.id);
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => {
+                          markTicketAsRead(task.id);
+                          setSelectedTask(task);
+                          setStatusEdit(task.status);
+                          setNoteEdit(task.notes || '');
+                          setActiveTab('console');
+                          setShowNotificationPanel(false);
+                        }}
+                        className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 relative group ${isUnread
+                            ? isLight ? 'bg-[#FDF3E7]/60 hover:bg-[#FDF3E7]' : 'bg-blue-950/30 hover:bg-blue-900/40'
+                            : isLight ? 'hover:bg-[#FBF5EC]' : 'hover:bg-white/[0.03]'
+                          }`}
+                      >
+                        {/* Unread Indicator Dot */}
+                        {isUnread && (
+                          <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 animate-pulse ${isLight ? 'bg-[#EA552E]' : 'bg-blue-500'
+                            }`} />
+                        )}
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                              }`}>
+                              {task.ticketNumber}
+                            </span>
+
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${task.priorityInCustomer === 'Urgent'
+                                ? 'bg-red-500/15 text-red-500 border-red-500/30'
+                                : task.priorityInCustomer === 'High'
+                                  ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+                                  : 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                              }`}>
+                              {task.priorityInCustomer || 'Medium'}
+                            </span>
+                          </div>
+
+                          <h5 className={`font-bold text-xs truncate mb-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                            {task.partyName}
+                          </h5>
+
+                          <p className={`text-[11px] line-clamp-2 leading-relaxed mb-1.5 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                            {task.descriptionOfWork}
+                          </p>
+
+                          <div className="flex items-center justify-between text-[9px] text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <User className="w-2.5 h-2.5" />
+                              {task.personName}
+                            </span>
+                            <span className="font-mono">
+                              {formatDateDDMMYYYY(task.createdAt || task.expectedDateToClose)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              {tasks.length > 0 && (
+                <div className={`p-2.5 text-center border-t ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
+                  }`}>
+                  <button
+                    onClick={() => {
+                      setActiveTab('console');
+                      setShowNotificationPanel(false);
+                    }}
+                    className={`text-xs font-bold transition-colors cursor-pointer ${isLight ? 'text-[#EA552E] hover:text-[#D9481F]' : 'text-blue-400 hover:text-blue-300'
+                      }`}
+                  >
+                    View all in Tickets Console →
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </header>
 
       {/* Main Body - Full Canvas Width */}
-      <div className="w-full px-4 sm:px-8 py-6 space-y-6">
+      <div className="w-full max-w-full px-3 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 overflow-x-hidden">
         {/* Dynamic Contextual KPI Tiles per Page/Tab */}
         {activeTab !== 'cms' && activeTab !== 'whatsapp' && activeTab !== 'delegation' && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
             {getPageKpis().map((tile, idx) => {
               const palette: Record<string, { rgb: string; iconGrad: string; meterLight: string; meterDark: string; numLight: string; numDark: string; subLight: string; subDark: string; ring: string }> = {
                 cyan: { rgb: '6,182,212', iconGrad: 'from-cyan-400 to-cyan-600', meterLight: 'bg-cyan-500', meterDark: 'bg-cyan-400', numLight: 'text-[#0E7490]', numDark: 'text-cyan-300', subLight: 'text-cyan-700', subDark: 'text-cyan-300/80', ring: 'group-hover:ring-cyan-400/40' },
@@ -1142,37 +1184,37 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               return (
                 <div
                   key={`${activeTab}-${tile.label}`}
-                  className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ring-1 ring-transparent ${p.ring} ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
+                  className={`stagger-item group relative border rounded-2xl p-3 sm:p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 ring-1 ring-transparent min-w-0 ${p.ring} ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
                     }`}
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div
-                    className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
+                    className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
                     style={{ background: `radial-gradient(circle, rgba(${p.rgb},${isLight ? 0.5 : 0.65}) 0%, transparent 70%)` }}
                   ></div>
 
-                  <div className="relative flex items-start justify-between mb-3">
-                    <div className={`text-[10px] font-bold uppercase tracking-widest pt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{tile.label}</div>
+                  <div className="relative flex items-start justify-between gap-1 mb-2 sm:mb-3">
+                    <div className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider pt-0.5 truncate ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{tile.label}</div>
                     <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
-                      style={{ boxShadow: `0 6px 16px rgba(${p.rgb},${isLight ? 0.35 : 0.45})` }}
+                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
+                      style={{ boxShadow: `0 4px 12px rgba(${p.rgb},${isLight ? 0.35 : 0.45})` }}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
 
-                  <div className={`relative text-[32px] leading-none font-black ${isLight ? p.numLight : p.numDark}`}>{tile.value}</div>
+                  <div className={`relative text-2xl sm:text-[32px] leading-none font-black ${isLight ? p.numLight : p.numDark}`}>{tile.value}</div>
 
-                  <div className={`relative mt-3 h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-[#F3EADC]' : 'bg-white/10'}`}>
+                  <div className={`relative mt-2 sm:mt-3 h-1 sm:h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-[#F3EADC]' : 'bg-white/10'}`}>
                     <div
                       className={`h-full rounded-full ${isLight ? p.meterLight : p.meterDark}`}
                       style={{ width: `${Math.max(6, Math.round(tile.ratio * 100))}%`, transition: 'width 0.9s cubic-bezier(0.16,1,0.3,1)', transitionDelay: `${0.2 + idx * 0.05}s` }}
                     ></div>
                   </div>
 
-                  <div className={`relative text-[10px] mt-2 font-mono flex items-center gap-1 ${isLight ? p.subLight : p.subDark}`}>
-                    {tile.live && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>}
-                    {tile.sub}
+                  <div className={`relative text-[9px] sm:text-[10px] mt-1.5 sm:mt-2 font-mono flex items-center gap-1 ${isLight ? p.subLight : p.subDark}`}>
+                    {tile.live && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>}
+                    <span className="truncate">{tile.sub}</span>
                   </div>
                 </div>
               );
@@ -1281,7 +1323,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
             {/* Enterprise Task Table */}
             <div className={`border rounded-2xl shadow-xl transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0B0F19]/90 border-white/10'
               }`}>
-              <div className="overflow-x-auto min-h-[340px] pb-32">
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto min-h-[340px] pb-32">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${isLight ? 'bg-[#FBF5EC]/90 border-[#EDE2D3] text-[#8A7B68]' : 'border-white/10 bg-white/[0.02] text-slate-400'
@@ -1457,6 +1500,106 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Native App Cards View (Airtel Thanks / Jio Style) */}
+              <div className="md:hidden divide-y divide-black/5 dark:divide-white/5">
+                {filteredTasks.length === 0 ? (
+                  <div className={`py-12 px-4 text-center text-xs ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>
+                    No tickets matching current filters.
+                  </div>
+                ) : (
+                  filteredTasks.map((t) => (
+                    <div key={t.id} className={`p-4 transition-colors space-y-3 ${isLight ? 'bg-white hover:bg-[#FBF5EC]' : 'bg-[#0B0F19]/60 hover:bg-white/[0.02]'}`}>
+                      {/* Top Row: Ticket Number, Date, Priority & Status */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`font-mono font-bold text-xs px-2 py-0.5 rounded-lg border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}`}>
+                            {t.ticketNumber}
+                          </span>
+                          <span className={`text-[10px] font-mono ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                            {formatDateDDMMYYYY(t.createdAt)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                            t.priorityInCustomer === 'Urgent'
+                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                              : t.priorityInCustomer === 'High'
+                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          }`}>
+                            {t.priorityInCustomer}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 ${
+                            t.status === 'Completed'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                              : t.status === 'In Progress'
+                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'Completed' ? 'bg-emerald-400' : t.status === 'In Progress' ? 'bg-blue-400' : 'bg-amber-400'}`} />
+                            {t.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Client Company & System */}
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <Building2 className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                          <span className={`font-bold text-xs truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                            {t.partyName}
+                          </span>
+                          <span className="opacity-40">•</span>
+                          <span className={`text-xs font-semibold ${isLight ? 'text-[#D9481F]' : 'text-cyan-300'}`}>
+                            {t.systemName}
+                          </span>
+                        </div>
+                        <p className={`text-xs leading-relaxed mt-1 line-clamp-2 ${isLight ? 'text-[#5C5244]' : 'text-slate-300'}`}>
+                          {t.descriptionOfWork}
+                        </p>
+                      </div>
+
+                      {/* Assigned Engineer & Actions */}
+                      <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isLight ? 'bg-[#FDF3E7] text-[#EA552E] border border-[#EDE2D3]' : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'}`}>
+                            {(t.assignedTo || 'U').charAt(0).toUpperCase()}
+                          </div>
+                          <span className={`text-xs font-semibold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                            {t.assignedTo || 'Unassigned'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {t.uploadFileUrl && (
+                            <a
+                              href={t.uploadFileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`p-2 rounded-xl border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}`}
+                              title="View Attachment / Evidence"
+                            >
+                              <Paperclip className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedTask(t);
+                              setNoteEdit(t.adminNotes || '');
+                              setStatusEdit(t.status);
+                            }}
+                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 ${isLight ? 'bg-[#EA552E] text-white shadow-sm' : 'bg-blue-600 text-white shadow-sm'}`}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1489,16 +1632,14 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
           return (
             <div className="space-y-6">
               {/* Hero Banner with Create Button */}
-              <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all ${
-                isLight 
-                  ? 'bg-gradient-to-r from-white via-[#FDFBF7] to-[#FBF5EC] border-[#EDE2D3]' 
+              <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all ${isLight
+                  ? 'bg-gradient-to-r from-white via-[#FDFBF7] to-[#FBF5EC] border-[#EDE2D3]'
                   : 'bg-gradient-to-r from-[#0F172A] via-[#0B1120] to-[#070D18] border-white/10'
-              }`}>
+                }`}>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${
-                      isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                    }`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                      }`}>
                       INTERNAL TASK MANAGEMENT
                     </span>
                     <span className="text-xs text-emerald-500 font-bold flex items-center gap-1">
@@ -1517,11 +1658,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <button
                   type="button"
                   onClick={() => setShowAddDelegationModal(true)}
-                  className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-white shadow-xl transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0 ${
-                    isLight 
-                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30' 
+                  className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-white shadow-xl transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0 ${isLight
+                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30'
                       : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/30'
-                  }`}
+                    }`}
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Assign New Task / Delegation</span>
@@ -1584,9 +1724,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               </div>
 
               {/* Filters & Search Control Bar */}
-              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-3 ${
-                isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
-              }`}>
+              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-3 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+                }`}>
                 {/* Search Box */}
                 <div className="relative w-full md:w-72">
                   <Search className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-400'}`} />
@@ -1595,11 +1734,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     value={delegationSearch}
                     onChange={(e) => setDelegationSearch(e.target.value)}
                     placeholder="Search task, engineer, system..."
-                    className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl outline-none border transition-all ${
-                      isLight 
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                    className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl outline-none border transition-all ${isLight
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]'
                         : 'bg-black/40 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
-                    }`}
+                      }`}
                   />
                 </div>
 
@@ -1611,11 +1749,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     <select
                       value={delegationFilterEmployee}
                       onChange={(e) => setDelegationFilterEmployee(e.target.value)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${
-                        isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]' 
+                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${isLight
+                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]'
                           : 'bg-[#1E293B] border-white/10 text-white'
-                      }`}
+                        }`}
                     >
                       <option value="All">All Engineers ({employees.length})</option>
                       {employees.map(emp => (
@@ -1630,11 +1767,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     <select
                       value={delegationFilterStatus}
                       onChange={(e) => setDelegationFilterStatus(e.target.value)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${
-                        isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]' 
+                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${isLight
+                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]'
                           : 'bg-[#1E293B] border-white/10 text-white'
-                      }`}
+                        }`}
                     >
                       <option value="All">All Statuses</option>
                       <option value="Pending">Pending</option>
@@ -1650,11 +1786,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     <select
                       value={delegationFilterPriority}
                       onChange={(e) => setDelegationFilterPriority(e.target.value)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${
-                        isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]' 
+                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${isLight
+                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]'
                           : 'bg-[#1E293B] border-white/10 text-white'
-                      }`}
+                        }`}
                     >
                       <option value="All">All Priorities</option>
                       <option value="Urgent">Urgent</option>
@@ -1667,14 +1802,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               </div>
 
               {/* Delegated Tasks List Table */}
-              <div className={`rounded-3xl border overflow-hidden shadow-xl ${
-                isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
-              }`}>
+              <div className={`rounded-3xl border overflow-hidden shadow-xl ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+                }`}>
                 {filteredDelegations.length === 0 ? (
                   <div className="py-16 px-6 text-center space-y-4">
-                    <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto ${
-                      isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/5 border-white/10 text-slate-400'
-                    }`}>
+                    <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#8A7B68]' : 'bg-white/5 border-white/10 text-slate-400'
+                      }`}>
                       <ListTodo className="w-8 h-8" />
                     </div>
                     <div>
@@ -1688,20 +1821,20 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     <button
                       type="button"
                       onClick={() => setShowAddDelegationModal(true)}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 cursor-pointer ${
-                        isLight ? 'bg-[#EA552E] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 shadow-md shadow-blue-600/30'
-                      }`}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 cursor-pointer ${isLight ? 'bg-[#EA552E] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 shadow-md shadow-blue-600/30'
+                        }`}
                     >
                       + Assign Task Now
                     </button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className={`border-b font-mono font-bold uppercase tracking-wider text-[10px] ${
-                          isLight ? 'bg-[#FDF8F2] text-[#8A7B68] border-[#EDE2D3]' : 'bg-white/[0.02] text-slate-400 border-white/10'
-                        }`}>
+                        <tr className={`border-b font-mono font-bold uppercase tracking-wider text-[10px] ${isLight ? 'bg-[#FDF8F2] text-[#8A7B68] border-[#EDE2D3]' : 'bg-white/[0.02] text-slate-400 border-white/10'
+                          }`}>
                           <th className="py-3.5 px-4">Task Details & Scope</th>
                           <th className="py-3.5 px-4">Assigned Engineer</th>
                           <th className="py-3.5 px-4">Target Deadline</th>
@@ -1719,30 +1852,26 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           return (
                             <tr
                               key={dlg.id}
-                              className={`transition-colors duration-150 ${
-                                isLight ? 'hover:bg-[#FDFBF7]' : 'hover:bg-white/[0.02]'
-                              }`}
+                              className={`transition-colors duration-150 ${isLight ? 'hover:bg-[#FDFBF7]' : 'hover:bg-white/[0.02]'
+                                }`}
                             >
                               {/* Task Details */}
                               <td className="py-4 px-4 max-w-xs sm:max-w-sm">
                                 <div className="flex items-start gap-2.5">
-                                  <div className={`p-2 rounded-xl border shrink-0 mt-0.5 ${
-                                    dlg.status === 'Completed'
+                                  <div className={`p-2 rounded-xl border shrink-0 mt-0.5 ${dlg.status === 'Completed'
                                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
                                       : isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/10 border-blue-500/30 text-blue-400'
-                                  }`}>
+                                    }`}>
                                     <ListTodo className="w-4 h-4" />
                                   </div>
                                   <div className="space-y-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <span className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-md border ${
-                                        isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                                      }`}>
+                                      <span className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-md border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                        }`}>
                                         {dlg.delegationNumber}
                                       </span>
-                                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md border ${
-                                        isLight ? 'bg-[#F5EFE6] text-[#7A6B58] border-[#E8DEC8]' : 'bg-white/5 text-slate-400 border-white/10'
-                                      }`}>
+                                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md border ${isLight ? 'bg-[#F5EFE6] text-[#7A6B58] border-[#E8DEC8]' : 'bg-white/5 text-slate-400 border-white/10'
+                                        }`}>
                                         {dlg.category || 'Internal Task'}
                                       </span>
                                     </div>
@@ -1772,9 +1901,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                               {/* Assigned Engineer */}
                               <td className="py-4 px-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2.5">
-                                  <div className={`w-8 h-8 rounded-xl overflow-hidden border shrink-0 flex items-center justify-center font-bold text-xs ${
-                                    isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-white/5 border-white/10 text-cyan-400'
-                                  }`}>
+                                  <div className={`w-8 h-8 rounded-xl overflow-hidden border shrink-0 flex items-center justify-center font-bold text-xs ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-white/5 border-white/10 text-cyan-400'
+                                    }`}>
                                     {assignedEmp?.avatar ? (
                                       <img src={assignedEmp.avatar} alt={dlg.assignedTo || 'Unassigned'} className="w-full h-full object-cover" />
                                     ) : (
@@ -1804,13 +1932,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                               {/* Priority */}
                               <td className="py-4 px-4 whitespace-nowrap">
-                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
-                                  dlg.priority === 'Urgent'
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${dlg.priority === 'Urgent'
                                     ? 'bg-red-500/15 text-red-500 border-red-500/30'
                                     : dlg.priority === 'High'
                                       ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
                                       : 'bg-blue-500/15 text-blue-500 border-blue-500/30'
-                                }`}>
+                                  }`}>
                                   {dlg.priority === 'Urgent' && <Flame className="w-3 h-3" />}
                                   {dlg.priority}
                                 </span>
@@ -1821,13 +1948,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                 <select
                                   value={dlg.status}
                                   onChange={(e) => handleDelegationStatusChange(dlg.id, e.target.value as TaskStatus)}
-                                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border outline-none cursor-pointer ${
-                                    dlg.status === 'Completed'
+                                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border outline-none cursor-pointer ${dlg.status === 'Completed'
                                       ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                                       : dlg.status === 'In Progress'
                                         ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
                                         : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                                  }`}
+                                    }`}
                                 >
                                   <option value="Pending">Pending</option>
                                   <option value="In Progress">In Progress</option>
@@ -1843,11 +1969,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                   <button
                                     type="button"
                                     onClick={() => setSelectedDelegation(dlg)}
-                                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border inline-flex items-center gap-1.5 transition-all hover:scale-105 cursor-pointer ${
-                                      isLight 
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
+                                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border inline-flex items-center gap-1.5 transition-all hover:scale-105 cursor-pointer ${isLight
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
                                         : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                    }`}
+                                      }`}
                                   >
                                     <Paperclip className="w-3 h-3" />
                                     <span>{proofFilesCount} Proof file{proofFilesCount > 1 ? 's' : ''}</span>
@@ -1875,11 +2000,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                     <button
                                       type="button"
                                       onClick={() => setSelectedDelegation(dlg)}
-                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1 cursor-pointer ${
-                                        isLight 
-                                          ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#EA552E] border-[#EDE2D3]' 
+                                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1 cursor-pointer ${isLight
+                                          ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#EA552E] border-[#EDE2D3]'
                                           : 'bg-white/5 hover:bg-white/10 text-cyan-400 border-white/10'
-                                      }`}
+                                        }`}
                                     >
                                       <Eye className="w-3.5 h-3.5" />
                                       <span>View Proof</span>
@@ -1890,11 +2014,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                     type="button"
                                     onClick={() => setSelectedDelegation(dlg)}
                                     title="View Delegation Details"
-                                    className={`p-1.5 rounded-xl border transition-colors ${
-                                      isLight 
-                                        ? 'bg-[#FBF5EC] hover:bg-[#F0E6D6] text-[#6B5D4A] border-[#EDE2D3]' 
+                                    className={`p-1.5 rounded-xl border transition-colors ${isLight
+                                        ? 'bg-[#FBF5EC] hover:bg-[#F0E6D6] text-[#6B5D4A] border-[#EDE2D3]'
                                         : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10'
-                                    }`}
+                                      }`}
                                   >
                                     <Eye className="w-3.5 h-3.5" />
                                   </button>
@@ -1915,6 +2038,109 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Mobile Native App Cards View for Delegations */}
+                  <div className="md:hidden divide-y divide-black/5 dark:divide-white/5">
+                    {filteredDelegations.map((dlg) => {
+                      const proofFilesCount = (dlg.completionFiles && dlg.completionFiles.length) || (dlg.completionFileUrl ? 1 : 0);
+
+                      return (
+                        <div key={dlg.id} className={`p-4 transition-colors space-y-3 ${isLight ? 'bg-white hover:bg-[#FDFBF7]' : 'bg-[#0F172A]/80 hover:bg-white/[0.02]'}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`font-mono font-bold text-xs px-2 py-0.5 rounded-lg border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'}`}>
+                                {dlg.delegationNumber}
+                              </span>
+                              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md border ${isLight ? 'bg-[#F5EFE6] text-[#7A6B58] border-[#E8DEC8]' : 'bg-white/5 text-slate-400 border-white/10'}`}>
+                                {dlg.category || 'Internal Task'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                dlg.priority === 'Urgent'
+                                  ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                  : dlg.priority === 'High'
+                                  ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                  : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                              }`}>
+                                {dlg.priority}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                dlg.status === 'Completed'
+                                  ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
+                                  : dlg.status === 'In Progress'
+                                  ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30'
+                                  : 'bg-amber-500/10 text-amber-500 border border-amber-500/30'
+                              }`}>
+                                {dlg.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className={`font-bold text-xs leading-relaxed ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                              {dlg.title}
+                            </h4>
+                            {dlg.description && (
+                              <p className={`text-[11px] line-clamp-2 leading-relaxed mt-1 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                                {dlg.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs pt-2 border-t border-black/5 dark:border-white/5">
+                            <div className="flex flex-col">
+                              <span className={`text-[10px] ${isLight ? 'text-[#9C8F7D]' : 'text-slate-500'}`}>
+                                Engineer: <strong className={isLight ? 'text-[#2A2118]' : 'text-white'}>{dlg.assignedTo || 'Unassigned'}</strong>
+                              </span>
+                              <span className={`text-[10px] font-mono ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                                Due: {formatDateDDMMYYYY(dlg.deadline)}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              {proofFilesCount > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedDelegation(dlg)}
+                                  className={`p-1.5 rounded-xl border ${isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}
+                                  title="View Proofs"
+                                >
+                                  <Paperclip className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              {dlg.status !== 'Completed' ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openDelegationCompletionModal(dlg)}
+                                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 shadow-sm flex items-center gap-1"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span>Done</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedDelegation(dlg)}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${isLight ? 'bg-[#FDF3E7] text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'}`}
+                                >
+                                  Proof
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedDelegation(dlg)}
+                                className={`p-1.5 rounded-xl border ${isLight ? 'bg-[#FBF5EC] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-400 border-white/10'}`}
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  </>
                 )}
               </div>
             </div>
@@ -1980,26 +2206,22 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               return (
                 <div className="space-y-6">
                   {/* 1. WHATSAPP / INSTAGRAM STORY CIRCULAR AVATARS ROW */}
-                  <div className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border shadow-sm ${
-                    isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
-                  }`}>
+                  <div className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border shadow-sm ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+                    }`}>
                     <div className="flex items-center justify-between mb-3 px-1">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#EA552E] animate-pulse"></span>
-                        <h3 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${
-                          isLight ? 'text-[#2A2118]' : 'text-white'
-                        }`}>
+                        <h3 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${isLight ? 'text-[#2A2118]' : 'text-white'
+                          }`}>
                           Team Stories & Quick Profiles
                         </h3>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isLight ? 'bg-[#FDF3E7] text-[#EA552E]' : 'bg-cyan-500/10 text-cyan-400'
-                        }`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isLight ? 'bg-[#FDF3E7] text-[#EA552E]' : 'bg-cyan-500/10 text-cyan-400'
+                          }`}>
                           {employees.length} Engineers
                         </span>
                       </div>
-                      <span className={`text-[11px] font-medium hidden sm:inline ${
-                        isLight ? 'text-[#8A7B68]' : 'text-slate-400'
-                      }`}>
+                      <span className={`text-[11px] font-medium hidden sm:inline ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+                        }`}>
                         Click circle to view full profile details
                       </span>
                     </div>
@@ -2010,23 +2232,19 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                         onClick={() => setShowAddEmpModal(true)}
                         className="flex flex-col items-center shrink-0 cursor-pointer group"
                       >
-                        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-[#EA552E] shadow-sm ${
-                          isLight ? 'border-[#C8BAA7] bg-[#FDF8F2] text-[#8A7B68]' : 'border-white/20 bg-white/5 text-slate-300'
-                        }`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                            isLight ? 'bg-[#EA552E] text-white group-hover:bg-[#D9481F]' : 'bg-cyan-500 text-slate-950 group-hover:bg-cyan-400'
+                        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-[#EA552E] shadow-sm ${isLight ? 'border-[#C8BAA7] bg-[#FDF8F2] text-[#8A7B68]' : 'border-white/20 bg-white/5 text-slate-300'
                           }`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isLight ? 'bg-[#EA552E] text-white group-hover:bg-[#D9481F]' : 'bg-cyan-500 text-slate-950 group-hover:bg-cyan-400'
+                            }`}>
                             <Plus className="w-5 h-5" />
                           </div>
                         </div>
-                        <span className={`text-xs font-bold mt-2 truncate max-w-[76px] text-center ${
-                          isLight ? 'text-[#2A2118]' : 'text-white'
-                        }`}>
+                        <span className={`text-xs font-bold mt-2 truncate max-w-[76px] text-center ${isLight ? 'text-[#2A2118]' : 'text-white'
+                          }`}>
                           Add New
                         </span>
-                        <span className={`text-[10px] truncate max-w-[76px] text-center ${
-                          isLight ? 'text-[#8A7B68]' : 'text-slate-500'
-                        }`}>
+                        <span className={`text-[10px] truncate max-w-[76px] text-center ${isLight ? 'text-[#8A7B68]' : 'text-slate-500'
+                          }`}>
                           Engineer
                         </span>
                       </div>
@@ -2045,14 +2263,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                             className="flex flex-col items-center shrink-0 cursor-pointer group"
                           >
                             {/* Instagram/WhatsApp Story Gradient Ring */}
-                            <div className={`p-[2.5px] rounded-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg ${
-                              hasActive
+                            <div className={`p-[2.5px] rounded-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg ${hasActive
                                 ? 'bg-gradient-to-tr from-amber-500 via-[#EA552E] to-rose-500 shadow-sm'
                                 : isLight ? 'bg-gradient-to-tr from-emerald-400 to-teal-500' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
-                            }`}>
-                              <div className={`p-[2px] rounded-full ${
-                                isLight ? 'bg-white' : 'bg-[#0F172A]'
                               }`}>
+                              <div className={`p-[2px] rounded-full ${isLight ? 'bg-white' : 'bg-[#0F172A]'
+                                }`}>
                                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-slate-900">
                                   {emp.avatar ? (
                                     <img
@@ -2064,17 +2280,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                       }}
                                     />
                                   ) : (
-                                    <div className={`w-full h-full flex items-center justify-center font-bold text-lg sm:text-xl ${
-                                      isLight ? 'bg-gradient-to-br from-[#EA552E] to-[#D9481F] text-white' : 'bg-blue-600 text-white'
-                                    }`}>
+                                    <div className={`w-full h-full flex items-center justify-center font-bold text-lg sm:text-xl ${isLight ? 'bg-gradient-to-br from-[#EA552E] to-[#D9481F] text-white' : 'bg-blue-600 text-white'
+                                      }`}>
                                       {emp.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
                                     </div>
                                   )}
 
                                   {/* Task count pill or online badge */}
-                                  <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white ring-2 ${
-                                    isLight ? 'ring-white' : 'ring-[#0F172A]'
-                                  } ${hasActive ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                                  <span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white ring-2 ${isLight ? 'ring-white' : 'ring-[#0F172A]'
+                                    } ${hasActive ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                                     {active.length}
                                   </span>
                                 </div>
@@ -2082,14 +2296,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                             </div>
 
                             {/* Name & Role below circle */}
-                            <span className={`text-xs font-bold mt-1.5 truncate max-w-[80px] text-center group-hover:text-[#EA552E] transition-colors ${
-                              isLight ? 'text-[#2A2118]' : 'text-white'
-                            }`}>
+                            <span className={`text-xs font-bold mt-1.5 truncate max-w-[80px] text-center group-hover:text-[#EA552E] transition-colors ${isLight ? 'text-[#2A2118]' : 'text-white'
+                              }`}>
                               {emp.name.split(' ')[0]}
                             </span>
-                            <span className={`text-[10px] truncate max-w-[80px] text-center ${
-                              isLight ? 'text-[#8A7B68]' : 'text-slate-400'
-                            }`}>
+                            <span className={`text-[10px] truncate max-w-[80px] text-center ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+                              }`}>
                               {emp.role.split(' ')[0]}
                             </span>
                           </div>
@@ -2099,12 +2311,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   </div>
 
                   {/* 2. TABLE FORM DATA VIEW */}
-                  <div className={`border rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm ${
-                    isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
-                  }`}>
-                    <div className={`p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                      isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/5'
+                  <div className={`border rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
                     }`}>
+                    <div className={`p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/5'
+                      }`}>
                       <div>
                         <h3 className={`font-bold text-sm sm:text-base ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
                           All Engineers & Team Workload
@@ -2113,19 +2323,18 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           Complete overview of contact details, active backlog tasks, and current ticket assignments.
                         </p>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-xl self-start sm:self-auto border ${
-                        isLight ? 'bg-white text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'
-                      }`}>
+                      <span className={`text-xs font-bold px-3 py-1 rounded-xl self-start sm:self-auto border ${isLight ? 'bg-white text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'
+                        }`}>
                         Showing {filteredEmployees.length} of {employees.length}
                       </span>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                            isLight ? 'bg-[#FBF5EC] text-[#8A7B68] border-[#EDE2D3]' : 'bg-black/30 text-slate-400 border-white/10'
-                          }`}>
+                          <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${isLight ? 'bg-[#FBF5EC] text-[#8A7B68] border-[#EDE2D3]' : 'bg-black/30 text-slate-400 border-white/10'
+                            }`}>
                             <th className="py-3 px-4">Engineer / Profile</th>
                             <th className="py-3 px-4">Role & Designation</th>
                             <th className="py-3 px-4">Contact Info</th>
@@ -2145,9 +2354,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                             return (
                               <tr
                                 key={emp.id}
-                                className={`transition-colors ${
-                                  isLight ? 'hover:bg-[#FDF8F2]' : 'hover:bg-white/[0.02]'
-                                }`}
+                                className={`transition-colors ${isLight ? 'hover:bg-[#FDF8F2]' : 'hover:bg-white/[0.02]'
+                                  }`}
                               >
                                 {/* Profile / Name */}
                                 <td className="py-3.5 px-4">
@@ -2166,23 +2374,20 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                           }}
                                         />
                                       ) : (
-                                        <div className={`w-full h-full flex items-center justify-center font-bold text-xs ${
-                                          isLight ? 'bg-[#EA552E] text-white' : 'bg-blue-600 text-white'
-                                        }`}>
+                                        <div className={`w-full h-full flex items-center justify-center font-bold text-xs ${isLight ? 'bg-[#EA552E] text-white' : 'bg-blue-600 text-white'
+                                          }`}>
                                           {emp.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
                                         </div>
                                       )}
                                       <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-1 ring-white"></span>
                                     </div>
                                     <div>
-                                      <div className={`font-bold text-xs sm:text-sm group-hover:underline ${
-                                        isLight ? 'text-[#2A2118]' : 'text-white'
-                                      }`}>
+                                      <div className={`font-bold text-xs sm:text-sm group-hover:underline ${isLight ? 'text-[#2A2118]' : 'text-white'
+                                        }`}>
                                         {emp.name}
                                       </div>
-                                      <div className={`text-[11px] font-mono ${
-                                        isLight ? 'text-[#8A7B68]' : 'text-slate-400'
-                                      }`}>
+                                      <div className={`text-[11px] font-mono ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+                                        }`}>
                                         {emp.phone || 'No phone'}
                                       </div>
                                     </div>
@@ -2191,9 +2396,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                                 {/* Role */}
                                 <td className="py-3.5 px-4">
-                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold border ${
-                                    isLight ? 'bg-[#FDF3E7] text-[#EA552E] border-[#EDE2D3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                                  }`}>
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold border ${isLight ? 'bg-[#FDF3E7] text-[#EA552E] border-[#EDE2D3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                                    }`}>
                                     <Briefcase className="w-3 h-3 shrink-0" />
                                     <span>{emp.role}</span>
                                   </span>
@@ -2223,11 +2427,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                                 {/* Active Tasks Count */}
                                 <td className="py-3.5 px-4 text-center">
-                                  <span className={`inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-full text-xs font-black ${
-                                    active.length > 0
+                                  <span className={`inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-full text-xs font-black ${active.length > 0
                                       ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 font-mono'
                                       : isLight ? 'bg-zinc-100 text-zinc-400' : 'bg-white/5 text-slate-500'
-                                  }`}>
+                                    }`}>
                                     {active.length}
                                   </span>
                                 </td>
@@ -2244,16 +2447,14 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                   {latestActiveTask ? (
                                     <div
                                       onClick={() => setViewingEmployee(emp)}
-                                      className={`p-1.5 rounded-lg border text-[11px] truncate cursor-pointer transition-colors ${
-                                        isLight
+                                      className={`p-1.5 rounded-lg border text-[11px] truncate cursor-pointer transition-colors ${isLight
                                           ? 'bg-[#FDF8F2] border-[#EDE2D3] hover:border-[#EA552E]'
                                           : 'bg-white/[0.02] border-white/10 hover:border-cyan-400'
-                                      }`}
+                                        }`}
                                       title={`${latestActiveTask.ticketNumber} - ${latestActiveTask.partyName}`}
                                     >
-                                      <span className={`font-mono font-bold mr-1.5 ${
-                                        isLight ? 'text-[#EA552E]' : 'text-cyan-400'
-                                      }`}>
+                                      <span className={`font-mono font-bold mr-1.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'
+                                        }`}>
                                         {latestActiveTask.ticketNumber}
                                       </span>
                                       <span className="truncate">{latestActiveTask.systemName}</span>
@@ -2272,11 +2473,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                       type="button"
                                       onClick={() => setViewingEmployee(emp)}
                                       title="View Full Details"
-                                      className={`p-1.5 rounded-lg transition-colors border ${
-                                        isLight
+                                      className={`p-1.5 rounded-lg transition-colors border ${isLight
                                           ? 'bg-[#FDF3E7] hover:bg-[#F7E8D4] text-[#EA552E] border-[#EDE2D3]'
                                           : 'bg-white/5 hover:bg-white/10 text-cyan-400 border-white/10'
-                                      }`}
+                                        }`}
                                     >
                                       <Eye className="w-3.5 h-3.5" />
                                     </button>
@@ -2284,11 +2484,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                       type="button"
                                       onClick={() => openEditEmployeeModal(emp)}
                                       title="Edit Engineer"
-                                      className={`p-1.5 rounded-lg transition-colors border ${
-                                        isLight
+                                      className={`p-1.5 rounded-lg transition-colors border ${isLight
                                           ? 'bg-white hover:bg-[#FDF8F2] text-[#8A7B68] hover:text-[#EA552E] border-[#EDE2D3]'
                                           : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10'
-                                      }`}
+                                        }`}
                                     >
                                       <Edit3 className="w-3.5 h-3.5" />
                                     </button>
@@ -2307,6 +2506,115 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           })}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Mobile Native App Cards View for Employees */}
+                    <div className="md:hidden divide-y divide-black/5 dark:divide-white/5">
+                      {filteredEmployees.map((emp) => {
+                        const assignedTasks = tasks.filter((t) => t.assignedTo === emp.name);
+                        const active = assignedTasks.filter((t) => t.status !== 'Completed');
+                        const completed = assignedTasks.filter((t) => t.status === 'Completed');
+                        const latestActiveTask = active[0];
+
+                        return (
+                          <div key={emp.id} className={`p-4 transition-colors space-y-3 ${isLight ? 'bg-white hover:bg-[#FDF8F2]' : 'bg-[#0F172A]/80 hover:bg-white/[0.02]'}`}>
+                            <div className="flex items-center justify-between gap-3">
+                              <div
+                                onClick={() => setViewingEmployee(emp)}
+                                className="flex items-center gap-3 cursor-pointer min-w-0"
+                              >
+                                <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-black/10 dark:border-white/10 shadow-sm">
+                                  {emp.avatar ? (
+                                    <img
+                                      src={emp.avatar}
+                                      alt={emp.name}
+                                      className="w-full h-full object-cover object-top"
+                                      onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=EA552E&color=fff&bold=true&size=100`;
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className={`w-full h-full flex items-center justify-center font-bold text-xs ${isLight ? 'bg-[#EA552E] text-white' : 'bg-blue-600 text-white'}`}>
+                                      {emp.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-1 ring-white"></span>
+                                </div>
+                                <div className="min-w-0">
+                                  <div className={`font-bold text-sm truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                    {emp.name}
+                                  </div>
+                                  <div className={`text-[11px] font-mono truncate ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                                    {emp.phone || 'No phone'}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 border ${
+                                emp.userRole === 'admin'
+                                  ? isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                  : isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/5 text-slate-300 border-white/10'
+                              }`}>
+                                {emp.userRole === 'admin' ? 'ADMIN' : 'ENGINEER'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-xs flex-wrap">
+                              <span className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/10'}`}>
+                                {emp.designation || emp.role}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className={`p-2 rounded-xl text-center border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/5 border-white/5'}`}>
+                                <div className="text-xs font-mono font-bold text-amber-500">{active.length} Active</div>
+                                <div className={`text-[9px] uppercase tracking-wider ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Backlog</div>
+                              </div>
+                              <div className={`p-2 rounded-xl text-center border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-white/5 border-white/5'}`}>
+                                <div className="text-xs font-mono font-bold text-emerald-500">{completed.length} Completed</div>
+                                <div className={`text-[9px] uppercase tracking-wider ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Resolved</div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5 text-xs">
+                              <div className="text-[11px] truncate max-w-[180px]">
+                                {latestActiveTask ? (
+                                  <span className="font-mono text-cyan-500 truncate">{latestActiveTask.systemName}</span>
+                                ) : (
+                                  <span className="text-emerald-500 font-medium">✓ Available</span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingEmployee(emp)}
+                                  className={`p-1.5 rounded-lg border ${isLight ? 'bg-[#FDF3E7] text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'}`}
+                                  title="View Details"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openEditEmployeeModal(emp)}
+                                  className={`p-1.5 rounded-lg border ${isLight ? 'bg-white text-[#8A7B68] border-[#EDE2D3]' : 'bg-white/5 text-slate-400 border-white/10'}`}
+                                  title="Edit"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                                  className="p-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-500"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2403,7 +2711,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               if (companyViewMode === 'list') {
                 return (
                   <div className={`border rounded-3xl overflow-hidden shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10'}`}>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead className={`uppercase text-[10px] font-bold tracking-wider border-b ${isLight ? 'bg-[#FBF5EC]/90 text-[#8A7B68] border-[#EDE2D3]' : 'bg-slate-950/80 text-slate-400 border-white/5'}`}>
                           <tr>
@@ -2528,6 +2837,101 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           })}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Mobile Native App Cards View for Companies */}
+                    <div className="md:hidden divide-y divide-black/5 dark:divide-white/5">
+                      {filteredComps.map((c) => {
+                        const compTasks = tasks.filter((t) => t.partyName === c.name);
+                        return (
+                          <div key={c.id} className={`p-4 transition-colors space-y-3 ${isLight ? 'bg-white hover:bg-[#FBF5EC]' : 'bg-[#0F172A]/80 hover:bg-white/[0.02]'}`}>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div
+                                  onClick={() => {
+                                    setEditingLogoCompany(c);
+                                    setEditLogoPreview(c.logoUrl || c.avatar || '');
+                                    setEditLogoFile(null);
+                                  }}
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0 border cursor-pointer ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-white/5 border-white/10'}`}
+                                >
+                                  {(c.logoUrl || c.avatar) ? (
+                                    <img src={c.logoUrl || c.avatar} alt={c.name} className="w-full h-full object-contain p-1" />
+                                  ) : (
+                                    <div className={`w-full h-full flex items-center justify-center font-bold text-xs ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-blue-600 text-white'}`}>
+                                      {c.name.substring(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className={`font-bold text-sm truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                                    {c.name}
+                                  </h4>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className={`font-mono font-bold text-[10px] px-2 py-0.5 rounded border ${isLight ? 'bg-cyan-50 text-[#0E7490] border-cyan-200' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}`}>
+                                      ID: {c.code}
+                                    </span>
+                                    <span className={`font-mono text-[10px] px-2 py-0.5 rounded border ${isLight ? 'bg-amber-50 text-[#B45309] border-amber-200' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                                      {c.password || 'client@123'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <span className={`px-2 py-1 rounded-full text-xs font-mono font-bold shrink-0 ${
+                                compTasks.length > 0
+                                  ? isLight ? 'bg-amber-100 text-amber-800' : 'bg-amber-500/20 text-amber-400'
+                                  : isLight ? 'bg-slate-100 text-slate-600' : 'bg-white/5 text-slate-400'
+                              }`}>
+                                {compTasks.length} Tickets
+                              </span>
+                            </div>
+
+                            {(c.contactPerson || c.phone || c.email) && (
+                              <div className={`p-2.5 rounded-xl text-xs space-y-1 ${isLight ? 'bg-[#FDF8F2]' : 'bg-black/30'}`}>
+                                {c.contactPerson && (
+                                  <div className="flex items-center gap-1.5">
+                                    <User className={`w-3.5 h-3.5 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`} />
+                                    <span className={`font-semibold ${isLight ? 'text-[#2A2118]' : 'text-slate-200'}`}>{c.contactPerson}</span>
+                                  </div>
+                                )}
+                                {c.phone && (
+                                  <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                                    <Phone className={`w-3.5 h-3.5 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`} />
+                                    <span>{c.phone}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5 text-xs">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingLogoCompany(c);
+                                  setEditLogoPreview(c.logoUrl || c.avatar || '');
+                                  setEditLogoFile(null);
+                                }}
+                                className={`px-3 py-1.5 rounded-xl border flex items-center gap-1 text-xs font-semibold ${isLight ? 'bg-[#FDF3E7] text-[#D9481F] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'}`}
+                              >
+                                <Camera className="w-3.5 h-3.5" />
+                                <span>Logo</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setSelectedCompany(c.name);
+                                  setActiveTab('console');
+                                }}
+                                className={`px-4 py-1.5 rounded-xl text-xs font-bold text-white flex items-center gap-1 ${isLight ? 'bg-[#EA552E] shadow-sm' : 'bg-blue-600 shadow-sm'}`}
+                              >
+                                <span>View Tickets</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -2669,7 +3073,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* DETAIL & NOTES MODAL */}
       {selectedTask && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedTask(null);
@@ -2779,9 +3183,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           selectedTask.completionFiles.map((fileItem, idx) => (
                             <div
                               key={idx}
-                              className={`rounded-lg p-2 flex items-center justify-between gap-2 border ${
-                                isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                              }`}
+                              className={`rounded-lg p-2 flex items-center justify-between gap-2 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                                }`}
                             >
                               <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
                                 <div className="p-1 rounded bg-emerald-500/10 text-emerald-500 shrink-0">
@@ -2808,9 +3211,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                             </div>
                           ))
                         ) : selectedTask.completionFileUrl ? (
-                          <div className={`rounded-lg p-2 flex items-center justify-between gap-2 border ${
-                            isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                          }`}>
+                          <div className={`rounded-lg p-2 flex items-center justify-between gap-2 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                            }`}>
                             <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
                               <div className="p-1 rounded bg-emerald-500/10 text-emerald-500 shrink-0">
                                 <Paperclip className="w-3 h-3" />
@@ -2969,11 +3371,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   value={completionRemark}
                   onChange={(e) => setCompletionRemark(e.target.value)}
                   placeholder="Describe the solution, updates made, fixes implemented, or remarks..."
-                  className={`w-full border rounded-2xl p-3 text-xs focus:outline-none transition-colors ${
-                    isLight 
-                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-emerald-500' 
+                  className={`w-full border rounded-2xl p-3 text-xs focus:outline-none transition-colors ${isLight
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-emerald-500'
                       : 'bg-black/50 border-white/20 text-white focus:border-emerald-500'
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -2982,11 +3383,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   <span>Resolution Proofs & Attachments (Multiple Files)</span>
                   <span className="text-[10px] lowercase font-normal opacity-75">(Images, Screenshots, PDFs, ZIPs)</span>
                 </label>
-                
+
                 {/* Upload Box */}
-                <div className={`p-4 border-2 border-dashed rounded-2xl transition-all ${
-                  isLight ? 'border-[#EDE2D3] bg-[#FBF5EC]' : 'border-white/10 bg-black/30'
-                }`}>
+                <div className={`p-4 border-2 border-dashed rounded-2xl transition-all ${isLight ? 'border-[#EDE2D3] bg-[#FBF5EC]' : 'border-white/10 bg-black/30'
+                  }`}>
                   <input
                     type="file"
                     id="multiple-completion-files-input"
@@ -3042,9 +3442,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 )}
               </div>
 
-              <div className={`p-3 rounded-xl border text-xs flex items-center gap-2.5 ${
-                isLight ? 'bg-amber-50/70 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
-              }`}>
+              <div className={`p-3 rounded-xl border text-xs flex items-center gap-2.5 ${isLight ? 'bg-amber-50/70 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+                }`}>
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>Marking this as Completed will record the resolution remarks and all uploaded multiple proofs into database records.</span>
               </div>
@@ -3057,9 +3456,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     setCompletingDelegation(null);
                     setCompletionFilesList([]);
                   }}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
                 >
                   Cancel
                 </button>
@@ -3204,9 +3602,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           selectedDelegation.completionFiles.map((fileItem, idx) => (
                             <div
                               key={idx}
-                              className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
-                                isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                              }`}
+                              className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                                }`}
                             >
                               <div className="flex items-center gap-2 overflow-hidden min-w-0">
                                 <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
@@ -3233,9 +3630,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                             </div>
                           ))
                         ) : selectedDelegation.completionFileUrl ? (
-                          <div className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
-                            isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                          }`}>
+                          <div className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                            }`}>
                             <div className="flex items-center gap-2 overflow-hidden min-w-0">
                               <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
                                 <Paperclip className="w-3.5 h-3.5" />
@@ -3268,9 +3664,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               <button
                 type="button"
                 onClick={() => setSelectedDelegation(null)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
               >
                 Close
               </button>
@@ -3296,20 +3691,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       {/* ASSIGN NEW INTERNAL TASK / DELEGATION MODAL */}
       {showAddDelegationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
-          <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto ${
-            isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'
-          }`}>
+          <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'
+            }`}>
             <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border ${
-                  isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/20 border-blue-500/30 text-blue-400'
-                }`}>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/20 border-blue-500/30 text-blue-400'
+                  }`}>
                   <ListTodo className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className={`font-mono font-bold text-[10px] tracking-widest uppercase ${
-                    isLight ? 'text-[#D9481F]' : 'text-cyan-400'
-                  }`}>
+                  <span className={`font-mono font-bold text-[10px] tracking-widest uppercase ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'
+                    }`}>
                     DIRECT TASK DELEGATION
                   </span>
                   <h3 className={`text-xl font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
@@ -3320,9 +3712,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               <button
                 type="button"
                 onClick={() => setShowAddDelegationModal(false)}
-                className={`text-2xl font-bold p-1 leading-none rounded-lg transition-colors ${
-                  isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`text-2xl font-bold p-1 leading-none rounded-lg transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 &times;
               </button>
@@ -3331,9 +3722,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
             <form onSubmit={handleCreateDelegationTask} className="space-y-4 text-xs">
               {/* Task Title */}
               <div>
-                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                  isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                }`}>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
                   Task Title / Objective <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -3342,19 +3732,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   value={delegationTitle}
                   onChange={(e) => setDelegationTitle(e.target.value)}
                   placeholder="e.g. Implement Multi-Factor Authentication (MFA) on ERP"
-                  className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none transition-colors ${
-                    isLight 
-                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                  className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none transition-colors ${isLight
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]'
                       : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
-                  }`}
+                    }`}
                 />
               </div>
 
               {/* Task Briefing / Scope */}
               <div>
-                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                  isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                }`}>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
                   Task Briefing & Detailed Instructions
                 </label>
                 <textarea
@@ -3362,31 +3750,28 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   value={delegationDesc}
                   onChange={(e) => setDelegationDesc(e.target.value)}
                   placeholder="Write clear steps, requirements, deliverables, and acceptance criteria for the assigned engineer..."
-                  className={`w-full border rounded-xl p-4 focus:outline-none transition-colors resize-none ${
-                    isLight 
-                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                  className={`w-full border rounded-xl p-4 focus:outline-none transition-colors resize-none ${isLight
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]'
                       : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
-                  }`}
+                    }`}
                 />
               </div>
 
               {/* Assignee & Deadline Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                  }`}>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                    }`}>
                     Assign To Employee / Engineer <span className="text-red-500">*</span>
                   </label>
                   <select
                     required
                     value={delegationAssignee}
                     onChange={(e) => setDelegationAssignee(e.target.value)}
-                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${
-                      isLight 
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' 
+                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${isLight
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]'
                         : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
-                    }`}
+                      }`}
                   >
                     <option value="">-- Select Engineer / Employee --</option>
                     {employees.map((emp) => (
@@ -3398,9 +3783,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
 
                 <div>
-                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                  }`}>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                    }`}>
                     Target Completion Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -3408,11 +3792,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     required
                     value={delegationDeadline}
                     onChange={(e) => setDelegationDeadline(e.target.value)}
-                    className={`w-full border rounded-xl px-4 py-3 font-mono font-bold focus:outline-none transition-colors ${
-                      isLight 
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' 
+                    className={`w-full border rounded-xl px-4 py-3 font-mono font-bold focus:outline-none transition-colors ${isLight
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]'
                         : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -3420,19 +3803,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               {/* Priority & Category Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                  }`}>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                    }`}>
                     Priority Level <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={delegationPriority}
                     onChange={(e) => setDelegationPriority(e.target.value as TaskPriority)}
-                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${
-                      isLight 
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' 
+                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${isLight
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]'
                         : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
-                    }`}
+                      }`}
                   >
                     <option value="Urgent">🔥 Urgent / Critical</option>
                     <option value="High">⚡ High Priority</option>
@@ -3442,9 +3823,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
 
                 <div>
-                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                    isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                  }`}>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                    }`}>
                     Category / Project Scope
                   </label>
                   <input
@@ -3452,20 +3832,18 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     value={delegationCategory}
                     onChange={(e) => setDelegationCategory(e.target.value)}
                     placeholder="e.g. Workflow Automation, Core API, UI/UX"
-                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none transition-colors ${
-                      isLight 
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none transition-colors ${isLight
+                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]'
                         : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
 
               {/* Reference Link */}
               <div>
-                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${
-                  isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
-                }`}>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
+                  }`}>
                   Reference URL / Spec Link (Optional)
                 </label>
                 <input
@@ -3473,11 +3851,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   value={delegationLink}
                   onChange={(e) => setDelegationLink(e.target.value)}
                   placeholder="https://github.com/... or docs URL"
-                  className={`w-full border rounded-xl px-4 py-3 focus:outline-none transition-colors ${
-                    isLight 
-                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' 
+                  className={`w-full border rounded-xl px-4 py-3 focus:outline-none transition-colors ${isLight
+                      ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]'
                       : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -3486,20 +3863,18 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <button
                   type="button"
                   onClick={() => setShowAddDelegationModal(false)}
-                  className={`px-5 py-2.5 rounded-xl font-bold transition-all ${
-                    isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatingDelegation}
-                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 cursor-pointer ${
-                    isLight 
-                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' 
+                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 cursor-pointer ${isLight
+                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25'
                       : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
-                  }`}
+                    }`}
                 >
                   {creatingDelegation ? (
                     <>
@@ -4511,6 +4886,43 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
           </div>
         </div>
       )}
+      {/* Mobile App Bottom Navigation Bar (Airtel / Jio Style) */}
+      <DashboardMobileBar
+        role="admin"
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onCenterAction={() => setShowAddDelegationModal(true)}
+        onOpenMenu={() => setShowMobileDrawer(true)}
+        unreadCount={unreadCount}
+        isLight={isLight}
+      />
+
+      {/* Mobile App Side Drawer Menu */}
+      <DashboardSidebarDrawer
+        isOpen={showMobileDrawer}
+        onClose={() => setShowMobileDrawer(false)}
+        role="admin"
+        activeTab={activeTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        userName="Super Admin"
+        userRoleLabel="Command Center"
+        companyName="Zentrixs Global"
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onLogout={() => {
+          clearAuthSession();
+          onLogout();
+        }}
+        totalTickets={tasks.length}
+        pendingTickets={tasks.filter((t) => t.status !== 'Completed').length}
+        isLight={isLight}
+      />
     </div>
   );
 };

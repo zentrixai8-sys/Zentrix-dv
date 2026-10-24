@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Building2, 
-  PlusCircle, 
-  Clock, 
-  CheckCircle2, 
-  Layers, 
-  Wrench, 
-  Sparkles, 
-  LogOut, 
-  Search, 
-  RefreshCw, 
-  SlidersHorizontal, 
-  ExternalLink, 
-  Calendar, 
-  User, 
-  UploadCloud, 
-  Check, 
+import {
+  Building2,
+  PlusCircle,
+  Clock,
+  CheckCircle2,
+  Layers,
+  Wrench,
+  Sparkles,
+  LogOut,
+  Search,
+  RefreshCw,
+  SlidersHorizontal,
+  ExternalLink,
+  Calendar,
+  User,
+  UploadCloud,
+  Check,
   AlertCircle,
   FileText,
   ChevronDown,
@@ -32,17 +32,18 @@ import {
   Moon,
   Zap,
   Server,
-  LayoutDashboard
+  LayoutDashboard,
+  Menu
 } from 'lucide-react';
 import { Task, SystemItem, WorkType, TaskPriority, Company } from '../types/taskTypes';
-import { 
-  fetchTasks, 
-  createTask, 
+import {
+  fetchTasks,
+  createTask,
   uploadFileToCloudinary,
-  getSystemsForCompany, 
+  getSystemsForCompany,
   getCompanies,
   fetchCompanies,
-  getAuthSession, 
+  getAuthSession,
   clearAuthSession,
   formatDateDDMMYYYY
 } from '../services/taskService';
@@ -52,6 +53,9 @@ import CustomDropdown from './CustomDropdown';
 import AnalyticsOverview from './AnalyticsOverview';
 import ThemeSelector from './ThemeSelector';
 import TroubleshootCenter from './TroubleshootCenter';
+import DashboardMobileBar from './DashboardMobileBar';
+import DashboardSidebarDrawer from './DashboardSidebarDrawer';
+import { startLiveTicketWatcher } from '../services/notificationService';
 
 interface CompanyDashboardProps {
   onLogout: () => void;
@@ -65,9 +69,9 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
   const [currentCompany, setCurrentCompany] = useState<Company | undefined>(() => {
     const list = getCompanies();
-    return list.find(c => 
-      (c.id && c.id.toLowerCase() === companyId.toLowerCase()) || 
-      (c.code && c.code.toLowerCase() === companyId.toLowerCase()) || 
+    return list.find(c =>
+      (c.id && c.id.toLowerCase() === companyId.toLowerCase()) ||
+      (c.code && c.code.toLowerCase() === companyId.toLowerCase()) ||
       (c.name && c.name.toLowerCase() === companyName.toLowerCase())
     );
   });
@@ -78,14 +82,15 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
   // Portal Theme: 'dark' | 'light'
   const [theme, setTheme] = useState<PortalTheme>(getStoredTheme);
+  const [showMobileDrawer, setShowMobileDrawer] = useState(false);
 
   useEffect(() => {
     const handleThemeEvent = () => setTheme(getStoredTheme());
     const handleLogoUpdate = () => {
       const list = getCompanies();
-      const matched = list.find(c => 
-        (c.id && c.id.toLowerCase() === companyId.toLowerCase()) || 
-        (c.code && c.code.toLowerCase() === companyId.toLowerCase()) || 
+      const matched = list.find(c =>
+        (c.id && c.id.toLowerCase() === companyId.toLowerCase()) ||
+        (c.code && c.code.toLowerCase() === companyId.toLowerCase()) ||
         (c.name && c.name.toLowerCase() === companyName.toLowerCase())
       );
       if (matched) {
@@ -197,9 +202,9 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
       const sysList = getSystemsForCompany(companyId);
       setSystems(sysList);
 
-      const comp = compList.find(c => 
-        (c.id && c.id.toLowerCase() === companyId.toLowerCase()) || 
-        (c.code && c.code.toLowerCase() === companyId.toLowerCase()) || 
+      const comp = compList.find(c =>
+        (c.id && c.id.toLowerCase() === companyId.toLowerCase()) ||
+        (c.code && c.code.toLowerCase() === companyId.toLowerCase()) ||
         (c.name && c.name.toLowerCase() === companyName.toLowerCase())
       );
       if (comp) {
@@ -217,6 +222,13 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
   useEffect(() => {
     loadData();
+    // Live polling & native OS push notifications watcher while company user is logged in
+    const stopWatcher = startLiveTicketWatcher('company', companyId, () => {
+      loadData();
+    });
+    return () => {
+      stopWatcher();
+    };
   }, [companyId]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
@@ -311,7 +323,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
     if (priorityFilter !== 'All' && t.priorityInCustomer !== priorityFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const match = 
+      const match =
         t.ticketNumber.toLowerCase().includes(q) ||
         t.systemName.toLowerCase().includes(q) ||
         t.descriptionOfWork.toLowerCase().includes(q) ||
@@ -329,9 +341,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
   const completedTasks = tasks.filter(t => t.status === 'Completed').length;
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${
-      isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
-    }`}>
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 md:pb-8 overflow-x-hidden w-full max-w-full ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
+      }`}>
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-blue-600 text-white px-5 py-3 rounded-2xl shadow-2xl border border-cyan-400 text-xs font-bold animate-bounce flex items-center gap-2">
@@ -340,35 +351,40 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         </div>
       )}
 
-      <header className={`border-b sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${
-        isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
-      }`}>
+      <header className={`border-b sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
+        }`}>
         {/* Row 1: Identity + Account Controls */}
         <div className="w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
+            {/* Mobile Hamburger Drawer Trigger */}
+            <button
+              onClick={() => setShowMobileDrawer(true)}
+              className={`p-2.5 rounded-xl border md:hidden active:scale-90 transition-transform ${
+                isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-white/5 border-white/10 text-white'
+              }`}
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
             {companyLogo && !companyLogoError ? (
-              <div className={`w-11 h-11 rounded-2xl p-1.5 flex items-center justify-center shrink-0 overflow-hidden border shadow-sm ${
-                isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-white/5 border-white/10'
-              }`}>
+              <div className={`w-11 h-11 rounded-2xl p-1.5 flex items-center justify-center shrink-0 overflow-hidden border shadow-sm ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-white/5 border-white/10'
+                }`}>
                 <img src={companyLogo} alt={companyName} loading="eager" decoding="async" className="w-full h-full object-contain" onError={() => setCompanyLogoError(true)} />
               </div>
             ) : (
-              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm tracking-wide shadow-sm ${
-                isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-gradient-to-br from-blue-600 to-cyan-500 text-white'
-              }`}>
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm tracking-wide shadow-sm ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-gradient-to-br from-blue-600 to-cyan-500 text-white'
+                }`}>
                 {companyInitials}
               </div>
             )}
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className={`text-base sm:text-lg font-black tracking-tight uppercase truncate max-w-[200px] sm:max-w-sm ${
-                  isLight ? 'text-[#2A2118]' : 'text-white'
-                }`}>
+                <h1 className={`text-base sm:text-lg font-black tracking-tight uppercase truncate max-w-[200px] sm:max-w-sm ${isLight ? 'text-[#2A2118]' : 'text-white'
+                  }`}>
                   {companyName}
                 </h1>
-                <span className={`hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black font-mono border shrink-0 ${
-                  isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                }`}>
+                <span className={`hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black font-mono border shrink-0 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                  }`}>
                   CLIENT PORTAL
                 </span>
               </div>
@@ -393,11 +409,10 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 onLogout();
               }}
               title="Disconnect / Logout"
-              className={`flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${
-                isLight
+              className={`flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${isLight
                   ? 'text-[#D14343] hover:bg-[#FBEAEA] border-[#F3D5D5]'
                   : 'text-red-400 hover:text-white hover:bg-red-600/20 border-red-500/30'
-              }`}
+                }`}
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -418,11 +433,10 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${
-                  activeTab === tab.key
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${activeTab === tab.key
                     ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                     : isLight ? 'text-[#8A7B68] hover:bg-[#FDF3E7] hover:text-[#2A2118]' : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
+                  }`}
               >
                 {'icon' in tab && tab.icon ? React.createElement(tab.icon as any, { className: "w-3.5 h-3.5" }) : null}
                 {tab.label}
@@ -431,11 +445,10 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
             <button
               onClick={() => setActiveTab('ai')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${
-                activeTab === 'ai'
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'ai'
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
                   : isLight ? 'text-amber-600 hover:bg-amber-50 hover:text-[#2A2118]' : 'text-amber-400 hover:bg-white/5 hover:text-white'
-              }`}
+                }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
               AI Consultant
@@ -448,60 +461,183 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
       <div className="w-full px-4 sm:px-8 py-6 space-y-6">
         {/* KPI Tiles — dynamic contextual metrics per tab */}
         {(activeTab === 'overview' || activeTab === 'completed' || activeTab === 'pending' || activeTab === 'all_tickets') && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {(() => {
-            if (activeTab === 'completed') {
-              const comp = tasks.filter((t) => t.status === 'Completed').length;
-              const compUrgent = tasks.filter((t) => t.status === 'Completed' && (t.priorityInCustomer === 'Urgent' || t.priorityInCustomer === 'High')).length;
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {(() => {
+              if (activeTab === 'completed') {
+                const comp = tasks.filter((t) => t.status === 'Completed').length;
+                const compUrgent = tasks.filter((t) => t.status === 'Completed' && (t.priorityInCustomer === 'Urgent' || t.priorityInCustomer === 'High')).length;
+                return [
+                  {
+                    label: 'Completed Tasks',
+                    value: comp,
+                    icon: CheckCircle2,
+                    accent: 'emerald' as const,
+                    sub: 'Resolved & Live ✓',
+                    live: true,
+                    ratio: 1,
+                    onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'High Priority Closed',
+                    value: compUrgent,
+                    icon: AlertTriangle,
+                    accent: 'red' as const,
+                    sub: 'Critical Solved',
+                    ratio: comp ? compUrgent / comp : 0,
+                    onClick: () => { setActiveTab('completed'); setPriorityFilter('High'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'Total Company Tasks',
+                    value: totalTasks,
+                    icon: Layers,
+                    accent: 'cyan' as const,
+                    sub: 'All Historical',
+                    ratio: 1,
+                    onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'Completion Rate',
+                    value: `${totalTasks ? Math.round((comp / totalTasks) * 100) : 0}%`,
+                    icon: Zap,
+                    accent: 'blue' as const,
+                    sub: 'Resolution Rate',
+                    ratio: totalTasks ? comp / totalTasks : 0,
+                    onClick: () => { setActiveTab('completed'); }
+                  },
+                  {
+                    label: 'Still Active/Pending',
+                    value: activeTasks,
+                    icon: Clock,
+                    accent: 'amber' as const,
+                    sub: 'Ongoing Work',
+                    ratio: totalTasks ? activeTasks / totalTasks : 0,
+                    onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'Protected Systems',
+                    value: systems.length || 7,
+                    icon: Server,
+                    accent: 'purple' as const,
+                    sub: '100% Operational',
+                    ratio: 1,
+                    onClick: () => { setActiveTab('systems'); }
+                  },
+                ];
+              }
+
+              if (activeTab === 'pending') {
+                const pend = tasks.filter((t) => t.status === 'Pending').length;
+                const inProg = tasks.filter((t) => t.status === 'In Progress').length;
+                const inRev = tasks.filter((t) => t.status === 'In Review').length;
+                const pendUrgent = tasks.filter((t) => t.status === 'Pending' && (t.priorityInCustomer === 'Urgent' || t.priorityInCustomer === 'High')).length;
+                return [
+                  {
+                    label: 'Pending Action',
+                    value: pend,
+                    icon: Clock,
+                    accent: 'amber' as const,
+                    sub: 'Awaiting engineer ↗',
+                    live: true,
+                    ratio: 1,
+                    onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'In Progress Dev',
+                    value: inProg,
+                    icon: Zap,
+                    accent: 'blue' as const,
+                    sub: 'Active Resolution',
+                    ratio: totalTasks ? inProg / totalTasks : 0,
+                    onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery('In Progress'); }
+                  },
+                  {
+                    label: 'In Review / QA',
+                    value: inRev,
+                    icon: Eye,
+                    accent: 'purple' as const,
+                    sub: 'Verification Stage',
+                    ratio: totalTasks ? inRev / totalTasks : 0,
+                    onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery('In Review'); }
+                  },
+                  {
+                    label: 'Urgent Pending',
+                    value: pendUrgent,
+                    icon: AlertTriangle,
+                    accent: 'red' as const,
+                    sub: 'Priority Tickets',
+                    ratio: pend ? pendUrgent / pend : 0,
+                    onClick: () => { setActiveTab('pending'); setPriorityFilter('High'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'Completed So Far',
+                    value: completedTasks,
+                    icon: CheckCircle2,
+                    accent: 'emerald' as const,
+                    sub: 'Resolved Tickets ✓',
+                    ratio: totalTasks ? completedTasks / totalTasks : 0,
+                    onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
+                  },
+                  {
+                    label: 'Total Raised',
+                    value: totalTasks,
+                    icon: Layers,
+                    accent: 'cyan' as const,
+                    sub: 'Lifetime Tickets',
+                    ratio: 1,
+                    onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
+                  },
+                ];
+              }
+
               return [
                 {
-                  label: 'Completed Tasks',
-                  value: comp,
-                  icon: CheckCircle2,
-                  accent: 'emerald' as const,
-                  sub: 'Resolved & Live ✓',
-                  live: true,
-                  ratio: 1,
-                  onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
-                },
-                {
-                  label: 'High Priority Closed',
-                  value: compUrgent,
-                  icon: AlertTriangle,
-                  accent: 'red' as const,
-                  sub: 'Critical Solved',
-                  ratio: comp ? compUrgent / comp : 0,
-                  onClick: () => { setActiveTab('completed'); setPriorityFilter('High'); setSearchQuery(''); }
-                },
-                {
-                  label: 'Total Company Tasks',
+                  label: 'Total Tasks',
                   value: totalTasks,
                   icon: Layers,
                   accent: 'cyan' as const,
-                  sub: 'All Historical',
+                  sub: 'Real-time Live Sync',
+                  live: true,
                   ratio: 1,
                   onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
                 },
                 {
-                  label: 'Completion Rate',
-                  value: `${totalTasks ? Math.round((comp / totalTasks) * 100) : 0}%`,
+                  label: 'Active Tasks',
+                  value: activeTasks,
                   icon: Zap,
                   accent: 'blue' as const,
-                  sub: 'Resolution Rate',
-                  ratio: totalTasks ? comp / totalTasks : 0,
-                  onClick: () => { setActiveTab('completed'); }
-                },
-                {
-                  label: 'Still Active/Pending',
-                  value: activeTasks,
-                  icon: Clock,
-                  accent: 'amber' as const,
-                  sub: 'Ongoing Work',
+                  sub: 'In Progress & Dev',
                   ratio: totalTasks ? activeTasks / totalTasks : 0,
                   onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
                 },
                 {
-                  label: 'Protected Systems',
+                  label: 'Pending',
+                  value: pendingTasks,
+                  icon: Clock,
+                  accent: 'amber' as const,
+                  sub: 'Awaiting engineer ↗',
+                  ratio: totalTasks ? pendingTasks / totalTasks : 0,
+                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'High / Urgent',
+                  value: urgentTasks,
+                  icon: AlertTriangle,
+                  accent: 'red' as const,
+                  sub: 'Priority tickets',
+                  ratio: totalTasks ? urgentTasks / totalTasks : 0,
+                  onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('High'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Completed',
+                  value: completedTasks,
+                  icon: CheckCircle2,
+                  accent: 'emerald' as const,
+                  sub: 'Verified & Live ✓',
+                  ratio: totalTasks ? completedTasks / totalTasks : 0,
+                  onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
+                },
+                {
+                  label: 'Connected Systems',
                   value: systems.length || 7,
                   icon: Server,
                   accent: 'purple' as const,
@@ -510,192 +646,68 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   onClick: () => { setActiveTab('systems'); }
                 },
               ];
-            }
-
-            if (activeTab === 'pending') {
-              const pend = tasks.filter((t) => t.status === 'Pending').length;
-              const inProg = tasks.filter((t) => t.status === 'In Progress').length;
-              const inRev = tasks.filter((t) => t.status === 'In Review').length;
-              const pendUrgent = tasks.filter((t) => t.status === 'Pending' && (t.priorityInCustomer === 'Urgent' || t.priorityInCustomer === 'High')).length;
-              return [
-                {
-                  label: 'Pending Action',
-                  value: pend,
-                  icon: Clock,
-                  accent: 'amber' as const,
-                  sub: 'Awaiting engineer ↗',
-                  live: true,
-                  ratio: 1,
-                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
-                },
-                {
-                  label: 'In Progress Dev',
-                  value: inProg,
-                  icon: Zap,
-                  accent: 'blue' as const,
-                  sub: 'Active Resolution',
-                  ratio: totalTasks ? inProg / totalTasks : 0,
-                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery('In Progress'); }
-                },
-                {
-                  label: 'In Review / QA',
-                  value: inRev,
-                  icon: Eye,
-                  accent: 'purple' as const,
-                  sub: 'Verification Stage',
-                  ratio: totalTasks ? inRev / totalTasks : 0,
-                  onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery('In Review'); }
-                },
-                {
-                  label: 'Urgent Pending',
-                  value: pendUrgent,
-                  icon: AlertTriangle,
-                  accent: 'red' as const,
-                  sub: 'Priority Tickets',
-                  ratio: pend ? pendUrgent / pend : 0,
-                  onClick: () => { setActiveTab('pending'); setPriorityFilter('High'); setSearchQuery(''); }
-                },
-                {
-                  label: 'Completed So Far',
-                  value: completedTasks,
-                  icon: CheckCircle2,
-                  accent: 'emerald' as const,
-                  sub: 'Resolved Tickets ✓',
-                  ratio: totalTasks ? completedTasks / totalTasks : 0,
-                  onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
-                },
-                {
-                  label: 'Total Raised',
-                  value: totalTasks,
-                  icon: Layers,
-                  accent: 'cyan' as const,
-                  sub: 'Lifetime Tickets',
-                  ratio: 1,
-                  onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
-                },
-              ];
-            }
-
-            return [
-              {
-                label: 'Total Tasks',
-                value: totalTasks,
-                icon: Layers,
-                accent: 'cyan' as const,
-                sub: 'Real-time Live Sync',
-                live: true,
-                ratio: 1,
-                onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('All'); setSearchQuery(''); }
-              },
-              {
-                label: 'Active Tasks',
-                value: activeTasks,
-                icon: Zap,
-                accent: 'blue' as const,
-                sub: 'In Progress & Dev',
-                ratio: totalTasks ? activeTasks / totalTasks : 0,
-                onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
-              },
-              {
-                label: 'Pending',
-                value: pendingTasks,
-                icon: Clock,
-                accent: 'amber' as const,
-                sub: 'Awaiting engineer ↗',
-                ratio: totalTasks ? pendingTasks / totalTasks : 0,
-                onClick: () => { setActiveTab('pending'); setPriorityFilter('All'); setSearchQuery(''); }
-              },
-              {
-                label: 'High / Urgent',
-                value: urgentTasks,
-                icon: AlertTriangle,
-                accent: 'red' as const,
-                sub: 'Priority tickets',
-                ratio: totalTasks ? urgentTasks / totalTasks : 0,
-                onClick: () => { setActiveTab('all_tickets'); setPriorityFilter('High'); setSearchQuery(''); }
-              },
-              {
-                label: 'Completed',
-                value: completedTasks,
-                icon: CheckCircle2,
-                accent: 'emerald' as const,
-                sub: 'Verified & Live ✓',
-                ratio: totalTasks ? completedTasks / totalTasks : 0,
-                onClick: () => { setActiveTab('completed'); setPriorityFilter('All'); setSearchQuery(''); }
-              },
-              {
-                label: 'Connected Systems',
-                value: systems.length || 7,
-                icon: Server,
-                accent: 'purple' as const,
-                sub: '100% Operational',
-                ratio: 1,
-                onClick: () => { setActiveTab('systems'); }
-              },
-            ];
-          })().map((tile, idx) => {
-            const palette: Record<string, { rgb: string; iconGrad: string; meterLight: string; meterDark: string; numLight: string; numDark: string; subLight: string; subDark: string; ring: string }> = {
-              cyan: { rgb: '6,182,212', iconGrad: 'from-cyan-400 to-cyan-600', meterLight: 'bg-cyan-500', meterDark: 'bg-cyan-400', numLight: 'text-[#0E7490]', numDark: 'text-cyan-300', subLight: 'text-cyan-700', subDark: 'text-cyan-300/80', ring: 'group-hover:ring-cyan-400/40' },
-              blue: { rgb: '59,130,246', iconGrad: 'from-blue-400 to-blue-600', meterLight: 'bg-blue-500', meterDark: 'bg-blue-400', numLight: 'text-[#1D4ED8]', numDark: 'text-blue-300', subLight: 'text-blue-700', subDark: 'text-blue-300/80', ring: 'group-hover:ring-blue-400/40' },
-              amber: { rgb: '245,158,11', iconGrad: 'from-amber-400 to-orange-500', meterLight: 'bg-amber-500', meterDark: 'bg-amber-400', numLight: 'text-[#B45309]', numDark: 'text-amber-300', subLight: 'text-amber-700', subDark: 'text-amber-300/80', ring: 'group-hover:ring-amber-400/40' },
-              red: { rgb: '239,68,68', iconGrad: 'from-red-400 to-rose-600', meterLight: 'bg-red-500', meterDark: 'bg-red-400', numLight: 'text-[#B91C1C]', numDark: 'text-red-300', subLight: 'text-red-700', subDark: 'text-red-300/80', ring: 'group-hover:ring-red-400/40' },
-              emerald: { rgb: '16,185,129', iconGrad: 'from-emerald-400 to-green-600', meterLight: 'bg-emerald-500', meterDark: 'bg-emerald-400', numLight: 'text-[#047857]', numDark: 'text-emerald-300', subLight: 'text-emerald-700', subDark: 'text-emerald-300/80', ring: 'group-hover:ring-emerald-400/40' },
-              purple: { rgb: '168,85,247', iconGrad: 'from-purple-400 to-fuchsia-600', meterLight: 'bg-purple-500', meterDark: 'bg-purple-400', numLight: 'text-[#7E22CE]', numDark: 'text-purple-300', subLight: 'text-purple-700', subDark: 'text-purple-300/80', ring: 'group-hover:ring-purple-400/40' },
-            };
-            const p = palette[tile.accent];
-            const Icon = tile.icon;
-            return (
-              <div
-                key={tile.label}
-                role="button"
-                tabIndex={0}
-                onClick={tile.onClick}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    tile.onClick?.();
-                  }
-                }}
-                className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 active:scale-[0.98] cursor-pointer select-none ring-1 ring-transparent ${p.ring} ${
-                  isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
-                }`}
-                style={{ animationDelay: `${idx * 0.05}s` }}
-                title={`Click to view ${tile.label}`}
-              >
-                {/* Radial accent glow */}
+            })().map((tile, idx) => {
+              const palette: Record<string, { rgb: string; iconGrad: string; meterLight: string; meterDark: string; numLight: string; numDark: string; subLight: string; subDark: string; ring: string }> = {
+                cyan: { rgb: '6,182,212', iconGrad: 'from-cyan-400 to-cyan-600', meterLight: 'bg-cyan-500', meterDark: 'bg-cyan-400', numLight: 'text-[#0E7490]', numDark: 'text-cyan-300', subLight: 'text-cyan-700', subDark: 'text-cyan-300/80', ring: 'group-hover:ring-cyan-400/40' },
+                blue: { rgb: '59,130,246', iconGrad: 'from-blue-400 to-blue-600', meterLight: 'bg-blue-500', meterDark: 'bg-blue-400', numLight: 'text-[#1D4ED8]', numDark: 'text-blue-300', subLight: 'text-blue-700', subDark: 'text-blue-300/80', ring: 'group-hover:ring-blue-400/40' },
+                amber: { rgb: '245,158,11', iconGrad: 'from-amber-400 to-orange-500', meterLight: 'bg-amber-500', meterDark: 'bg-amber-400', numLight: 'text-[#B45309]', numDark: 'text-amber-300', subLight: 'text-amber-700', subDark: 'text-amber-300/80', ring: 'group-hover:ring-amber-400/40' },
+                red: { rgb: '239,68,68', iconGrad: 'from-red-400 to-rose-600', meterLight: 'bg-red-500', meterDark: 'bg-red-400', numLight: 'text-[#B91C1C]', numDark: 'text-red-300', subLight: 'text-red-700', subDark: 'text-red-300/80', ring: 'group-hover:ring-red-400/40' },
+                emerald: { rgb: '16,185,129', iconGrad: 'from-emerald-400 to-green-600', meterLight: 'bg-emerald-500', meterDark: 'bg-emerald-400', numLight: 'text-[#047857]', numDark: 'text-emerald-300', subLight: 'text-emerald-700', subDark: 'text-emerald-300/80', ring: 'group-hover:ring-emerald-400/40' },
+                purple: { rgb: '168,85,247', iconGrad: 'from-purple-400 to-fuchsia-600', meterLight: 'bg-purple-500', meterDark: 'bg-purple-400', numLight: 'text-[#7E22CE]', numDark: 'text-purple-300', subLight: 'text-purple-700', subDark: 'text-purple-300/80', ring: 'group-hover:ring-purple-400/40' },
+              };
+              const p = palette[tile.accent];
+              const Icon = tile.icon;
+              return (
                 <div
-                  className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
-                  style={{ background: `radial-gradient(circle, rgba(${p.rgb},${isLight ? 0.5 : 0.65}) 0%, transparent 70%)` }}
-                ></div>
-
-                <div className="relative flex items-start justify-between mb-3">
-                  <div className={`text-[10px] font-bold uppercase tracking-widest pt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{tile.label}</div>
+                  key={tile.label}
+                  role="button"
+                  tabIndex={0}
+                  onClick={tile.onClick}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      tile.onClick?.();
+                    }
+                  }}
+                  className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 active:scale-[0.98] cursor-pointer select-none ring-1 ring-transparent ${p.ring} ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
+                    }`}
+                  style={{ animationDelay: `${idx * 0.05}s` }}
+                  title={`Click to view ${tile.label}`}
+                >
+                  {/* Radial accent glow */}
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 shadow-md`}
-                    style={{ boxShadow: `0 6px 16px rgba(${p.rgb},${isLight ? 0.35 : 0.45})` }}
-                  >
-                    <Icon className="w-4 h-4" />
+                    className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"
+                    style={{ background: `radial-gradient(circle, rgba(${p.rgb},${isLight ? 0.5 : 0.65}) 0%, transparent 70%)` }}
+                  ></div>
+
+                  <div className="relative flex items-start justify-between mb-3">
+                    <div className={`text-[10px] font-bold uppercase tracking-widest pt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{tile.label}</div>
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 shadow-md`}
+                      style={{ boxShadow: `0 6px 16px rgba(${p.rgb},${isLight ? 0.35 : 0.45})` }}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <div className={`relative text-[32px] leading-none font-black ${isLight ? p.numLight : p.numDark}`}>{tile.value}</div>
+
+                  {/* Share-of-total meter */}
+                  <div className={`relative mt-3 h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-[#F3EADC]' : 'bg-white/10'}`}>
+                    <div
+                      className={`h-full rounded-full ${isLight ? p.meterLight : p.meterDark}`}
+                      style={{ width: `${Math.max(6, Math.round(tile.ratio * 100))}%`, transition: 'width 0.9s cubic-bezier(0.16,1,0.3,1)', transitionDelay: `${0.2 + idx * 0.05}s` }}
+                    ></div>
+                  </div>
+
+                  <div className={`relative text-[10px] mt-2 font-mono flex items-center gap-1 ${isLight ? p.subLight : p.subDark}`}>
+                    {tile.live && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>}
+                    {tile.sub}
                   </div>
                 </div>
-
-                <div className={`relative text-[32px] leading-none font-black ${isLight ? p.numLight : p.numDark}`}>{tile.value}</div>
-
-                {/* Share-of-total meter */}
-                <div className={`relative mt-3 h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-[#F3EADC]' : 'bg-white/10'}`}>
-                  <div
-                    className={`h-full rounded-full ${isLight ? p.meterLight : p.meterDark}`}
-                    style={{ width: `${Math.max(6, Math.round(tile.ratio * 100))}%`, transition: 'width 0.9s cubic-bezier(0.16,1,0.3,1)', transitionDelay: `${0.2 + idx * 0.05}s` }}
-                  ></div>
-                </div>
-
-                <div className={`relative text-[10px] mt-2 font-mono flex items-center gap-1 ${isLight ? p.subLight : p.subDark}`}>
-                  {tile.live && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>}
-                  {tile.sub}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         )}
 
         {/* ========================================================================= */}
@@ -711,9 +723,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         {(activeTab === 'completed' || activeTab === 'pending' || activeTab === 'all_tickets') && (
           <div className="space-y-6">
             {/* Search and Filters Bar */}
-            <div className={`border rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 transition-colors duration-300 ${
-              isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)]' : 'bg-[#0F172A]/90 border-white/10'
-            }`}>
+            <div className={`border rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)]' : 'bg-[#0F172A]/90 border-white/10'
+              }`}>
               <div className="relative w-full md:w-80">
                 <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-[#B5A892]' : 'text-slate-400'}`} />
                 <input
@@ -721,20 +732,18 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tasks, system, description..."
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs outline-none border transition-all duration-200 ${
-                    isLight
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs outline-none border transition-all duration-200 ${isLight
                       ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/10'
                       : 'bg-black/40 border-white/10 text-white placeholder:text-slate-500 focus:border-blue-500'
-                  }`}
+                    }`}
                 />
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                 <button
                   onClick={loadData}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                    isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'
+                    }`}
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
@@ -756,9 +765,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
                 <button
                   onClick={() => setActiveTab('raise')}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${
-                    isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
-                  }`}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
+                    }`}
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   + Raise Ticket
@@ -767,15 +775,14 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
             </div>
 
             {/* Tasks Table */}
-            <div className={`border rounded-2xl shadow-xl overflow-hidden transition-colors duration-300 ${
-              isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0B0F19]/90 border-white/10'
-            }`}>
-              <div className="overflow-x-auto">
+            <div className={`border rounded-2xl shadow-xl overflow-hidden transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0B0F19]/90 border-white/10'
+              }`}>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                      isLight ? 'bg-[#FBF5EC]/90 border-[#EDE2D3] text-[#8A7B68]' : 'border-white/10 bg-white/[0.02] text-slate-400'
-                    }`}>
+                    <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${isLight ? 'bg-[#FBF5EC]/90 border-[#EDE2D3] text-[#8A7B68]' : 'border-white/10 bg-white/[0.02] text-slate-400'
+                      }`}>
                       <th className="py-4 px-4 whitespace-nowrap">Type of Work</th>
                       <th className="py-4 px-4 whitespace-nowrap">Party Name</th>
                       <th className="py-4 px-4 whitespace-nowrap">System Name</th>
@@ -800,9 +807,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                         <tr key={t.id} className={`transition-colors duration-200 ${isLight ? 'hover:bg-[#FBF5EC]' : 'hover:bg-white/[0.02]'}`}>
                           {/* Type of Work */}
                           <td className="py-4 px-4 whitespace-nowrap">
-                            <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-semibold border ${
-                              isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/5'
-                            }`}>
+                            <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-semibold border ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/5'
+                              }`}>
                               {t.typeOfWork}
                             </span>
                           </td>
@@ -865,13 +871,12 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
                           {/* Priority */}
                           <td className="py-4 px-3 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
-                              t.priorityInCustomer === 'Urgent'
+                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${t.priorityInCustomer === 'Urgent'
                                 ? isLight ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-red-500/20 text-red-400 border border-red-500/30'
                                 : t.priorityInCustomer === 'High'
-                                ? isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border border-[#EDE2D3]' : 'bg-slate-700/40 text-slate-300 border border-white/10'
-                            }`}>
+                                  ? isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border border-[#EDE2D3]' : 'bg-slate-700/40 text-slate-300 border border-white/10'
+                              }`}>
                               {t.priorityInCustomer}
                             </span>
                           </td>
@@ -897,18 +902,16 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
                           {/* Status */}
                           <td className="py-4 px-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                              t.status === 'Completed'
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${t.status === 'Completed'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : t.status === 'In Progress'
-                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
-                                : t.status === 'In Review'
-                                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                            }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                t.status === 'Completed' ? 'bg-emerald-400' : t.status === 'In Progress' ? 'bg-blue-400' : 'bg-amber-400'
-                              }`}></span>
+                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                                  : t.status === 'In Review'
+                                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
+                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'Completed' ? 'bg-emerald-400' : t.status === 'In Progress' ? 'bg-blue-400' : 'bg-amber-400'
+                                }`}></span>
                               {t.status}
                             </span>
                           </td>
@@ -921,11 +924,10 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                                   href={t.completionFileUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={`p-1.5 rounded-lg border transition-colors ${
-                                    isLight
+                                  className={`p-1.5 rounded-lg border transition-colors ${isLight
                                       ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'
                                       : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                  }`}
+                                    }`}
                                   title={`Resolution Proof: ${t.completionFileName || 'View Proof'}`}
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -957,6 +959,82 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Native App Cards (Airtel Thanks / Jio App Style) */}
+              <div className="md:hidden divide-y divide-white/5">
+                {filteredTasks.length === 0 ? (
+                  <div className={`py-12 text-center text-xs ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>
+                    No tasks found. Tap <strong>+ Raise</strong> below to assign work to Zentrixs.
+                  </div>
+                ) : (
+                  filteredTasks.map((t) => (
+                    <div key={t.id} className={`p-4 transition-colors ${isLight ? 'bg-white hover:bg-[#FBF5EC]' : 'bg-[#0B0F19]/60 hover:bg-white/[0.02]'}`}>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${isLight ? 'bg-[#FDEEE7] text-[#EA552E]' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>
+                            {t.ticketNumber}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-semibold border ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/5'}`}>
+                            {t.typeOfWork}
+                          </span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 ${
+                          t.status === 'Completed'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                            : t.status === 'In Progress'
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'Completed' ? 'bg-emerald-400' : t.status === 'In Progress' ? 'bg-blue-400' : 'bg-amber-400'}`} />
+                          {t.status}
+                        </span>
+                      </div>
+
+                      <div className={`font-bold text-sm mb-1 ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>
+                        {t.systemName}
+                      </div>
+
+                      <p className={`text-xs leading-relaxed mb-3 line-clamp-2 ${isLight ? 'text-[#5C5244]' : 'text-slate-300'}`}>
+                        {t.descriptionOfWork}
+                      </p>
+
+                      <div className="flex items-center justify-between text-[11px] pt-2 border-t border-white/5">
+                        <div className="flex flex-col">
+                          <span className={`text-[10px] ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                            Due: <strong className="font-mono">{formatDateDDMMYYYY(t.expectedDateToClose)}</strong>
+                          </span>
+                          <span className={`text-[10px] ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>
+                            Engineer: {t.assignedTo || 'Assigning...'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {t.uploadFileUrl && (
+                            <a
+                              href={t.uploadFileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`p-2 rounded-xl border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'}`}
+                              title="View Attachment"
+                            >
+                              <Paperclip className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setViewingTask(t)}
+                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 ${
+                              isLight ? 'bg-[#EA552E] text-white shadow-sm' : 'bg-blue-600 text-white shadow-sm'
+                            }`}
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Details</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -965,14 +1043,12 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         {/* TAB: RAISE TICKET (Dark Cyber Glassmorphic Form)                           */}
         {/* ========================================================================= */}
         {activeTab === 'raise' && (
-          <div className={`max-w-3xl mx-auto border rounded-3xl p-8 shadow-2xl space-y-6 transition-colors duration-300 ${
-            isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10'
-          }`}>
+          <div className={`max-w-3xl mx-auto border rounded-3xl p-8 shadow-2xl space-y-6 transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10'
+            }`}>
             <div className={`pb-4 border-b flex items-center justify-between ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div>
-                <span className={`inline-block px-3 py-1 rounded-lg font-bold text-xs tracking-wider mb-2 border font-mono ${
-                  isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                }`}>
+                <span className={`inline-block px-3 py-1 rounded-lg font-bold text-xs tracking-wider mb-2 border font-mono ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                  }`}>
                   TASK TICKET 1
                 </span>
                 <h2 className={`text-2xl font-black tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Raise New Task to Zentrixs Admin</h2>
@@ -1008,9 +1084,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
                     Date (Auto Generated)
                   </label>
-                  <div className={`flex items-center gap-3 border rounded-2xl px-4 py-3 text-sm font-mono ${
-                    isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#EA552E]' : 'bg-black/40 border-white/10 text-cyan-400'
-                  }`}>
+                  <div className={`flex items-center gap-3 border rounded-2xl px-4 py-3 text-sm font-mono ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#EA552E]' : 'bg-black/40 border-white/10 text-cyan-400'
+                    }`}>
                     <Calendar className={`w-4 h-4 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
                     <span>{formatDateDDMMYYYY(new Date().toISOString())}</span>
                   </div>
@@ -1029,9 +1104,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                       value={formPersonName}
                       onChange={(e) => setFormPersonName(e.target.value)}
                       placeholder="Enter person name"
-                      className={`w-full border rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none transition-colors duration-200 ${
-                        isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-blue-500'
-                      }`}
+                      className={`w-full border rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-blue-500'
+                        }`}
                     />
                   </div>
                 </div>
@@ -1052,9 +1126,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                       value={formPhone}
                       onChange={(e) => setFormPhone(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className={`w-full border rounded-2xl pl-11 pr-4 py-3 text-sm font-mono focus:outline-none transition-colors duration-200 ${
-                        isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-emerald-500' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-emerald-500'
-                      }`}
+                      className={`w-full border rounded-2xl pl-11 pr-4 py-3 text-sm font-mono focus:outline-none transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-emerald-500' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-emerald-500'
+                        }`}
                     />
                   </div>
                 </div>
@@ -1116,9 +1189,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Enter detailed description of what needs to be fixed, added or edited..."
-                  className={`w-full border rounded-2xl p-4 text-sm focus:outline-none resize-y transition-colors duration-200 ${
-                    isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500'
-                  }`}
+                  className={`w-full border rounded-2xl p-4 text-sm focus:outline-none resize-y transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500'
+                    }`}
                 />
               </div>
 
@@ -1132,9 +1204,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                     type="date"
                     value={formExpectedDate}
                     onChange={(e) => setFormExpectedDate(e.target.value)}
-                    className={`w-full border rounded-2xl px-4 py-3 text-sm font-mono focus:outline-none transition-colors duration-200 ${
-                      isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-blue-500'
-                    }`}
+                    className={`w-full border rounded-2xl px-4 py-3 text-sm font-mono focus:outline-none transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-blue-500'
+                      }`}
                   />
                 </div>
 
@@ -1148,9 +1219,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                     value={formLink}
                     onChange={(e) => setFormLink(e.target.value)}
                     placeholder="https://company.zentrix.app/..."
-                    className={`w-full border rounded-2xl px-4 py-3 text-sm focus:outline-none transition-colors duration-200 ${
-                      isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500'
-                    }`}
+                    className={`w-full border rounded-2xl px-4 py-3 text-sm focus:outline-none transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-blue-500'
+                      }`}
                   />
                 </div>
               </div>
@@ -1160,9 +1230,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
                   Upload File / Screenshot (Optional)
                 </label>
-                <div className={`border-2 border-dashed rounded-2xl p-6 text-center transition-colors cursor-pointer relative ${
-                  isLight ? 'border-[#EDE2D3] hover:border-[#EA552E]/50 bg-[#FBF5EC]' : 'border-white/10 hover:border-cyan-400/50 bg-black/30'
-                }`}>
+                <div className={`border-2 border-dashed rounded-2xl p-6 text-center transition-colors cursor-pointer relative ${isLight ? 'border-[#EDE2D3] hover:border-[#EA552E]/50 bg-[#FBF5EC]' : 'border-white/10 hover:border-cyan-400/50 bg-black/30'
+                  }`}>
                   <input
                     type="file"
                     onChange={(e) => setFormFile(e.target.files?.[0] || null)}
@@ -1192,9 +1261,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className={`px-8 py-3.5 text-white rounded-xl text-xs font-bold tracking-wide transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 ${
-                    isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
-                  }`}
+                  className={`px-8 py-3.5 text-white rounded-xl text-xs font-bold tracking-wide transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer hover:scale-[1.02] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
+                    }`}
                 >
                   {submitting ? 'Submitting Ticket...' : 'Raise Ticket & Assign to Zentrixs Admin'}
                 </button>
@@ -1215,16 +1283,14 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {systems.map((s) => (
-                <div key={s.id} className={`stagger-item border rounded-3xl p-6 shadow-xl space-y-4 transition-all duration-300 ${
-                  isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:border-cyan-400 hover:shadow-[0_10px_28px_rgba(234,85,46,0.1)] hover:-translate-y-1' : 'bg-[#0F172A] border-white/10 hover:border-cyan-500/40'
-                }`}>
+                <div key={s.id} className={`stagger-item border rounded-3xl p-6 shadow-xl space-y-4 transition-all duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:border-cyan-400 hover:shadow-[0_10px_28px_rgba(234,85,46,0.1)] hover:-translate-y-1' : 'bg-[#0F172A] border-white/10 hover:border-cyan-500/40'
+                  }`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-[10px] font-bold uppercase tracking-widest ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{s.category}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      s.status === 'Active'
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'Active'
                         ? isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                         : isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                    }`}>
+                      }`}>
                       {s.status}
                     </span>
                   </div>
@@ -1237,9 +1303,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                       href={s.linkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1 ${
-                        isLight ? 'bg-[#FDEEE7] text-[#EA552E] hover:bg-[#EA552E] hover:text-white border-[#F5D5C3]' : 'bg-blue-600/20 text-cyan-400 hover:bg-blue-600 hover:text-white border-cyan-500/30'
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] hover:bg-[#EA552E] hover:text-white border-[#F5D5C3]' : 'bg-blue-600/20 text-cyan-400 hover:bg-blue-600 hover:text-white border-cyan-500/30'
+                        }`}
                     >
                       Launch <ExternalLink className="w-3.5 h-3.5" />
                     </a>
@@ -1268,9 +1333,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         {/* TAB: AI CONSULTANT (Dark Cyber AI Chat Console)                           */}
         {/* ========================================================================= */}
         {activeTab === 'ai' && (
-          <div className={`max-w-3xl mx-auto border rounded-3xl p-6 shadow-2xl flex flex-col h-[650px] transition-colors duration-300 ${
-            isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10'
-          }`}>
+          <div className={`max-w-3xl mx-auto border rounded-3xl p-6 shadow-2xl flex flex-col h-[650px] transition-colors duration-300 ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10'
+            }`}>
             <div className={`flex items-center gap-3 pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className={`w-10 h-10 rounded-2xl border flex items-center justify-center ${isLight ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-amber-500/20 border-amber-500/40 text-amber-400'}`}>
                 <Sparkles className="w-5 h-5" />
@@ -1289,11 +1353,10 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
-                      msg.role === 'user'
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${msg.role === 'user'
                         ? isLight ? 'bg-[#EA552E] text-white rounded-br-none shadow-lg' : 'bg-blue-600 text-white rounded-br-none shadow-lg'
                         : isLight ? 'bg-[#FBF5EC] border border-[#EDE2D3] text-[#5C5244] rounded-bl-none' : 'bg-black/50 border border-white/10 text-slate-200 rounded-bl-none'
-                    }`}
+                      }`}
                   >
                     {msg.text}
                   </div>
@@ -1315,9 +1378,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 placeholder="Ask about errors, module updates, or integration issues..."
-                className={`flex-1 border rounded-2xl px-4 py-3 text-xs focus:outline-none transition-colors duration-200 ${
-                  isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400'
-                }`}
+                className={`flex-1 border rounded-2xl px-4 py-3 text-xs focus:outline-none transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#C9BCA8] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400'
+                  }`}
               />
               <button
                 type="submit"
@@ -1387,9 +1449,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
             {/* Resolution & Completion Proof (Visible to Client Who Raised Ticket) */}
             {(viewingTask.status === 'Completed' || viewingTask.completionRemark || viewingTask.completionFileUrl) && (
-              <div className={`p-4 rounded-2xl border space-y-3 ${
-                isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
-              }`}>
+              <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
+                }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
@@ -1407,9 +1468,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 </div>
 
                 {viewingTask.completionRemark ? (
-                  <div className={`text-xs leading-relaxed p-3 rounded-xl ${
-                    isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'
-                  }`}>
+                  <div className={`text-xs leading-relaxed p-3 rounded-xl ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'
+                    }`}>
                     {viewingTask.completionRemark}
                   </div>
                 ) : (
@@ -1419,9 +1479,8 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                 )}
 
                 {viewingTask.completionFileUrl && (
-                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${
-                    isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                  }`}>
+                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                    }`}>
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
                         <Paperclip className="w-4 h-4" />
@@ -1490,6 +1549,42 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
           </div>
         </div>
       )}
+      {/* Mobile App Bottom Navigation Bar (Airtel / Jio Style) */}
+      <DashboardMobileBar
+        role="company"
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onOpenMenu={() => setShowMobileDrawer(true)}
+        isLight={isLight}
+      />
+
+      {/* Mobile App Side Drawer Menu */}
+      <DashboardSidebarDrawer
+        isOpen={showMobileDrawer}
+        onClose={() => setShowMobileDrawer(false)}
+        role="company"
+        activeTab={activeTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        userName={userName}
+        userRoleLabel="Client Portal"
+        companyName={companyName}
+        companyLogo={companyLogo}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onLogout={() => {
+          clearAuthSession();
+          onLogout();
+        }}
+        totalTickets={tasks.length}
+        pendingTickets={pendingTasks}
+        isLight={isLight}
+      />
     </div>
   );
 };

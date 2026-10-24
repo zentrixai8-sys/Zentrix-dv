@@ -812,7 +812,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
                 </span>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className={`uppercase text-[10px] font-bold tracking-wider border-b ${
                     isLight 
@@ -918,6 +918,84 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile View - WhatsApp Templates Cards */}
+              <div className="md:hidden divide-y divide-black/5 dark:divide-white/5">
+                {templates.map((tpl) => {
+                  const isSelected = selectedTemplate?.name === tpl.name;
+                  const isReview = tpl.status === 'IN_REVIEW';
+                  const isApproved = tpl.status === 'APPROVED';
+
+                  return (
+                    <div
+                      key={tpl.id || tpl.name}
+                      onClick={() => setSelectedTemplate(tpl)}
+                      className={`p-3.5 transition-colors cursor-pointer space-y-2 ${
+                        isSelected
+                          ? isLight ? 'bg-cyan-50/70' : 'bg-cyan-500/10'
+                          : isLight ? 'bg-white hover:bg-[#FBF5EC]' : 'bg-[#0B0F19]/60 hover:bg-white/[0.02]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`font-mono font-bold text-xs truncate ${
+                            isLight ? (isSelected ? 'text-cyan-800' : 'text-[#2A2118]') : 'text-cyan-300'
+                          }`}>
+                            {tpl.name}
+                          </span>
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfig({ ...config, templateName: tpl.name });
+                            saveWhatsAppConfig({ templateName: tpl.name });
+                            setSelectedTemplate(tpl);
+                          }}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 transition-all ${
+                            config.templateName === tpl.name
+                              ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                              : isLight ? 'text-[#7A6B58] bg-[#EDE4D8]/60' : 'text-slate-300 bg-white/10'
+                          }`}
+                        >
+                          {config.templateName === tpl.name ? 'Active' : 'Select'}
+                        </button>
+                      </div>
+
+                      <p className={`text-[11px] leading-relaxed line-clamp-2 ${isLight ? 'text-[#5C5244]' : 'text-slate-400'}`}>
+                        {tpl.bodyText}
+                      </p>
+
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${isLight ? 'bg-[#EAE0D2] text-[#4A3D2E]' : 'bg-white/5 text-slate-300'}`}>
+                            {tpl.category}
+                          </span>
+                          <span className={`text-[10px] ${isLight ? 'text-[#7A6B58]' : 'text-slate-500'}`}>
+                            {tpl.language}
+                          </span>
+                        </div>
+                        {isReview ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            In review
+                          </span>
+                        ) : isApproved ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Approved
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${isLight ? 'bg-[#EAE0D2] text-[#4A3D2E]' : 'bg-slate-800 text-slate-300'}`}>
+                            {tpl.status}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Dynamic Parameter Explainer */}
@@ -1290,7 +1368,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
               <div className={`border rounded-2xl overflow-hidden shadow-xl ${
                 isLight ? 'bg-[#FAF7F2] border-[#EDE2D3]' : 'bg-[#111A2E]/70 border-white/10'
               }`}>
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className={`uppercase text-[10px] font-bold tracking-wider border-b ${
                       isLight ? 'bg-[#EDE4D8]/60 text-[#7A6B58] border-[#EDE2D3]' : 'bg-slate-950/80 text-slate-400 border-white/5'
@@ -1412,6 +1490,74 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
                       })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile View - Dispatch Log Cards */}
+                <div className="md:hidden divide-y divide-black/5 dark:divide-white/5">
+                  {filteredLogs.map((log) => {
+                    const isSent = log.status === 'SENT';
+                    const dateObj = new Date(log.timestamp);
+                    const formattedDate = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                    return (
+                      <div
+                        key={log.id}
+                        onClick={() => setSelectedLogDetail(log)}
+                        className={`p-3.5 transition-colors cursor-pointer space-y-2.5 ${
+                          isLight ? 'bg-white hover:bg-[#FBF5EC]' : 'bg-[#0B0F19]/60 hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                              isLight ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-blue-500/10 text-cyan-300 border border-blue-500/20'
+                            }`}>
+                              {log.templateName}
+                            </span>
+                            {log.ticketNumber && (
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                                isLight ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                              }`}>
+                                {log.ticketNumber}
+                              </span>
+                            )}
+                          </div>
+                          {isSent ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
+                              SENT
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30">
+                              <AlertCircle className="w-2.5 h-2.5 text-red-500" />
+                              FAILED
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className={`font-bold text-xs truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                              {log.recipientName}
+                            </div>
+                            <div className="text-[11px] text-cyan-600 dark:text-cyan-400 font-mono flex items-center gap-1 mt-0.5">
+                              <Smartphone className="w-3 h-3 shrink-0" />
+                              {log.recipientPhone}
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 font-mono text-[10px]">
+                            <div className={isLight ? 'text-[#2A2118]' : 'text-white'}>{formattedDate}</div>
+                            <div className={isLight ? 'text-[#7A6B58]' : 'text-slate-500'}>{formattedTime}</div>
+                          </div>
+                        </div>
+
+                        <p className={`text-[11px] leading-relaxed line-clamp-2 ${isLight ? 'text-[#5C5244]' : 'text-slate-400'}`}>
+                          {log.messageSnippet}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className={`p-3.5 border-t flex items-center justify-between text-xs ${

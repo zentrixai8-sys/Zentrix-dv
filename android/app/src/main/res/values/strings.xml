@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Zentrixs</string>
+    <string name="title_activity_main">Zentrixs</string>
+    <string name="package_name">com.zentrixs.app</string>
+    <string name="custom_url_scheme">com.zentrixs.app</string>
+</resources>

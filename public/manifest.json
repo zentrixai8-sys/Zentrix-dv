@@ -1,0 +1,29 @@
+{
+  "name": "Zentrixs Enterprise Portal",
+  "short_name": "Zentrixs",
+  "description": "Zentrixs Enterprise Automation Command Center & Client Ticket Portal",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0F19",
+  "theme_color": "#EA552E",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
+}
