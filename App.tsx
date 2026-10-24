@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import LoginModal from './components/LoginModal';
 import Hero from './components/Hero';
@@ -132,6 +132,14 @@ export const LandingPage = () => {
   );
 };
 
+// Protected Route - bina login ke dashboard nahi khulega
+const ProtectedRoute: React.FC<{ authRole: 'admin' | 'company' | null; children: React.ReactNode }> = ({ authRole, children }) => {
+  if (!authRole) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
 // Reusable AppContent for both Client (BrowserRouter) and Server (MemoryRouter)
 export const AppContent: React.FC = () => {
   const [authRole, setAuthRole] = useState<'admin' | 'company' | null>(() => {
@@ -184,32 +192,31 @@ export const AppContent: React.FC = () => {
         <Route
           path="/dashboard"
           element={
-            authRole === 'admin' ? (
-              <SuperAdminConsole onLogout={handleLogout} />
-            ) : authRole === 'company' ? (
-              <CompanyDashboard onLogout={handleLogout} />
-            ) : (
-              <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
-                <LoginModal
-                  onClose={() => navigate('/')}
-                  onSuccess={(user, role) => handleLoginSuccess(user, role)}
-                />
-              </div>
-            )
+            <ProtectedRoute authRole={authRole}>
+              {authRole === 'admin' ? (
+                <SuperAdminConsole onLogout={handleLogout} />
+              ) : (
+                <CompanyDashboard onLogout={handleLogout} />
+              )}
+            </ProtectedRoute>
           }
         />
         <Route
           path="/login"
           element={
-            <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
-              <LoginModal
-                onClose={() => navigate('/')}
-                onSuccess={(user, role) => {
-                  handleLoginSuccess(user, role);
-                  navigate('/dashboard');
-                }}
-              />
-            </div>
+            authRole ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
+                <LoginModal
+                  onClose={() => navigate('/')}
+                  onSuccess={(user, role) => {
+                    handleLoginSuccess(user, role);
+                    navigate('/dashboard');
+                  }}
+                />
+              </div>
+            )
           }
         />
         <Route path="*" element={<LandingPage />} />

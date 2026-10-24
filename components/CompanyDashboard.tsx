@@ -175,7 +175,9 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const dateStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const dateStr = `${day}-${month}-${now.getFullYear()}`;
       const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
       setCurrentTime(`${dateStr} • ${timeStr}`);
     };
@@ -238,7 +240,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         typeOfWork: formTypeOfWork,
         systemName: formSystemName,
         descriptionOfWork: formDescription,
-        expectedDateToClose: formExpectedDate,
+        expectedDateToClose: formatDateDDMMYYYY(formExpectedDate),
         priorityInCustomer: formPriority,
         linkOfSystem: formLink || undefined,
         uploadFileUrl: uploadedFileUrl,
@@ -935,7 +937,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className={`p-1.5 rounded-lg border transition-colors ${isLight ? 'bg-[#FDEEE7] hover:bg-[#F9DCCB] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border-cyan-500/30'}`}
-                                  title={`Cloudinary File: ${t.uploadFileName || 'View Upload'}`}
+                                  title={`Attachment: ${t.uploadFileName || 'View Upload'}`}
                                 >
                                   <Paperclip className="w-3.5 h-3.5" />
                                 </a>
@@ -1010,7 +1012,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                     isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#EA552E]' : 'bg-black/40 border-white/10 text-cyan-400'
                   }`}>
                     <Calendar className={`w-4 h-4 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
-                    <span>{new Date().toLocaleDateString('en-GB')}</span>
+                    <span>{formatDateDDMMYYYY(new Date().toISOString())}</span>
                   </div>
                 </div>
 
@@ -1399,7 +1401,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   </div>
                   {viewingTask.completedAt && (
                     <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
-                      {new Date(viewingTask.completedAt).toLocaleString()}
+                      {formatDateDDMMYYYY(viewingTask.completedAt)}
                     </span>
                   )}
                 </div>
@@ -1449,7 +1451,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
             {viewingTask.uploadFileUrl && (
               <div>
-                <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Cloudinary Attachment</span>
+                <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Attachment / Evidence</span>
                 <div className={`rounded-2xl p-4 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className={`p-2.5 rounded-xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
@@ -1460,7 +1462,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                         {viewingTask.uploadFileName || 'Uploaded File'}
                       </div>
                       <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
-                        Stored in Cloudinary (dfbllmnld / zentrixs)
+                        Secure File Storage
                       </div>
                     </div>
                   </div>

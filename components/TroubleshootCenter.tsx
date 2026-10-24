@@ -106,10 +106,10 @@ const TROUBLESHOOT_GUIDES: DiagnosticGuide[] = [
     errorCode: 'MEDIA_ATTACH_URL_INVALID_404',
     severity: 'High',
     symptom: 'Text message arrives, but the PDF invoice or image attachment is missing or corrupted.',
-    rootCause: 'Google Drive file permission is set to "Restricted" instead of "Anyone with the link can view", or Cloudinary CDN link is not accessible over public HTTPS.',
+    rootCause: 'Google Drive file permission is set to "Restricted" instead of "Anyone with the link can view", or Secure Storage CDN link is not accessible over public HTTPS.',
     estimatedFixTime: '3 minutes',
     steps: [
-      'Locate the generated PDF/image in your Google Drive or Cloudinary repository.',
+      'Locate the generated PDF/image in your Google Drive or secure media storage repository.',
       'Right-click the file in Google Drive > Share > Set Access to "Anyone with the link can view (Viewer)".',
       'Verify the file size is under 16MB (WhatsApp Media API limit for documents is 100MB, images 16MB).',
       'Ensure the direct link ends with a valid extension (.pdf, .jpg, .png) or has proper Content-Type headers.',
@@ -118,7 +118,7 @@ const TROUBLESHOOT_GUIDES: DiagnosticGuide[] = [
     codeSnippet: 'HTTP 403 Forbidden: Google Drive download link requires OAuth2 authentication. Switch link to public export URL.',
     systemName: 'Automated Invoice & Media Delivery',
     suggestedWorkType: 'Error Received',
-    tags: ['pdf', 'media', 'attachment', 'drive', 'cloudinary', 'invoice']
+    tags: ['pdf', 'media', 'attachment', 'drive', 'storage', 'invoice']
   },
 
   // LOOKER STUDIO & BI ANALYTICS
@@ -246,13 +246,13 @@ const TROUBLESHOOT_GUIDES: DiagnosticGuide[] = [
     errorCode: 'CORS_OR_FIREWALL_BLOCK_403',
     severity: 'Low',
     symptom: 'Dashboard loads partially, fonts are missing, or API requests show "Network Error" on corporate office network.',
-    rootCause: 'Corporate proxy or IT firewall is blocking Cloudflare Worker API URLs (`*.workers.dev`) or Cloudinary CDN domains.',
+    rootCause: 'Corporate proxy or IT firewall is blocking Cloudflare Worker API URLs (`*.workers.dev`) or Media Storage CDN domains.',
     estimatedFixTime: '5 minutes',
     steps: [
       'Test opening the portal on mobile data or guest Wi-Fi to confirm if it is a network-specific restriction.',
       'Request your company IT network team to whitelist the following secure domains:',
       '  - `*.workers.dev` (Secure API Gateway)',
-      '  - `res.cloudinary.com` (Cloudinary Asset CDN)',
+      '  - Secure Media & Asset CDN Domains',
       '  - `fonts.googleapis.com` & `fonts.gstatic.com` (Typography)',
       'Disable aggressive browser adblocker extensions (e.g. uBlock Origin) on the portal URL.'
     ],

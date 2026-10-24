@@ -16,11 +16,21 @@ export const formatDateDDMMYYYY = (dateStr?: string | null): string => {
   if (!dateStr || dateStr === '-' || dateStr === 'No Date') return '-';
   const trimmed = dateStr.trim();
   if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) return trimmed;
-  const ymdMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+  // DD/MM/YYYY or DD-MM-YYYY with trailing time
+  const dmyMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (dmyMatch && Number(dmyMatch[1]) <= 31 && Number(dmyMatch[2]) <= 12) {
+    const [, d, m, y] = dmyMatch;
+    return `${d.padStart(2, '0')}-${m.padStart(2, '0')}-${y}`;
+  }
+
+  // YYYY-MM-DD or ISO timestamp (e.g. 2026-10-24T13:41:22.503Z) or YYYY-MM-DD HH:mm
+  const ymdMatch = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if (ymdMatch) {
     const [, y, m, d] = ymdMatch;
     return `${d.padStart(2, '0')}-${m.padStart(2, '0')}-${y}`;
   }
+
   try {
     const d = new Date(trimmed);
     if (!isNaN(d.getTime())) {
@@ -32,6 +42,30 @@ export const formatDateDDMMYYYY = (dateStr?: string | null): string => {
   } catch (_) {}
   return dateStr;
 };
+
+export const getNowDDMMYYYY = (): string => {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+export const normalizeTaskDates = (task: Task): Task => ({
+  ...task,
+  createdAt: formatDateDDMMYYYY(task.createdAt),
+  updatedAt: formatDateDDMMYYYY(task.updatedAt),
+  expectedDateToClose: formatDateDDMMYYYY(task.expectedDateToClose),
+  completedAt: task.completedAt ? formatDateDDMMYYYY(task.completedAt) : undefined
+});
+
+export const normalizeDelegationDates = (dlg: Delegation): Delegation => ({
+  ...dlg,
+  targetDate: formatDateDDMMYYYY(dlg.targetDate),
+  createdAt: formatDateDDMMYYYY(dlg.createdAt),
+  updatedAt: formatDateDDMMYYYY(dlg.updatedAt),
+  completedAt: dlg.completedAt ? formatDateDDMMYYYY(dlg.completedAt) : undefined
+});
 
 // Cloudinary Configuration from User's Cloudinary Account
 export const CLOUDINARY_CLOUD_NAME = 'dfbllmnld';
@@ -348,23 +382,26 @@ export const TROUBLESHOOT_GUIDES = [
 const getStoredTasks = (): Task[] => {
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-      return INITIAL_TASKS;
+      return INITIAL_TASKS.map(normalizeTaskDates);
     }
     const raw = localStorage.getItem(STORAGE_KEYS.TASKS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(INITIAL_TASKS));
-      return INITIAL_TASKS;
+      const init = INITIAL_TASKS.map(normalizeTaskDates);
+      localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(init));
+      return init;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(normalizeTaskDates) : INITIAL_TASKS.map(normalizeTaskDates);
   } catch {
-    return INITIAL_TASKS;
+    return INITIAL_TASKS.map(normalizeTaskDates);
   }
 };
 
 const saveTasks = (tasks: Task[]) => {
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+    const normalized = tasks.map(normalizeTaskDates);
+    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(normalized));
   } catch (e) {
     console.error('Failed to save tasks to localStorage', e);
   }
@@ -700,12 +737,14 @@ export const fetchTasks = async (
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.tasks)) {
-          baseTasks = data.tasks;
+          const normalized = data.tasks.map(normalizeTaskDates);
+          baseTasks = normalized;
           memoryTaskCache = {
             companyIdKey: companyKey,
-            tasks: data.tasks,
+            tasks: normalized,
             cachedAt: Date.now()
           };
+          saveTasks(normalized);
         }
       }
     } catch (e) {
@@ -750,8 +789,7 @@ export const createTask = async (taskInput: Partial<Task>): Promise<{ success: b
   const currentSession = getAuthSession();
   const ticketNumber = taskInput.ticketNumber || `TCK-2026-${Math.floor(100 + Math.random() * 900)}`;
 
-  const now = new Date();
-  const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  const formattedDate = getNowDDMMYYYY();
 
   const newTask: Task = {
     id: `tsk_${Date.now()}`,
@@ -765,7 +803,7 @@ export const createTask = async (taskInput: Partial<Task>): Promise<{ success: b
     linkOfSystem: taskInput.linkOfSystem || '',
     priorityInCustomer: taskInput.priorityInCustomer || 'Medium',
     notes: taskInput.notes || '-',
-    expectedDateToClose: taskInput.expectedDateToClose || '2026-03-15',
+    expectedDateToClose: formatDateDDMMYYYY(taskInput.expectedDateToClose) || '15-03-2026',
     uploadFileUrl: taskInput.uploadFileUrl,
     uploadFileName: taskInput.uploadFileName,
     uploadFiles: taskInput.uploadFiles,
@@ -890,10 +928,10 @@ export const updateTaskStatus = async (
         tasks[index].completionFiles = completionData.completionFiles;
       }
       if (status === 'Completed') {
-        tasks[index].completedAt = new Date().toLocaleString();
+        tasks[index].completedAt = getNowDDMMYYYY();
       }
     }
-    tasks[index].updatedAt = new Date().toLocaleString();
+    tasks[index].updatedAt = getNowDDMMYYYY();
     saveTasks(tasks);
     return { success: true };
   }
@@ -1129,11 +1167,11 @@ export const DEFAULT_DELEGATIONS: Delegation[] = [
     assignedBy: 'Super Admin',
     category: 'Workflow Automation',
     priority: 'High',
-    targetDate: '2026-03-20',
+    targetDate: '20-03-2026',
     linkUrl: 'https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/',
     status: 'In Progress',
-    createdAt: '2026-03-01 10:00 AM',
-    updatedAt: '2026-03-01 10:00 AM'
+    createdAt: '01-03-2026',
+    updatedAt: '01-03-2026'
   },
   {
     id: 'dlg_2',
@@ -1144,34 +1182,36 @@ export const DEFAULT_DELEGATIONS: Delegation[] = [
     assignedBy: 'Super Admin',
     category: 'Infrastructure',
     priority: 'Urgent',
-    targetDate: '2026-03-18',
+    targetDate: '18-03-2026',
     status: 'Pending',
-    createdAt: '2026-03-02 02:30 PM',
-    updatedAt: '2026-03-02 02:30 PM'
+    createdAt: '02-03-2026',
+    updatedAt: '02-03-2026'
   }
 ];
 
 export const getStoredDelegations = (): Delegation[] => {
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-      return DEFAULT_DELEGATIONS;
+      return DEFAULT_DELEGATIONS.map(normalizeDelegationDates);
     }
     const raw = localStorage.getItem(STORAGE_KEYS.DELEGATIONS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.DELEGATIONS, JSON.stringify(DEFAULT_DELEGATIONS));
-      return DEFAULT_DELEGATIONS;
+      const init = DEFAULT_DELEGATIONS.map(normalizeDelegationDates);
+      localStorage.setItem(STORAGE_KEYS.DELEGATIONS, JSON.stringify(init));
+      return init;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : DEFAULT_DELEGATIONS;
+    return Array.isArray(parsed) ? parsed.map(normalizeDelegationDates) : DEFAULT_DELEGATIONS.map(normalizeDelegationDates);
   } catch {
-    return DEFAULT_DELEGATIONS;
+    return DEFAULT_DELEGATIONS.map(normalizeDelegationDates);
   }
 };
 
 export const saveDelegations = (delegations: Delegation[]): void => {
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.DELEGATIONS, JSON.stringify(delegations));
+    const normalized = delegations.map(normalizeDelegationDates);
+    localStorage.setItem(STORAGE_KEYS.DELEGATIONS, JSON.stringify(normalized));
   } catch (e) {
     console.error('Failed to save delegations to localStorage', e);
   }
@@ -1184,8 +1224,9 @@ export const fetchDelegations = async (): Promise<Delegation[]> => {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.delegations)) {
-          saveDelegations(data.delegations);
-          return data.delegations;
+          const normalized = data.delegations.map(normalizeDelegationDates);
+          saveDelegations(normalized);
+          return normalized;
         }
       }
     } catch (e) {
@@ -1201,8 +1242,7 @@ export const createDelegation = async (input: Partial<Delegation>): Promise<{ su
   }
 
   const delegationNumber = input.delegationNumber || `DLG-2026-${Math.floor(100 + Math.random() * 900)}`;
-  const now = new Date();
-  const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  const formattedDate = getNowDDMMYYYY();
 
   const newDelegation: Delegation = {
     id: `dlg_${Date.now()}`,
@@ -1213,7 +1253,7 @@ export const createDelegation = async (input: Partial<Delegation>): Promise<{ su
     assignedBy: input.assignedBy || 'Super Admin',
     category: input.category || 'Workflow Automation',
     priority: input.priority || 'High',
-    targetDate: input.targetDate || '2026-03-31',
+    targetDate: formatDateDDMMYYYY(input.targetDate) || '31-03-2026',
     linkUrl: input.linkUrl?.trim() || undefined,
     status: 'Pending',
     createdAt: formattedDate,
@@ -1288,8 +1328,8 @@ export const updateDelegationStatus = async (
     if (completionData?.completionFileUrl) list[index].completionFileUrl = completionData.completionFileUrl;
     if (completionData?.completionFileName) list[index].completionFileName = completionData.completionFileName;
     if (completionData?.completionFiles !== undefined) list[index].completionFiles = completionData.completionFiles;
-    if (status === 'Completed') list[index].completedAt = new Date().toLocaleString();
-    list[index].updatedAt = new Date().toLocaleString();
+    if (status === 'Completed') list[index].completedAt = getNowDDMMYYYY();
+    list[index].updatedAt = getNowDDMMYYYY();
     saveDelegations(list);
     return { success: true };
   }

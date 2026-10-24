@@ -670,7 +670,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       description: fullDesc,
       category: delegationCategory || 'Workflow Automation',
       priority: delegationPriority,
-      targetDate: delegationDeadline || '2026-03-31',
+      targetDate: formatDateDDMMYYYY(delegationDeadline) || '31-03-2026',
       assignedTo: delegationAssignee,
       linkUrl: delegationLink.trim() || undefined,
       status: 'Pending'
@@ -1309,7 +1309,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           {/* Ticket Number & Date */}
                           <td className="py-4 px-4 whitespace-nowrap">
                             <div className={`font-mono font-bold ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>{t.ticketNumber}</div>
-                            <div className={`text-[10px] ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>{t.createdAt}</div>
+                            <div className={`text-[10px] ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>{formatDateDDMMYYYY(t.createdAt)}</div>
                           </td>
 
                           {/* Company Name */}
@@ -1320,7 +1320,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                 {t.partyName}
                               </span>
                             </div>
-                            <div className={`text-[10px] ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Due: {t.expectedDateToClose}</div>
+                            <div className={`text-[10px] ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>Due: {formatDateDDMMYYYY(t.expectedDateToClose)}</div>
                           </td>
 
                           {/* Person & System */}
@@ -1415,7 +1415,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="p-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-xl transition-colors"
-                                  title={`Cloudinary Attachment: ${t.uploadFileName || 'View File'}`}
+                                  title={`Attachment: ${t.uploadFileName || 'View File'}`}
                                 >
                                   <Paperclip className="w-3.5 h-3.5" />
                                 </a>
@@ -2719,7 +2719,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <div>
                   <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>
                     <Paperclip className="w-3.5 h-3.5" />
-                    Cloudinary Attachment / Uploaded File
+                    Attachment / Evidence
                   </label>
                   <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
                     <div className="flex items-center gap-2.5 overflow-hidden">
@@ -2731,7 +2731,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           {selectedTask.uploadFileName || 'Uploaded Attachment'}
                         </div>
                         <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
-                          Cloudinary CDN: dfbllmnld / zentrixs
+                          Secure File Storage
                         </div>
                       </div>
                     </div>
@@ -2741,7 +2741,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       rel="noopener noreferrer"
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/20'}`}
                     >
-                      <span>Open in Cloudinary</span>
+                      <span>View Evidence</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -2758,7 +2758,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     </div>
                     {selectedTask.completedAt && (
                       <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
-                        {new Date(selectedTask.completedAt).toLocaleString()}
+                        {formatDateDDMMYYYY(selectedTask.completedAt)}
                       </span>
                     )}
                   </div>
@@ -3183,7 +3183,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     </div>
                     {selectedDelegation.completedAt && (
                       <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
-                        {selectedDelegation.completedAt}
+                        {formatDateDDMMYYYY(selectedDelegation.completedAt)}
                       </span>
                     )}
                   </div>
