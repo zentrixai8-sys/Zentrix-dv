@@ -1059,16 +1059,32 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   </div>
                 </div>
 
-                {unreadCount > 0 && (
+                <div className="flex items-center gap-1.5">
                   <button
-                    onClick={markAllTicketsAsRead}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer ${isLight ? 'text-[#EA552E] hover:bg-[#FDEEE7]' : 'text-blue-400 hover:bg-blue-600/20'
-                      }`}
+                    onClick={async () => {
+                      const { testOutsideNotification } = await import('../services/notificationService');
+                      await testOutsideNotification();
+                      showToast('Test notification sent to device!');
+                    }}
+                    title="Test device outside push notification"
+                    className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer ${
+                      isLight ? 'text-blue-600 hover:bg-blue-50 border border-blue-200' : 'text-cyan-400 hover:bg-cyan-500/10 border border-cyan-500/30'
+                    }`}
                   >
-                    <CheckCheck className="w-3 h-3" />
-                    <span>Mark all read</span>
+                    <span>🔔 Test Alert</span>
                   </button>
-                )}
+
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllTicketsAsRead}
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer ${isLight ? 'text-[#EA552E] hover:bg-[#FDEEE7]' : 'text-blue-400 hover:bg-blue-600/20'
+                        }`}
+                    >
+                      <CheckCheck className="w-3 h-3" />
+                      <span>Mark all read</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Notifications List */}
