@@ -16,6 +16,7 @@ import AdminDashboard from './components/AdminDashboard';
 import CompanyDashboard from './components/CompanyDashboard';
 import SuperAdminConsole from './components/SuperAdminConsole';
 import { getAuthSession, clearAuthSession } from './services/taskService';
+import { applyStatusBarTheme, getStoredTheme } from './services/themeService';
 import LegalPage from './components/LegalPage';
 import ServiceDetailPage from './components/ServiceDetailPage';
 import ServicesPage from './components/ServicesPage';
@@ -166,6 +167,16 @@ export const AppContent: React.FC = () => {
     setAuthRole(null);
     setCurrentUser('');
   };
+
+  useEffect(() => {
+    applyStatusBarTheme(getStoredTheme());
+    const handleThemeChange = (e: any) => {
+      const current = e.detail || getStoredTheme();
+      applyStatusBarTheme(current);
+    };
+    window.addEventListener('zentrix_theme_change', handleThemeChange);
+    return () => window.removeEventListener('zentrix_theme_change', handleThemeChange);
+  }, []);
 
   const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
 

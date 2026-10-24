@@ -15,6 +15,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
   const [activeTab, setActiveTab] = useState<'company' | 'admin'>('company');
   const [theme, setTheme] = useState<PortalTheme>(getStoredTheme);
 
+  const handleThemeChange = (newTheme: PortalTheme) => {
+    setTheme(newTheme);
+    setStoredTheme(newTheme);
+  };
+
   const isLight = theme === 'light';
 
   // Company Form State (Only ID & Password)
@@ -112,7 +117,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-inherit/40">
             <ThemeSelector
               theme={theme}
-              onChange={setTheme}
+              onChange={handleThemeChange}
               size="sm"
             />
 
