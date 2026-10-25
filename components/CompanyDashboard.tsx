@@ -50,6 +50,7 @@ import {
 import { sendTicketWhatsAppNotification } from '../services/whatsappService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
 import CustomDropdown from './CustomDropdown';
+import CustomDatePicker from './CustomDatePicker';
 import AnalyticsOverview from './AnalyticsOverview';
 import ThemeSelector from './ThemeSelector';
 import TroubleshootCenter from './TroubleshootCenter';
@@ -1200,12 +1201,12 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
                     Expected Date To Close
                   </label>
-                  <input
-                    type="date"
+                  <CustomDatePicker
                     value={formExpectedDate}
-                    onChange={(e) => setFormExpectedDate(e.target.value)}
-                    className={`w-full border rounded-2xl px-4 py-3 text-sm font-mono focus:outline-none transition-colors duration-200 ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-blue-500'
-                      }`}
+                    onChange={setFormExpectedDate}
+                    isLight={isLight}
+                    className="w-full"
+                    placeholder="Select Target Date"
                   />
                 </div>
 

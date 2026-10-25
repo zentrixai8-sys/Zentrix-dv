@@ -89,7 +89,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const isSmall = size === 'sm';
 
   return (
-    <div className={`relative inline-block ${className}`} ref={containerRef}>
+    <div className={`relative ${className.includes('w-full') ? 'w-full' : 'inline-block'} ${className}`} ref={containerRef}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -98,21 +98,21 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           badgeStyle
             ? `${getStatusBadgeColors(value)} ${isSmall ? 'px-2.5 py-1 text-[11px] font-bold' : 'px-3 py-1.5 text-xs font-bold'}`
             : isLight
-            ? `bg-slate-50 hover:bg-slate-100 text-slate-800 ${
+            ? `bg-[#FBF5EC] hover:bg-[#F5EDE1] text-[#2A2118] ${
                 isOpen 
-                  ? 'border-blue-600 ring-2 ring-blue-500/20 bg-white' 
-                  : 'border-slate-200 hover:border-slate-300'
-              } ${isSmall ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2.5 text-xs font-semibold'}`
-            : `bg-[#0B1120] hover:bg-[#111A2E] text-slate-200 ${
+                  ? 'border-[#EA552E] ring-2 ring-[#EA552E]/20 bg-white' 
+                  : 'border-[#EDE2D3] hover:border-[#EA552E]/40'
+              } ${isSmall ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-3 text-xs font-semibold'}`
+            : `bg-black/50 hover:bg-black/70 text-slate-200 ${
                 isOpen 
                   ? 'border-cyan-400 ring-2 ring-cyan-500/20 text-white' 
                   : 'border-white/10 hover:border-cyan-500/40'
-              } ${isSmall ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2.5 text-xs font-semibold'}`
+              } ${isSmall ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-3 text-xs font-semibold'}`
         }`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <div className="flex items-center gap-2 truncate">
+        <div className="flex items-center gap-2 truncate min-w-0 flex-1">
           {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
           {selectedOption?.dotColor && (
             <span className={`w-2 h-2 rounded-full shrink-0 ${selectedOption.dotColor}`} />
@@ -122,7 +122,9 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
         <ChevronDown
           className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-cyan-400' : 'text-slate-400'
+            isOpen
+              ? isLight ? 'rotate-180 text-[#EA552E]' : 'rotate-180 text-cyan-400'
+              : isLight ? 'text-[#9C8F7D]' : 'text-slate-400'
           }`}
         />
       </button>
@@ -130,12 +132,12 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       {/* Floating Menu Popover */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-1.5 min-w-[190px] w-max max-w-xs max-h-64 overflow-y-auto z-[70] rounded-2xl p-1.5 shadow-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150 border ${
+          className={`absolute top-full mt-1.5 w-full min-w-full max-w-full max-h-60 overflow-y-auto z-[85] rounded-2xl p-1.5 shadow-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150 border ${
             align === 'right' ? 'right-0' : 'left-0'
           } ${
             isLight
-              ? 'bg-white/98 backdrop-blur-2xl border-slate-200 shadow-slate-900/15'
-              : 'bg-[#0B1120]/98 backdrop-blur-2xl border-cyan-500/30 shadow-black/90'
+              ? 'bg-[#FFFCF8] border-[#EDE2D3] shadow-[0_12px_36px_rgba(234,85,46,0.14)] text-[#2A2118]'
+              : 'bg-[#0B1120] border-cyan-500/30 shadow-2xl shadow-black/90 text-white'
           } ${menuClassName}`}
           role="listbox"
         >
@@ -152,23 +154,23 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer text-left ${
                   isSelected
                     ? isLight
-                      ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200'
+                      ? 'bg-[#FDF3E7] text-[#EA552E] font-bold border border-[#EDE2D3]'
                       : 'bg-cyan-500/15 text-white font-bold border border-cyan-500/30'
                     : isLight
-                    ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'text-[#2A2118] hover:bg-[#FBF5EC]'
                     : 'text-slate-300 hover:bg-white/5 hover:text-white'
                 }`}
                 role="option"
                 aria-selected={isSelected}
               >
-                <div className="flex items-center gap-2.5 truncate">
+                <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
                   {opt.dotColor && (
                     <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dotColor}`} />
                   )}
-                  <div className="truncate">
-                    <div className="truncate font-medium">{opt.label}</div>
+                  <div className="truncate min-w-0 flex-1">
+                    <div className="truncate font-semibold">{opt.label}</div>
                     {opt.sublabel && (
-                      <div className={`text-[10px] truncate ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
                         {opt.sublabel}
                       </div>
                     )}
@@ -177,12 +179,12 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   {opt.badge && (
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${opt.badgeColor || 'bg-white/10 text-slate-400'}`}>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${opt.badgeColor || (isLight ? 'bg-[#FDF3E7] text-[#D9481F]' : 'bg-white/10 text-slate-400')}`}>
                       {opt.badge}
                     </span>
                   )}
                   {isSelected && (
-                    <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-cyan-400'}`} />
+                    <Check className={`w-3.5 h-3.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
                   )}
                 </div>
               </button>

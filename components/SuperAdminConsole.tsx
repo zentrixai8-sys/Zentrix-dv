@@ -88,6 +88,7 @@ import { Link } from 'react-router-dom';
 import { LOGO_URL, COMPANY_NAME } from '../constants';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
 import CustomDropdown from './CustomDropdown';
+import CustomDatePicker from './CustomDatePicker';
 import ThemeSelector from './ThemeSelector';
 import DashboardMobileBar from './DashboardMobileBar';
 import DashboardSidebarDrawer from './DashboardSidebarDrawer';
@@ -3789,22 +3790,22 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     }`}>
                     Assign To Employee / Engineer <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    required
+                  <CustomDropdown
+                    options={[
+                      { value: '', label: '-- Select Engineer / Employee --' },
+                      ...employees.map((emp) => ({
+                        value: emp.name,
+                        label: emp.name,
+                        sublabel: emp.designation || emp.role || 'Engineer',
+                        dotColor: 'bg-cyan-400'
+                      }))
+                    ]}
                     value={delegationAssignee}
-                    onChange={(e) => setDelegationAssignee(e.target.value)}
-                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${isLight
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]'
-                        : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
-                      }`}
-                  >
-                    <option value="">-- Select Engineer / Employee --</option>
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={emp.name}>
-                        {emp.name} ({emp.designation || emp.role || 'Engineer'})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setDelegationAssignee}
+                    placeholder="-- Select Engineer / Employee --"
+                    isLight={isLight}
+                    className="w-full"
+                  />
                 </div>
 
                 <div>
@@ -3812,15 +3813,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     }`}>
                     Target Completion Date <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    required
+                  <CustomDatePicker
                     value={delegationDeadline}
-                    onChange={(e) => setDelegationDeadline(e.target.value)}
-                    className={`w-full border rounded-xl px-4 py-3 font-mono font-bold focus:outline-none transition-colors ${isLight
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]'
-                        : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
-                      }`}
+                    onChange={setDelegationDeadline}
+                    isLight={isLight}
+                    className="w-full"
+                    placeholder="Select Target Date"
                   />
                 </div>
               </div>
@@ -3832,19 +3830,18 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     }`}>
                     Priority Level <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <CustomDropdown
+                    options={[
+                      { value: 'Urgent', label: '🔥 Urgent / Critical', dotColor: 'bg-red-500' },
+                      { value: 'High', label: '⚡ High Priority', dotColor: 'bg-amber-400' },
+                      { value: 'Medium', label: '⚖️ Medium Priority', dotColor: 'bg-blue-400' },
+                      { value: 'Low', label: '🌱 Low Priority', dotColor: 'bg-emerald-400' }
+                    ]}
                     value={delegationPriority}
-                    onChange={(e) => setDelegationPriority(e.target.value as TaskPriority)}
-                    className={`w-full border rounded-xl px-4 py-3 font-semibold focus:outline-none cursor-pointer transition-colors ${isLight
-                        ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]'
-                        : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'
-                      }`}
-                  >
-                    <option value="Urgent">🔥 Urgent / Critical</option>
-                    <option value="High">⚡ High Priority</option>
-                    <option value="Medium">⚖️ Medium Priority</option>
-                    <option value="Low">🌱 Low Priority</option>
-                  </select>
+                    onChange={(val) => setDelegationPriority(val as TaskPriority)}
+                    isLight={isLight}
+                    className="w-full"
+                  />
                 </div>
 
                 <div>
