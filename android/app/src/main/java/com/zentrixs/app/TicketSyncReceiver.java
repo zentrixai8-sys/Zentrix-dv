@@ -32,7 +32,11 @@ import java.util.concurrent.Executors;
 
 public class TicketSyncReceiver extends BroadcastReceiver {
     private static final String TAG = "TicketSyncReceiver";
-    private static final String API_URL = "https://zentrix-rain-71e2.zentrix-ai8.workers.dev/api/tasks";
+    private static final String API_BASE = "https://zentrix-rain-71e2.zentrix-ai8.workers.dev";
+    private static final String API_URL = API_BASE + "/api/tasks";
+    // Constant-size change digest. Polled instead of the full ticket list so a
+    // quiet check costs a few bytes of mobile data instead of the whole table.
+    private static final String PULSE_URL = API_BASE + "/api/tasks/pulse";
     private static final String PREFS_NAME = "zentrixs_ticket_cache";
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -73,11 +77,12 @@ public class TicketSyncReceiver extends BroadcastReceiver {
         return activeNetwork != null && activeNetwork.isConnected();
     }
 
-    private void checkAndNotifyNewTickets(Context context) {
+    /** Simple JSON GET. Returns the response body, or null on any failure. */
+    private String httpGet(String endpoint) {
         HttpURLConnection conn = null;
         BufferedReader reader = null;
         try {
-            URL url = new URL(API_URL);
+            URL url = new URL(endpoint);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10000);
@@ -87,8 +92,8 @@ public class TicketSyncReceiver extends BroadcastReceiver {
 
             int code = conn.getResponseCode();
             if (code != 200) {
-                Log.w(TAG, "API returned non-200 code: " + code);
-                return;
+                Log.w(TAG, "API " + endpoint + " returned non-200 code: " + code);
+                return null;
             }
 
             reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -97,17 +102,55 @@ public class TicketSyncReceiver extends BroadcastReceiver {
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }
+            return sb.toString();
+        } catch (Exception e) {
+            Log.e(TAG, "HTTP GET failed for " + endpoint, e);
+            return null;
+        } finally {
+            if (reader != null) {
+                try { reader.close(); } catch (Exception ignored) {}
+            }
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
 
-            JSONObject root = new JSONObject(sb.toString());
-            JSONArray tasks = root.optJSONArray("tasks");
-            if (tasks == null || tasks.length() == 0) return;
-
+    private void checkAndNotifyNewTickets(Context context) {
+        try {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             boolean initialized = prefs.getBoolean("initialized", false);
+
+            // Step 1: ask the cheap digest whether anything changed at all.
+            // If it has not, we skip downloading the ticket list entirely.
+            String signature = null;
+            String pulseBody = httpGet(PULSE_URL);
+            if (pulseBody != null) {
+                try {
+                    signature = new JSONObject(pulseBody).optString("signature", null);
+                } catch (Exception ignored) {}
+            }
+
+            if (signature != null && initialized
+                    && signature.equals(prefs.getString("pulse_signature", ""))) {
+                Log.d(TAG, "No ticket changes (pulse unchanged), skipped full fetch");
+                return;
+            }
+
+            // Step 2: something changed (or the digest is unavailable) - fetch the list.
+            String body = httpGet(API_URL);
+            if (body == null) return;
+
+            JSONObject root = new JSONObject(body);
+            JSONArray tasks = root.optJSONArray("tasks");
+            if (tasks == null) return;
+
             Set<String> seenIds = new HashSet<>(prefs.getStringSet("seen_ids", new HashSet<>()));
 
             if (!initialized) {
-                // First run: Seed current existing tasks so we don't spam old notifications
+                // First run: Seed current existing tasks so we don't spam old notifications.
+                // Runs even when the list is empty, otherwise the very first ticket
+                // ever created would be swallowed as a seed instead of notified.
                 SharedPreferences.Editor editor = prefs.edit();
                 for (int i = 0; i < tasks.length(); i++) {
                     JSONObject t = tasks.getJSONObject(i);
@@ -119,12 +162,19 @@ public class TicketSyncReceiver extends BroadcastReceiver {
                 }
                 editor.putStringSet("seen_ids", seenIds);
                 editor.putBoolean("initialized", true);
+                if (signature != null) editor.putString("pulse_signature", signature);
                 editor.apply();
                 Log.d(TAG, "Initialized ticket cache with " + seenIds.size() + " existing tickets");
                 return;
             }
 
             SharedPreferences.Editor editor = prefs.edit();
+            // A ticket is only recorded as seen once its notification actually
+            // fired. Recording it up front meant that if the notification was
+            // dropped (permission revoked, SecurityException) that ticket would
+            // never alert again - it looked like notifications randomly skipped.
+            boolean deliveryPending = false;
+
             for (int i = 0; i < tasks.length(); i++) {
                 JSONObject t = tasks.getJSONObject(i);
                 String id = t.optString("id");
@@ -138,47 +188,53 @@ public class TicketSyncReceiver extends BroadcastReceiver {
 
                 // Check 1: Brand new ticket
                 if (!seenIds.contains(id)) {
-                    seenIds.add(id);
-                    editor.putString("status_" + id, status);
-
                     String title = "🔔 New Ticket #" + ticketNumber;
-                    String body = partyName + ": " + typeOfWork + (systemName.isEmpty() ? "" : " - " + systemName);
-                    showNotification(context, id.hashCode(), title, body);
-                    Log.i(TAG, "Fired background notification for new ticket: " + ticketNumber);
+                    String text = partyName + ": " + typeOfWork + (systemName.isEmpty() ? "" : " - " + systemName);
+
+                    if (showNotification(context, id.hashCode(), title, text)) {
+                        seenIds.add(id);
+                        editor.putString("status_" + id, status);
+                        Log.i(TAG, "Fired background notification for new ticket: " + ticketNumber);
+                    } else {
+                        deliveryPending = true;
+                        Log.w(TAG, "Notification not delivered, will retry next cycle: " + ticketNumber);
+                    }
                 } else {
                     // Check 2: Status update on existing ticket
                     String prevStatus = prefs.getString("status_" + id, "");
                     if (!prevStatus.isEmpty() && !prevStatus.equals(status)) {
-                        editor.putString("status_" + id, status);
-
                         String title = "⚡ Ticket #" + ticketNumber + " " + status;
-                        String body = partyName + " status updated: " + prevStatus + " ➔ " + status;
-                        showNotification(context, id.hashCode() + 1, title, body);
-                        Log.i(TAG, "Fired background notification for status update: " + ticketNumber);
+                        String text = partyName + " status updated: " + prevStatus + " ➔ " + status;
+
+                        if (showNotification(context, (id + status).hashCode(), title, text)) {
+                            editor.putString("status_" + id, status);
+                            Log.i(TAG, "Fired background notification for status update: " + ticketNumber);
+                        } else {
+                            deliveryPending = true;
+                        }
                     }
                 }
             }
 
             editor.putStringSet("seen_ids", seenIds);
+            // Only remember this digest when everything was delivered, so a failed
+            // notification is re-examined on the next cycle instead of skipped.
+            if (signature != null && !deliveryPending) {
+                editor.putString("pulse_signature", signature);
+            }
             editor.apply();
 
         } catch (Exception e) {
             Log.e(TAG, "Error in checkAndNotifyNewTickets", e);
-        } finally {
-            if (reader != null) {
-                try { reader.close(); } catch (Exception ignored) {}
-            }
-            if (conn != null) {
-                conn.disconnect();
-            }
         }
     }
 
-    private void showNotification(Context context, int notifId, String title, String body) {
+    /** @return true only when the notification was actually handed to the OS. */
+    private boolean showNotification(Context context, int notifId, String title, String body) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 Log.w(TAG, "Notification permission not granted");
-                return;
+                return false;
             }
         }
 
@@ -208,8 +264,13 @@ public class TicketSyncReceiver extends BroadcastReceiver {
 
         try {
             NotificationManagerCompat.from(context).notify(notifId, builder.build());
+            return true;
         } catch (SecurityException se) {
             Log.e(TAG, "SecurityException while showing notification", se);
+            return false;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to show notification", e);
+            return false;
         }
     }
 }
