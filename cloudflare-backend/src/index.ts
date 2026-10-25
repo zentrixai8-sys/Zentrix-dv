@@ -1,9 +1,13 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { sendWebPush, PushSubscriptionRecord, VapidConfig } from './webpush';
 
 export interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_SUBJECT?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -25,6 +29,154 @@ app.get('/', (c) => {
     engine: 'Cloudflare Workers + Hono + D1 Database',
     timestamp: new Date().toISOString()
   });
+});
+
+// ==========================================
+// 0. WEB PUSH (notifications while the app is closed)
+// ==========================================
+
+const PUSH_TABLE_SQL = `CREATE TABLE IF NOT EXISTS push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  role TEXT,
+  company_id TEXT,
+  created_at TEXT
+)`;
+
+const ensurePushTable = async (db: D1Database) => {
+  try { await db.prepare(PUSH_TABLE_SQL).run(); } catch (_) {}
+};
+
+const getVapidConfig = (env: Env): VapidConfig | null => {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return null;
+  return {
+    publicKey: env.VAPID_PUBLIC_KEY,
+    privateKey: env.VAPID_PRIVATE_KEY,
+    subject: env.VAPID_SUBJECT || 'mailto:info@piramalpetroleum.com'
+  };
+};
+
+// Fan a notification out to every stored subscription for the given audience.
+// `companyId` null/undefined means admin devices; otherwise that company plus admins.
+const broadcastPush = async (
+  env: Env,
+  payload: Record<string, any>,
+  companyId?: string | null
+): Promise<void> => {
+  const vapid = getVapidConfig(env);
+  if (!vapid) return; // keys not configured yet - stay silent, polling still covers the open app
+
+  const db = env.DB;
+  await ensurePushTable(db);
+
+  let rows: any[] = [];
+  try {
+    const result = companyId
+      ? await db
+          .prepare("SELECT * FROM push_subscriptions WHERE role = 'admin' OR company_id = ?")
+          .bind(companyId)
+          .all()
+      : await db.prepare('SELECT * FROM push_subscriptions').all();
+    rows = result.results || [];
+  } catch (_) {
+    return;
+  }
+
+  await Promise.all(
+    rows.map(async (row: any) => {
+      const subscription: PushSubscriptionRecord = {
+        endpoint: row.endpoint,
+        p256dh: row.p256dh,
+        auth: row.auth
+      };
+      try {
+        const res = await sendWebPush(subscription, payload, vapid);
+        if (res.expired) {
+          await db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(row.endpoint).run();
+        }
+      } catch (_) {
+        // one bad subscription must not block the rest
+      }
+    })
+  );
+};
+
+// Public key so the browser can build a push subscription
+app.get('/api/push/public-key', (c) => {
+  const key = c.env.VAPID_PUBLIC_KEY;
+  if (!key) return c.json({ error: 'Push not configured' }, 503);
+  return c.json({ success: true, publicKey: key });
+});
+
+// Register a device
+app.post('/api/push/subscribe', async (c) => {
+  try {
+    const db = c.env.DB;
+    await ensurePushTable(db);
+
+    const body = await c.req.json();
+    const endpoint = body?.endpoint;
+    const p256dh = body?.keys?.p256dh;
+    const auth = body?.keys?.auth;
+
+    if (!endpoint || !p256dh || !auth) {
+      return c.json({ error: 'endpoint and keys.p256dh / keys.auth are required' }, 400);
+    }
+
+    await db
+      .prepare(
+        `INSERT INTO push_subscriptions (endpoint, p256dh, auth, role, company_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(endpoint) DO UPDATE SET
+           p256dh = excluded.p256dh,
+           auth = excluded.auth,
+           role = excluded.role,
+           company_id = excluded.company_id`
+      )
+      .bind(
+        endpoint,
+        p256dh,
+        auth,
+        body.role || 'admin',
+        body.companyId || null,
+        new Date().toISOString()
+      )
+      .run();
+
+    return c.json({ success: true });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Remove a device
+app.post('/api/push/unsubscribe', async (c) => {
+  try {
+    const db = c.env.DB;
+    await ensurePushTable(db);
+    const { endpoint } = await c.req.json();
+    if (!endpoint) return c.json({ error: 'endpoint is required' }, 400);
+
+    await db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(endpoint).run();
+    return c.json({ success: true });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Send a test push to every registered device
+app.post('/api/push/test', async (c) => {
+  if (!getVapidConfig(c.env)) return c.json({ error: 'Push not configured' }, 503);
+
+  await broadcastPush(c.env, {
+    title: '🔔 Zentrixs Push Test',
+    body: 'Web push is working - you will now get alerts with the app closed.',
+    tag: `push-test-${Date.now()}`,
+    data: { url: '/dashboard' }
+  });
+
+  return c.json({ success: true });
 });
 
 // ==========================================
@@ -175,6 +327,32 @@ app.get('/api/tasks', async (c) => {
   }
 });
 
+// GET /api/tasks/pulse - Constant-size change digest for the live watcher.
+// Lets clients poll frequently without transferring the whole tasks table:
+// the signature only moves when a task is added, removed or updated.
+app.get('/api/tasks/pulse', async (c) => {
+  try {
+    const db = c.env.DB;
+    const { companyId } = c.req.query();
+
+    let query = 'SELECT COUNT(*) AS total, MAX(updated_at) AS lastUpdated FROM tasks WHERE 1=1';
+    const params: any[] = [];
+
+    if (companyId) {
+      query += ' AND company_id = ?';
+      params.push(companyId);
+    }
+
+    const row: any = await db.prepare(query).bind(...params).first();
+    const total = row?.total ?? 0;
+    const lastUpdated = row?.lastUpdated ?? '';
+
+    return c.json({ success: true, signature: `${total}:${lastUpdated}` });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 // POST /api/tasks - Company raises a new task or Admin creates delegation
 app.post('/api/tasks', async (c) => {
   try {
@@ -228,6 +406,16 @@ app.post('/api/tasks', async (c) => {
       body.personName || 'Company User',
       `Ticket ${ticketNumber} raised for ${body.systemName}`
     ).run();
+
+    // Push to closed/backgrounded devices. waitUntil keeps the response fast.
+    c.executionCtx.waitUntil(
+      broadcastPush(c.env, {
+        title: `🔔 New Ticket #${ticketNumber}`,
+        body: `${body.partyName || 'Company Client'}: ${body.typeOfWork || 'New Task'} - ${body.systemName || ''}`,
+        tag: `new-ticket-${id}`,
+        data: { url: '/dashboard', ticketId: id }
+      })
+    );
 
     return c.json({
       success: true,
@@ -320,6 +508,26 @@ app.put('/api/tasks/:id/status', async (c) => {
       now, 
       taskId
     ).run();
+
+    if (status) {
+      const task: any = await db
+        .prepare('SELECT ticket_number, company_id, party_name, system_name FROM tasks WHERE id = ?')
+        .bind(taskId)
+        .first();
+
+      c.executionCtx.waitUntil(
+        broadcastPush(
+          c.env,
+          {
+            title: `⚡ Ticket #${task?.ticket_number || ''} ${status}`,
+            body: `${task?.system_name || task?.party_name || 'Ticket'} is now ${status}`,
+            tag: `status-${taskId}-${status}`,
+            data: { url: '/dashboard', ticketId: taskId }
+          },
+          task?.company_id || null
+        )
+      );
+    }
 
     return c.json({ success: true, message: 'Status updated successfully' });
   } catch (err: any) {

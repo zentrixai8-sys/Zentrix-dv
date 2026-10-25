@@ -11,3 +11,8 @@ database_id = "2b7d2148-91c5-4162-9cdd-d9b15eda57ae"
 [vars]
 ENVIRONMENT = "production"
 APP_NAME = "Zentrixs Enterprise Portal API"
+# Web Push (VAPID). The public key is meant to be public - it is served to
+# browsers at /api/push/public-key. The PRIVATE key must never live here:
+# set it once with `npx wrangler secret put VAPID_PRIVATE_KEY`.
+VAPID_PUBLIC_KEY = "BM_rE-Z3hs31GuI2ETeDI2nTnPTuPPGJ0MAcc5BX2HMEQRjkkTEwumHsTBr9rHGJHsYcrNjcTr9qdFSzyxhbQpI"
+VAPID_SUBJECT = "mailto:info@piramalpetroleum.com"

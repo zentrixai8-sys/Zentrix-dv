@@ -472,6 +472,7 @@ const getStoredCompanies = (): Company[] => {
 };
 
 const saveCompanies = (comps: Company[]) => {
+  invalidateRefCache('companies');
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
     localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(comps));
@@ -552,6 +553,9 @@ export const updateCompanyLogo = async (companyId: string, logoUrl: string): Pro
 };
 
 export const fetchCompanies = async (): Promise<Company[]> => {
+  const cached = readRefCache<Company[]>('companies');
+  if (cached) return cached;
+
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/companies`);
@@ -587,6 +591,7 @@ export const fetchCompanies = async (): Promise<Company[]> => {
             }
           });
           saveCompanies(stored);
+          writeRefCache('companies', stored);
           return stored;
         }
       }
@@ -705,6 +710,44 @@ const CACHE_TTL_MS = 60 * 1000; // 60 Seconds Cache
 
 export const invalidateTaskCache = () => {
   memoryTaskCache = null;
+};
+
+// Constant-size change digest used by the live watcher so it can poll often
+// without pulling the whole tasks table. Returns null when the endpoint is
+// unavailable (e.g. worker not redeployed yet) so callers can fall back.
+export const fetchTasksPulse = async (companyId?: string): Promise<string | null> => {
+  if (!CLOUDFLARE_API_URL) return null;
+  try {
+    const query = new URLSearchParams();
+    if (companyId) query.set('companyId', companyId);
+
+    const res = await fetch(`${CLOUDFLARE_API_URL}/api/tasks/pulse?${query.toString()}`);
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return typeof data?.signature === 'string' ? data.signature : null;
+  } catch (_) {
+    return null;
+  }
+};
+
+// Shared TTL cache for the reference tables (companies / users / delegations).
+// These change rarely but loadData() refetches them after every mutation.
+const refCache = new Map<string, { data: any; cachedAt: number }>();
+
+const readRefCache = <T,>(key: string): T | null => {
+  const hit = refCache.get(key);
+  if (hit && Date.now() - hit.cachedAt < CACHE_TTL_MS) return hit.data as T;
+  return null;
+};
+
+const writeRefCache = (key: string, data: any) => {
+  refCache.set(key, { data, cachedAt: Date.now() });
+};
+
+export const invalidateRefCache = (key?: 'companies' | 'employees' | 'delegations') => {
+  if (key) refCache.delete(key);
+  else refCache.clear();
 };
 
 // --- TASK OPERATIONS ---
@@ -973,6 +1016,7 @@ export const getStoredEmployees = (): Employee[] => {
 };
 
 export const saveEmployees = (emps: Employee[]): void => {
+  invalidateRefCache('employees');
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(emps));
@@ -1107,6 +1151,9 @@ export const deleteEmployee = async (empId: string): Promise<boolean> => {
 };
 
 export const fetchEmployees = async (): Promise<Employee[]> => {
+  const cached = readRefCache<Employee[]>('employees');
+  if (cached) return cached;
+
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/users`);
@@ -1136,6 +1183,7 @@ export const fetchEmployees = async (): Promise<Employee[]> => {
             }
           });
           saveEmployees(stored);
+          writeRefCache('employees', stored);
           return stored;
         }
       }
@@ -1208,6 +1256,7 @@ export const getStoredDelegations = (): Delegation[] => {
 };
 
 export const saveDelegations = (delegations: Delegation[]): void => {
+  invalidateRefCache('delegations');
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
     const normalized = delegations.map(normalizeDelegationDates);
@@ -1218,6 +1267,9 @@ export const saveDelegations = (delegations: Delegation[]): void => {
 };
 
 export const fetchDelegations = async (): Promise<Delegation[]> => {
+  const cached = readRefCache<Delegation[]>('delegations');
+  if (cached) return cached;
+
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/delegations`);
@@ -1226,6 +1278,7 @@ export const fetchDelegations = async (): Promise<Delegation[]> => {
         if (Array.isArray(data.delegations)) {
           const normalized = data.delegations.map(normalizeDelegationDates);
           saveDelegations(normalized);
+          writeRefCache('delegations', normalized);
           return normalized;
         }
       }
