@@ -819,7 +819,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   };
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 md:pb-8 overflow-x-hidden w-full max-w-full ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 md:pb-8 [overflow-x:clip] w-full max-w-full ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
       }`}>
       {/* Toast Notification */}
       {toastMessage && (
@@ -830,7 +830,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       )}
 
       {/* Website-Styled Admin Header */}
-      <header className={`border-b sticky top-0 z-40 px-3 sm:px-8 py-3 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/95 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
+      <header className={`border-b sticky top-0 inset-x-0 z-40 px-3 sm:px-8 py-3 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/95 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
         }`}>
         <div className="w-full flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           {/* Exact Brand Logo matching Website + Mobile Hamburger */}

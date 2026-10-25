@@ -342,7 +342,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
   const completedTasks = tasks.filter(t => t.status === 'Completed').length;
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 md:pb-8 overflow-x-hidden w-full max-w-full ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 md:pb-8 [overflow-x:clip] w-full max-w-full ${isLight ? 'bg-[#FBF5EC] text-[#2A2118] selection:bg-[#EA552E]/20' : 'bg-[#070A11] text-slate-100 selection:bg-blue-600/30'
       }`}>
       {/* Toast Alert */}
       {toastMessage && (
@@ -352,7 +352,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         </div>
       )}
 
-      <header className={`border-b sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
+      <header className={`border-b sticky top-0 inset-x-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
         }`}>
         {/* Row 1: Identity + Account Controls */}
         <div className="w-full flex items-center justify-between gap-4">
