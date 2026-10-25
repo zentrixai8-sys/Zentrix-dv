@@ -1572,27 +1572,29 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
 
           {/* Selected Log Detail Modal */}
           {selectedLogDetail && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-              <div className={`w-full max-w-lg border rounded-3xl p-6 space-y-5 shadow-2xl ${
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+              <div className={`w-full max-w-lg max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden ${
                 isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'
               }`}>
-                <div className={`flex items-center justify-between pb-3 border-b ${
-                  isLight ? 'border-[#EDE2D3]' : 'border-white/10'
+                <div className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${
+                  isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'
                 }`}>
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                    <h3 className={`font-bold text-base ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                  <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                    <MessageSquare className="w-5 h-5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                    <h3 className={`font-bold text-base truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
                       WhatsApp Dispatch Details
                     </h3>
                   </div>
                   <button
                     onClick={() => setSelectedLogDetail(null)}
-                    className={`text-xl p-1 cursor-pointer ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                    className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                    aria-label="Close"
                   >
                     &times;
                   </button>
                 </div>
 
+                <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className={`p-3 rounded-xl border ${
                     isLight ? 'bg-[#FAF7F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'
@@ -1649,8 +1651,9 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = ({ onClose, isL
                     <span className="text-red-600 dark:text-red-300 text-[11px]">{selectedLogDetail.error}</span>
                   </div>
                 )}
+                </div>
 
-                <div className={`flex justify-end pt-2 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+                <div className={`flex justify-end px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                   <button
                     onClick={() => setSelectedLogDetail(null)}
                     className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer"

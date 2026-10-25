@@ -1396,152 +1396,156 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
       {/* TICKET DETAILS MODAL */}
       {viewingTask && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-6 ${isLight ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/85 backdrop-blur-md'}`}>
-          <div className={`w-full max-w-xl rounded-3xl p-6 md:p-8 space-y-6 border transition-all ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_20px_50px_rgba(0,0,0,0.15)] text-[#2A2118]' : 'bg-[#0F172A] border-white/20 shadow-2xl text-white'}`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-              <div>
-                <span className={`font-mono font-bold text-sm ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{viewingTask.ticketNumber}</span>
-                <h3 className={`text-lg font-bold mt-1 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.systemName}</h3>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden transition-all ${isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-[#0F172A] border-white/20 text-white'}`}>
+            <div className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="min-w-0 flex-1 pr-2">
+                <span className={`font-mono font-bold text-xs ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{viewingTask.ticketNumber}</span>
+                <h3 className={`text-base sm:text-lg font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.systemName}</h3>
               </div>
               <button
                 onClick={() => setViewingTask(null)}
-                className={`text-lg font-bold p-2 transition-colors ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
               >
                 &times;
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
-                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Type of Work:</span>
-                <div className={`font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.typeOfWork}</div>
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className={`p-2.5 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Type of Work:</span>
+                  <div className={`font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.typeOfWork}</div>
+                </div>
+                <div className={`p-2.5 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Raised By:</span>
+                  <div className={`font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.personName}</div>
+                </div>
+                <div className={`p-2.5 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Assigned Engineer:</span>
+                  <div className={`font-bold mt-0.5 truncate ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{viewingTask.assignedTo || 'Assigning...'}</div>
+                </div>
+                <div className={`p-2.5 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
+                  <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Target Resolution:</span>
+                  <div className={`font-bold font-mono mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{formatDateDDMMYYYY(viewingTask.expectedDateToClose)}</div>
+                </div>
               </div>
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
-                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Raised By:</span>
-                <div className={`font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{viewingTask.personName}</div>
-              </div>
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
-                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Assigned Engineer:</span>
-                <div className={`font-bold mt-0.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>{viewingTask.assignedTo || 'Assigning...'}</div>
-              </div>
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/40 border-white/5'}`}>
-                <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Target Resolution:</span>
-                <div className={`font-bold font-mono mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{formatDateDDMMYYYY(viewingTask.expectedDateToClose)}</div>
-              </div>
-            </div>
 
-            <div>
-              <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Description</span>
-              <div className={`p-4 rounded-2xl border text-xs leading-relaxed max-h-40 overflow-y-auto ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#2A2118]' : 'bg-black/50 border-white/10 text-slate-200'}`}>
-                {viewingTask.descriptionOfWork}
+              <div>
+                <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1.5 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Description</span>
+                <div className={`p-3.5 rounded-xl border text-xs leading-relaxed max-h-36 overflow-y-auto ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#2A2118]' : 'bg-black/50 border-white/10 text-slate-200'}`}>
+                  {viewingTask.descriptionOfWork}
+                </div>
               </div>
-            </div>
 
-            <div>
-              <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Internal Notes & Status</span>
-              <div className={`p-3 rounded-xl border text-xs flex items-center justify-between ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#5C5244]' : 'bg-black/40 border-white/5 text-slate-300'}`}>
-                <span>{viewingTask.notes || 'Under review by Zentrixs engineering team.'}</span>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-500/20 text-cyan-400 border-cyan-500/30'}`}>
-                  {viewingTask.status}
-                </span>
+              <div>
+                <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1.5 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Internal Notes & Status</span>
+                <div className={`p-3 rounded-xl border text-xs flex items-center justify-between ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3] text-[#5C5244]' : 'bg-black/40 border-white/5 text-slate-300'}`}>
+                  <span className="truncate pr-2">{viewingTask.notes || 'Under review by Zentrixs engineering team.'}</span>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-500/20 text-cyan-400 border-cyan-500/30'}`}>
+                    {viewingTask.status}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Resolution & Completion Proof (Visible to Client Who Raised Ticket) */}
-            {(viewingTask.status === 'Completed' || viewingTask.completionRemark || viewingTask.completionFileUrl) && (
-              <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
-                }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
-                      <CheckCircle2 className="w-4 h-4" />
+              {/* Resolution & Completion Proof (Visible to Client Who Raised Ticket) */}
+              {(viewingTask.status === 'Completed' || viewingTask.completionRemark || viewingTask.completionFileUrl) && (
+                <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
+                  }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                      <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-emerald-800' : 'text-emerald-400'}`}>
+                        Resolution Remark & Work Summary
+                      </span>
                     </div>
-                    <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-emerald-800' : 'text-emerald-400'}`}>
-                      Resolution Remark & Work Summary
-                    </span>
+                    {viewingTask.completedAt && (
+                      <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
+                        {formatDateDDMMYYYY(viewingTask.completedAt)}
+                      </span>
+                    )}
                   </div>
-                  {viewingTask.completedAt && (
-                    <span className={`text-[10px] font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400/80'}`}>
-                      {formatDateDDMMYYYY(viewingTask.completedAt)}
-                    </span>
+
+                  {viewingTask.completionRemark ? (
+                    <div className={`text-xs leading-relaxed p-3 rounded-xl ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'
+                      }`}>
+                      {viewingTask.completionRemark}
+                    </div>
+                  ) : (
+                    <p className={`text-xs italic ${isLight ? 'text-emerald-700' : 'text-emerald-300/80'}`}>
+                      Task has been verified and marked as Completed.
+                    </p>
+                  )}
+
+                  {viewingTask.completionFileUrl && (
+                    <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
+                      }`}>
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                          <Paperclip className="w-4 h-4" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                            {viewingTask.completionFileName || 'Completion Attachment / Proof'}
+                          </div>
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                            Verification document from engineering team
+                          </div>
+                        </div>
+                      </div>
+                      <a
+                        href={viewingTask.completionFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20"
+                      >
+                        <span>View / Download</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   )}
                 </div>
+              )}
 
-                {viewingTask.completionRemark ? (
-                  <div className={`text-xs leading-relaxed p-3 rounded-xl ${isLight ? 'bg-white/80 border border-emerald-100 text-emerald-950' : 'bg-black/30 border border-emerald-500/20 text-emerald-200'
-                    }`}>
-                    {viewingTask.completionRemark}
-                  </div>
-                ) : (
-                  <p className={`text-xs italic ${isLight ? 'text-emerald-700' : 'text-emerald-300/80'}`}>
-                    Task has been verified and marked as Completed.
-                  </p>
-                )}
-
-                {viewingTask.completionFileUrl && (
-                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${isLight ? 'bg-white/90 border-emerald-200' : 'bg-black/40 border-emerald-500/30'
-                    }`}>
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+              {viewingTask.uploadFileUrl && (
+                <div>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1.5 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Attachment / Evidence</span>
+                  <div className={`rounded-2xl p-3.5 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`p-2 rounded-xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
                         <Paperclip className="w-4 h-4" />
                       </div>
                       <div className="overflow-hidden">
                         <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                          {viewingTask.completionFileName || 'Completion Attachment / Proof'}
+                          {viewingTask.uploadFileName || 'Uploaded File'}
                         </div>
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                          Verification document from engineering team
+                        <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
+                          Secure File Storage
                         </div>
                       </div>
                     </div>
                     <a
-                      href={viewingTask.completionFileUrl}
+                      href={viewingTask.uploadFileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20"
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-md shadow-cyan-500/20'}`}
                     >
-                      <span>View / Download</span>
+                      <span>View</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
-                )}
-              </div>
-            )}
-
-            {viewingTask.uploadFileUrl && (
-              <div>
-                <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Attachment / Evidence</span>
-                <div className={`rounded-2xl p-4 flex items-center justify-between gap-3 border ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-cyan-950/30 border-cyan-500/30'}`}>
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className={`p-2.5 rounded-xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'}`}>
-                      <Paperclip className="w-4 h-4" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <div className={`text-xs font-bold truncate font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                        {viewingTask.uploadFileName || 'Uploaded File'}
-                      </div>
-                      <div className={`text-[10px] truncate ${isLight ? 'text-[#8A7B68]' : 'text-cyan-400'}`}>
-                        Secure File Storage
-                      </div>
-                    </div>
-                  </div>
-                  <a
-                    href={viewingTask.uploadFileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 text-white ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-md shadow-cyan-500/20'}`}
-                  >
-                    <span>View / Download</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className={`flex justify-end pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+            {/* Modal Sticky Footer */}
+            <div className={`flex justify-end px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
               <button
                 onClick={() => setViewingTask(null)}
-                className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all text-white ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'}`}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all text-white cursor-pointer ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30'}`}
               >
                 Close
               </button>

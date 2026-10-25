@@ -54,7 +54,8 @@ import {
   BellRing,
   CheckCheck,
   Inbox,
-  Menu
+  Menu,
+  X
 } from 'lucide-react';
 import { Task, TaskStatus, Company, Employee, TaskPriority, Delegation } from '../types/taskTypes';
 import {
@@ -3090,23 +3091,24 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       {/* DETAIL & NOTES MODAL */}
       {selectedTask && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedTask(null);
           }}
         >
-          <div className={`w-full max-w-lg max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl my-auto overflow-hidden ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+          <div className={`w-full max-w-lg max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
             {/* Modal Header */}
-            <div className={`flex items-center justify-between px-5 py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
-              <div>
+            <div className={`flex items-start justify-between px-4 py-3 sm:px-5 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="min-w-0 flex-1 pr-2">
                 <span className={`font-mono font-bold text-xs ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>{selectedTask.ticketNumber}</span>
-                <h3 className={`text-base font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{selectedTask.systemName}</h3>
+                <h3 className={`text-base font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{selectedTask.systemName}</h3>
               </div>
               <button
                 onClick={() => setSelectedTask(null)}
-                className={`text-lg font-bold p-1.5 rounded-xl transition-colors cursor-pointer ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
               >
-                &times;
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -3339,23 +3341,23 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* COMPLETION & RESOLUTION REMARK / ATTACHMENT MODAL */}
       {(completingTask || completingDelegation) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-          <div className={`w-full max-w-xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                  <CheckCircle2 className="w-6 h-6" />
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden transition-all ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                <div className="p-2 sm:p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                       {completingDelegation ? completingDelegation.delegationNumber : completingTask?.ticketNumber}
                     </span>
-                    <span className={`text-xs ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                    <span className={`text-xs truncate ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
                       {completingDelegation ? `Assigned to ${completingDelegation.assignedTo}` : `for ${completingTask?.partyName}`}
                     </span>
                   </div>
-                  <h3 className={`text-lg font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                  <h3 className={`text-base sm:text-lg font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
                     {completingDelegation ? 'Mark Delegation as Completed' : 'Mark Task as Completed'}
                   </h3>
                 </div>
@@ -3367,13 +3369,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   setCompletingDelegation(null);
                   setCompletionFilesList([]);
                 }}
-                className={`text-lg font-bold p-2 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
               >
-                &times;
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleConfirmCompletion} className="space-y-4">
+            <form onSubmit={handleConfirmCompletion} className="flex-1 flex flex-col overflow-hidden text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-between ${isLight ? 'text-[#8A7B68]' : 'text-slate-300'}`}>
                   <span>Resolution Remark / Work Done *</span>
@@ -3463,8 +3467,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>Marking this as Completed will record the resolution remarks and all uploaded multiple proofs into database records.</span>
               </div>
+              </div>
 
-              <div className={`flex items-center justify-end gap-3 pt-3 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-end gap-2.5 sm:gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                 <button
                   type="button"
                   onClick={() => {
@@ -3472,7 +3478,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     setCompletingDelegation(null);
                     setCompletionFilesList([]);
                   }}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                 >
                   Cancel
@@ -3480,17 +3486,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <button
                   type="submit"
                   disabled={savingCompletion || uploadingCompletionFile}
-                  className="px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25 cursor-pointer"
+                  className="px-5 sm:px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-lg shadow-emerald-500/25 cursor-pointer"
                 >
                   {savingCompletion || uploadingCompletionFile ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>{uploadingCompletionFile ? 'Uploading Attachments...' : 'Completing...'}</span>
+                      <span>{uploadingCompletionFile ? 'Uploading...' : 'Completing...'}</span>
                     </>
                   ) : (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      <span>Confirm & Mark Completed</span>
+                      <span>Mark Completed</span>
                     </>
                   )}
                 </button>
@@ -3502,7 +3508,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* VIEW DELEGATION DETAILS & PROOFS MODAL */}
       {selectedDelegation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
           <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
             <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className="flex items-center gap-3">
@@ -3706,36 +3712,39 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* ASSIGN NEW INTERNAL TASK / DELEGATION MODAL */}
       {showAddDelegationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
-          <div className={`w-full max-w-2xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'
             }`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/20 border-blue-500/30 text-blue-400'
+            {/* Modal Header */}
+            <div className={`flex items-start justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center border shrink-0 ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3] text-[#EA552E]' : 'bg-blue-600/20 border-blue-500/30 text-blue-400'
                   }`}>
-                  <ListTodo className="w-5 h-5" />
+                  <ListTodo className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <span className={`font-mono font-bold text-[10px] tracking-widest uppercase ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'
+                <div className="min-w-0 flex-1">
+                  <span className={`font-mono font-bold text-[9px] sm:text-[10px] tracking-widest uppercase block ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'
                     }`}>
                     DIRECT TASK DELEGATION
                   </span>
-                  <h3 className={`text-xl font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                    Assign Task to Employee / Engineer
+                  <h3 className={`text-sm sm:text-lg font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    Assign Task to Engineer
                   </h3>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddDelegationModal(false)}
-                className={`text-2xl font-bold p-1 leading-none rounded-lg transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                className={`p-1.5 rounded-xl transition-colors shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'
                   }`}
+                aria-label="Close"
               >
-                &times;
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateDelegationTask} className="space-y-4 text-xs">
+            <form onSubmit={handleCreateDelegationTask} className="flex-1 flex flex-col overflow-hidden text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* Task Title */}
               <div>
                 <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'
@@ -3873,13 +3882,14 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     }`}
                 />
               </div>
+              </div>
 
-              {/* Footer Actions */}
-              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-end gap-2.5 sm:gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                 <button
                   type="button"
                   onClick={() => setShowAddDelegationModal(false)}
-                  className={`px-5 py-2.5 rounded-xl font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  className={`px-4 sm:px-5 py-2.5 rounded-xl font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                 >
                   Cancel
@@ -3887,7 +3897,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <button
                   type="submit"
                   disabled={creatingDelegation}
-                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 cursor-pointer ${isLight
+                  className={`px-5 sm:px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-98 flex items-center gap-2 cursor-pointer ${isLight
                       ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25'
                       : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'
                     }`}
@@ -3895,12 +3905,12 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   {creatingDelegation ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Delegating Task...</span>
+                      <span>Delegating...</span>
                     </>
                   ) : (
                     <>
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Assign Task to Employee</span>
+                      <span>Assign Task</span>
                     </>
                   )}
                 </button>
@@ -3912,22 +3922,24 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* REGISTER NEW CLIENT COMPANY MODAL */}
       {showAddCompModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-md">
-          <div className={`w-full max-w-xl border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-              <div>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-start justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="min-w-0 flex-1 pr-2">
                 <span className={`font-mono font-bold text-xs tracking-wider ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>ADMIN CLIENT SETUP</span>
-                <h3 className={`text-xl font-bold mt-1 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Register New Client Company & Generate Login</h3>
+                <h3 className={`text-base sm:text-xl font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Register New Client Company</h3>
               </div>
               <button
                 onClick={() => setShowAddCompModal(false)}
-                className={`text-lg font-bold p-2 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
               >
-                &times;
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleRegisterCompany} className="space-y-4 text-xs">
+            <form onSubmit={handleRegisterCompany} className="flex-1 flex flex-col overflow-hidden text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? "text-[#6B5D4A]" : "text-slate-300"}`}>
                   Company Name <span className="text-red-400">*</span>
@@ -4064,20 +4076,23 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
               </div>
 
-              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              </div>
+
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-end gap-2.5 sm:gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                 <button
                   type="button"
                   onClick={() => setShowAddCompModal(false)}
-                  className={`px-5 py-2.5 rounded-xl ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                  className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatingComp}
-                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
+                  className={`px-5 sm:px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
                 >
-                  {creatingComp ? 'Creating...' : 'Register Company & Assign Credentials'}
+                  {creatingComp ? 'Creating...' : 'Register Company'}
                 </button>
               </div>
             </form>
@@ -4087,8 +4102,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* EDIT COMPANY LOGO MODAL */}
       {editingLogoCompany && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className={`w-full max-w-md border rounded-3xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-cyan-500/30'}`}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-md max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-cyan-500/30'}`}>
             <div className={`flex items-center justify-between pb-3 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className="flex items-center gap-2.5">
                 <div className={`p-2 rounded-xl border ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
@@ -4187,16 +4202,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       )}
       {/* REGISTER NEW ENGINEER / USER MODAL */}
       {showAddEmpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-          <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto precision-scrollbar border rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-2xl border ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
-                  <UserPlus className="w-5 h-5" />
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-start justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+                <div className={`p-2 sm:p-2.5 rounded-2xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <span className={`font-mono font-bold text-[10px] uppercase tracking-wider ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>ENGINEERING & SUPPORT TEAM</span>
-                  <h3 className={`text-xl font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Create New User / Engineer</h3>
+                <div className="min-w-0 flex-1">
+                  <span className={`font-mono font-bold text-[10px] uppercase tracking-wider block ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>ENGINEERING & SUPPORT TEAM</span>
+                  <h3 className={`text-base sm:text-lg font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Create New User / Engineer</h3>
                 </div>
               </div>
               <button
@@ -4206,13 +4221,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   setNewEmpAvatarDisplay('');
                   setNewEmpCloudUrl('');
                 }}
-                className={`text-lg font-bold p-2 rounded-xl transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
               >
-                &times;
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateEmployee} className="space-y-4 text-xs">
+            <form onSubmit={handleCreateEmployee} className="flex-1 flex flex-col overflow-hidden text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* Profile Image Upload & Preview */}
               <div>
                 <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
@@ -4427,7 +4444,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
               </div>
 
-              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              </div>
+
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-end gap-2.5 sm:gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                 <button
                   type="button"
                   onClick={() => {
@@ -4435,16 +4455,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     setNewEmpAvatarDisplay('');
                     setNewEmpCloudUrl('');
                   }}
-                  className={`px-5 py-2.5 rounded-xl font-bold transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                  className={`px-4 sm:px-5 py-2.5 rounded-xl font-bold transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatingEmp || !newEmpName.trim() || !newEmpPhone.trim() || !newEmpDesignation.trim()}
-                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
+                  className={`px-5 sm:px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
                 >
-                  {creatingEmp ? 'Saving Engineer...' : 'Create & Register Engineer'}
+                  {creatingEmp ? 'Saving...' : 'Register Engineer'}
                 </button>
               </div>
             </form>
@@ -4459,13 +4479,13 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
         const empCompleted = empTasks.filter((t) => t.status === 'Completed');
 
         return (
-          <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 ${isLight ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/85 backdrop-blur-md'} animate-in fade-in duration-200`}>
-            <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto border rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl ${isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-[#0F172A] border-white/20 text-white'}`}>
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+            <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden ${isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-[#0F172A] border-white/20 text-white'}`}>
 
               {/* Profile Header & Large Avatar */}
-              <div className={`flex items-start justify-between pb-5 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border-2 shadow-lg ${isLight ? 'border-[#EA552E]/30 bg-[#FDF3E7]' : 'border-cyan-400/40 bg-white/5'
+              <div className={`flex items-start justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1 pr-2">
+                  <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shrink-0 border-2 shadow-lg ${isLight ? 'border-[#EA552E]/30 bg-[#FDF3E7]' : 'border-cyan-400/40 bg-white/5'
                     }`}>
                     {viewingEmployee.avatar ? (
                       <img
@@ -4477,26 +4497,26 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                         }}
                       />
                     ) : (
-                      <div className={`w-full h-full flex items-center justify-center font-bold text-2xl ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-blue-600/30 text-blue-400'}`}>
+                      <div className={`w-full h-full flex items-center justify-center font-bold text-xl sm:text-2xl ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-blue-600/30 text-blue-400'}`}>
                         {viewingEmployee.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className={`text-xl sm:text-2xl font-black ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                      <h3 className={`text-lg sm:text-xl font-black truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
                         {viewingEmployee.name}
                       </h3>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isLight ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${isLight ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}>
                         Active
                       </span>
                     </div>
-                    <p className={`text-xs font-semibold flex items-center gap-1.5 mt-1 ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>
+                    <p className={`text-xs font-semibold flex items-center gap-1.5 mt-0.5 truncate ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>
                       <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                      <span>{viewingEmployee.designation || viewingEmployee.role}</span>
+                      <span className="truncate">{viewingEmployee.designation || viewingEmployee.role}</span>
                     </p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A]' : 'bg-white/5 text-slate-400'}`}>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-md ${isLight ? 'bg-[#FDF3E7] text-[#6B5D4A]' : 'bg-white/5 text-slate-400'}`}>
                         ID: {viewingEmployee.id}
                       </span>
                     </div>
@@ -4505,12 +4525,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <button
                   type="button"
                   onClick={() => setViewingEmployee(null)}
-                  className={`text-2xl font-bold p-1 rounded-xl transition-colors ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                  className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                  aria-label="Close"
                 >
-                  &times;
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
+              {/* Scrollable Body */}
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* Contact Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className={`p-3.5 rounded-2xl border space-y-1 ${isLight ? 'bg-[#FDF8F2] border-[#EDE2D3]' : 'bg-black/30 border-white/5'}`}>
@@ -4600,9 +4623,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   )}
                 </div>
               </div>
+              </div>
 
-              {/* Footer */}
-              <div className={`flex items-center justify-between pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                 <button
                   type="button"
                   onClick={() => {
@@ -4638,16 +4662,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
       {/* EDIT ENGINEER / USER PROFILE MODAL */}
       {editingEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-          <div className={`w-full max-w-xl max-h-[90vh] overflow-y-auto precision-scrollbar border rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
-            <div className={`flex items-center justify-between pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-2xl border ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
-                  <Edit3 className="w-5 h-5" />
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-start justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+                <div className={`p-2 sm:p-2.5 rounded-2xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
+                  <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <span className={`font-mono font-bold text-[10px] uppercase tracking-wider ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>ENGINEER PROFILE</span>
-                  <h3 className={`text-xl font-bold mt-0.5 ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Edit Engineer / User Details</h3>
+                <div className="min-w-0 flex-1">
+                  <span className={`font-mono font-bold text-[10px] uppercase tracking-wider block ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>ENGINEER PROFILE</span>
+                  <h3 className={`text-base sm:text-lg font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Edit Engineer / User Details</h3>
                 </div>
               </div>
               <button
@@ -4657,13 +4681,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   setEditEmpAvatarDisplay('');
                   setEditEmpCloudUrl('');
                 }}
-                className={`text-lg font-bold p-2 rounded-xl transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FBF5EC]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
               >
-                &times;
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEditEmployee} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveEditEmployee} className="flex-1 flex flex-col overflow-hidden text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* Profile Image Upload & Preview */}
               <div>
                 <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
@@ -4878,7 +4904,10 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
               </div>
 
-              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+              </div>
+
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-end gap-2.5 sm:gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
                 <button
                   type="button"
                   onClick={() => {
@@ -4886,16 +4915,16 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     setEditEmpAvatarDisplay('');
                     setEditEmpCloudUrl('');
                   }}
-                  className={`px-5 py-2.5 rounded-xl font-bold transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                  className={`px-4 sm:px-5 py-2.5 rounded-xl font-bold transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={savingEditEmp || !editEmpName.trim() || !editEmpPhone.trim() || !editEmpDesignation.trim()}
-                  className={`px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
+                  className={`px-5 sm:px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
                 >
-                  {savingEditEmp ? 'Saving Changes...' : 'Save Profile Changes'}
+                  {savingEditEmp ? 'Saving...' : 'Save Profile Changes'}
                 </button>
               </div>
             </form>

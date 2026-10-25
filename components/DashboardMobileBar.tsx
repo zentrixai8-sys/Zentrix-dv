@@ -37,7 +37,7 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
 
     return (
       <nav
-        className={`fixed bottom-0 inset-x-0 z-50 md:hidden pb-[max(env(safe-area-inset-bottom),10px)] pt-2 transition-all ${navBg}`}
+        className={`fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),10px)] pt-2 transition-all ${navBg}`}
         aria-label="Company Portal Mobile Navigation"
       >
         <div className="max-w-md mx-auto px-3 flex items-center justify-between relative">
@@ -163,7 +163,7 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
   // Admin Bottom Bar
   return (
     <nav
-      className={`fixed bottom-0 inset-x-0 z-50 md:hidden pb-[max(env(safe-area-inset-bottom),10px)] pt-2 transition-all ${navBg}`}
+      className={`fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),10px)] pt-2 transition-all ${navBg}`}
       aria-label="Admin Console Mobile Navigation"
     >
       <div className="max-w-md mx-auto px-3 flex items-center justify-between relative">
