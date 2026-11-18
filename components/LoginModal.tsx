@@ -139,22 +139,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
         }`} />
 
         <div className="p-6 sm:p-8">
-          {/* Header Bar: Theme Selector + Security Tag + Close Button */}
+          {/* Header Bar: Theme Selector + Close Button */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-inherit/40">
             <ThemeSelector
               theme={theme}
               onChange={handleThemeChange}
               size="sm"
             />
-
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-sm ${
-              isLight 
-                ? 'bg-[#FDF3E7] text-[#EA552E] border-[#F5D5C3]' 
-                : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25 shadow-cyan-500/10'
-            }`}>
-              <Shield className="w-3 h-3" />
-              <span>Secure Gateway</span>
-            </div>
 
             {!Capacitor.isNativePlatform() && (
               <button
