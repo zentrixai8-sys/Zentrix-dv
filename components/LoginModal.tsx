@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ChevronRight, Sparkles, KeyRound, Eye, EyeOff, Zap } from 'lucide-react';
+import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ArrowRight, ShieldCheck, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { validateLogin } from '../services/sheetService';
 import { loginCompany, loginAdmin, setAuthSession } from '../services/taskService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
@@ -15,6 +15,7 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) => {
   const [activeTab, setActiveTab] = useState<'company' | 'admin'>('company');
   const [theme, setTheme] = useState<PortalTheme>(getStoredTheme);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleThemeChange = (newTheme: PortalTheme) => {
     setTheme(newTheme);
@@ -23,12 +24,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
 
   const isLight = theme === 'light';
 
-  // Company Form State (Only ID & Password)
+  // Company Form State (ID & Password)
   const [companyName, setCompanyName] = useState('');
   const [companyPassword, setCompanyPassword] = useState('');
   const [showCompanyPassword, setShowCompanyPassword] = useState(false);
 
-  // Admin Form State (Only ID & Password)
+  // Admin Form State (ID & Password)
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminPassword, setShowAdminPassword] = useState(false);
@@ -108,421 +109,371 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
     setLoading(false);
   };
 
+  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Dynamic Animated Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto">
+      {/* Background with warm ambient gradients matching the reference mockup */}
       <div 
-        className={`fixed inset-0 transition-all duration-300 ${
-          isLight 
-            ? 'bg-slate-900/50 backdrop-blur-md' 
-            : 'bg-black/80 backdrop-blur-xl'
-        }`} 
+        className={`fixed inset-0 transition-colors duration-500 ${
+          isLight
+            ? 'bg-[#FAF3EA]'
+            : 'bg-[#0A0D14]'
+        }`}
         onClick={onClose}
-      />
-
-      {/* Main Glassmorphic Modal Card - Enhanced 2-Column on Desktop */}
-      <div className={`relative w-full max-w-md md:max-w-4xl rounded-[2.25rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 border transition-all my-auto ${
-        isLight 
-          ? 'bg-gradient-to-b from-[#FFFFFF] via-[#FDFBF7] to-[#F7F2EA] border-[#E8DEC8] text-[#2A2118] shadow-[0_30px_90px_-15px_rgba(234,85,46,0.22)]' 
-          : 'bg-gradient-to-b from-[#0F1422]/98 via-[#0B0E17]/98 to-[#06080E]/98 border-white/15 text-white shadow-[0_30px_90px_-15px_rgba(0,0,0,0.95),0_0_50px_rgba(6,182,212,0.15)]'
-      }`}>
-        {/* Subtle Ambient Top Glow */}
-        <div className={`absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-40 rounded-full blur-3xl pointer-events-none ${
-          isLight ? 'bg-orange-400/20' : 'bg-cyan-500/20'
-        }`} />
-
-        {/* Top Gradient Border Line */}
-        <div className={`h-1.5 w-full ${
+      >
+        {/* Soft radial background glow circles */}
+        <div className={`absolute top-0 left-0 w-[500px] md:w-[700px] h-[500px] md:h-[700px] rounded-full blur-[120px] pointer-events-none transition-all duration-700 ${
           isLight 
-            ? 'bg-gradient-to-r from-[#F0653A] via-[#EA552E] to-[#D9481F]' 
-            : 'bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500'
+            ? 'bg-gradient-to-br from-[#FFE5D4]/70 via-[#FFD6C0]/50 to-transparent' 
+            : 'bg-gradient-to-br from-orange-500/10 via-cyan-500/10 to-transparent'
         }`} />
+        <div className={`absolute bottom-0 right-10 w-[450px] md:w-[650px] h-[450px] md:h-[650px] rounded-full blur-[130px] pointer-events-none transition-all duration-700 ${
+          isLight 
+            ? 'bg-gradient-to-tl from-[#FFE9DB]/80 via-[#FCE4D6]/50 to-transparent' 
+            : 'bg-gradient-to-tl from-cyan-500/10 via-blue-600/10 to-transparent'
+        }`} />
+        {/* Decorative subtle circular graphic as in reference */}
+        <div className={`hidden md:block absolute bottom-8 left-[38%] w-80 h-80 rounded-full pointer-events-none ${
+          isLight 
+            ? 'bg-gradient-to-br from-white/60 to-white/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.8)]' 
+            : 'bg-white/[0.02] border border-white/5'
+        }`} />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 min-h-full">
-          {/* LEFT DESKTOP BRANDING & HIGHLIGHT SHOWCASE PANEL (Visible on md+) */}
-          <div className={`hidden md:flex md:col-span-5 flex-col justify-between p-8 border-r relative overflow-hidden ${
-            isLight 
-              ? 'bg-gradient-to-br from-[#FFF8EE] via-[#FDF4E7] to-[#F7ECE0] border-[#E8DEC8]' 
-              : 'bg-gradient-to-br from-[#0B101E] via-[#090D18] to-[#04060B] border-white/10'
-          }`}>
-            {/* Ambient Graphic Circle */}
-            <div className={`absolute -bottom-16 -left-16 w-48 h-48 rounded-full blur-2xl pointer-events-none ${
-              isLight ? 'bg-orange-300/30' : 'bg-blue-600/20'
-            }`} />
-
-            {/* Brand Logo & Title */}
-            <div className="space-y-4 relative z-10">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shadow-md ${
-                  isLight ? 'bg-[#EA552E] text-white border-[#EA552E]/30' : 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-black border-cyan-400/40'
-                }`}>
-                  <Zap className="w-5 h-5 fill-current" />
-                </div>
-                <div>
-                  <h3 className={`text-lg font-black tracking-wider uppercase font-sans ${isLight ? 'text-[#1C1610]' : 'text-white'}`}>
-                    ZENTRIXS
-                  </h3>
-                  <span className={`text-[10px] font-bold tracking-widest uppercase block ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>
-                    SYSTEM CLOUD
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <h4 className={`text-xl font-black leading-tight tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                  {activeTab === 'company' ? 'Enterprise Client Gateway' : 'Engineering Command & Workload'}
-                </h4>
-                <p className={`text-xs mt-2 leading-relaxed font-medium ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                  {activeTab === 'company'
-                    ? 'Raise instant priority support tickets, monitor connected enterprise systems, verify milestones and collaborate seamlessly with our engineering architects.'
-                    : 'Manage task delegation, track company ticket queues, resolve bug updates and monitor live team workload in real time.'}
-                </p>
-              </div>
-
-              {/* Feature Points */}
-              <div className="space-y-2.5 pt-4">
-                {[
-                  { title: 'Cloudflare D1 & Sync', desc: 'Encrypted low-latency live persistence' },
-                  { title: 'Strict Role Privacy', desc: 'Secure authorized access for clients & team' },
-                  { title: 'Instant Push Alerts', desc: 'Strict notifications on ticket dispatch & close' },
-                ].map((feat, i) => (
-                  <div key={i} className={`p-2.5 rounded-2xl border text-xs flex items-center gap-2.5 transition-all ${
-                    isLight ? 'bg-white/70 border-[#EDE2D3] shadow-xs' : 'bg-white/5 border-white/5 shadow-inner'
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${isLight ? 'bg-[#EA552E]' : 'bg-cyan-400'}`} />
-                    <div className="min-w-0">
-                      <span className={`font-bold block text-[11px] ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{feat.title}</span>
-                      <span className={`text-[10px] block truncate ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>{feat.desc}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* Full-view Container */}
+      <div className="relative z-10 w-full min-h-screen flex flex-col justify-between p-4 sm:p-8 md:p-12 lg:px-20 max-w-7xl mx-auto">
+        {/* TOP BAR */}
+        <header className="flex items-center justify-between w-full pt-1 pb-4">
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#EA552E] flex items-center justify-center text-white shadow-md shadow-[#EA552E]/30">
+              <Building2 className="w-5 h-5" />
             </div>
-
-            {/* Bottom Left Badge */}
-            <div className="pt-6 relative z-10">
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-xs ${
-                isLight ? 'bg-white border-[#EDE2D3] text-[#7A6B58]' : 'bg-black/40 border-white/10 text-slate-400'
-              }`}>
-                <Lock className="w-3 h-3 text-emerald-500" />
-                <span>256-bit Encrypted Portal</span>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-base font-black tracking-tight ${isLight ? 'text-[#1D1B18]' : 'text-white'}`}>
+                  Zentrixs Portal
+                </span>
               </div>
+              <span className={`text-[11px] font-semibold block -mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>
+                Digital Services
+              </span>
             </div>
           </div>
 
-          {/* RIGHT LOGIN FORM PANEL (7 cols on md+) */}
-          <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between">
-          {/* Header Bar: Theme Selector + Powered By Zentrixs + Close Button */}
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-inherit/40">
+          {/* Right Status Pill & Theme Selector & Close */}
+          <div className="flex items-center gap-3">
+            {/* System Operational pill from reference */}
+            <div className={`hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-md shadow-xs ${
+              isLight 
+                ? 'bg-white/80 text-[#2C2620] border-[#E8DEC8]' 
+                : 'bg-white/5 text-slate-300 border-white/10'
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>System Operational</span>
+            </div>
+
+            {/* Theme Selector Pill */}
             <ThemeSelector
               theme={theme}
               onChange={handleThemeChange}
               size="sm"
             />
 
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-xs ${
-              isLight 
-                ? 'bg-[#FDF3E7] text-[#EA552E] border-[#F5D5C3]' 
-                : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25 shadow-cyan-500/10'
-            }`}>
-              <span>Powered by Zentrixs</span>
-            </div>
-
-            {!Capacitor.isNativePlatform() && (
+            {!isNative && (
               <button
                 onClick={onClose}
-                title="Close modal"
-                className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                title="Close"
+                className={`p-2 rounded-xl transition-all cursor-pointer ${
                   isLight 
-                    ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#F0E6D6]' 
+                    ? 'text-[#8E7E70] hover:text-[#1D1B18] hover:bg-black/5' 
                     : 'text-slate-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
+        </header>
 
-          {/* Session Expiry / Info Notice */}
-          {notice && (
-            <div className={`mb-5 p-3 rounded-xl border text-xs font-bold text-center ${
-              isLight
-                ? 'bg-amber-50 border-amber-200 text-amber-800'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+        {/* MAIN BODY: 2 COLUMNS ON DESKTOP */}
+        <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center my-auto py-6 sm:py-10">
+          {/* LEFT HERO COLUMN (DESKTOP) */}
+          <div className="hidden lg:flex lg:col-span-7 flex-col justify-center space-y-7 pr-4">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center self-start gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border backdrop-blur-md shadow-xs bg-white/70 border-[#EADECE] text-[#5A4F44]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#EA552E]" />
+              <span>Authorized Personnel Access</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className={`text-4xl xl:text-5xl font-black tracking-tight leading-[1.15] ${
+              isLight ? 'text-[#191512]' : 'text-white'
             }`}>
-              {notice}
-            </div>
-          )}
+              A secure gateway to <br />
+              <span className="text-[#EA552E]">enterprise services.</span>
+            </h1>
 
-          {/* Segmented Dual Switcher Tabs */}
-          <div className={`p-1.5 rounded-2xl border mb-7 grid grid-cols-2 gap-1.5 shadow-inner ${
-            isLight 
-              ? 'bg-[#F4ECE0] border-[#E5DAC8]' 
-              : 'bg-black/50 border-white/10'
-          }`}>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('company');
-                setError('');
-              }}
-              className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
-                activeTab === 'company'
-                  ? isLight
-                    ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] text-white shadow-md shadow-[#EA552E]/30'
-                    : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/25'
-                  : isLight
-                    ? 'text-[#7A6B58] hover:text-[#2A2118] hover:bg-[#EBE0CF]'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5 shrink-0" />
-              <span>Company</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('admin');
-                setError('');
-              }}
-              className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
-                activeTab === 'admin'
-                  ? isLight
-                    ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] text-white shadow-md shadow-[#EA552E]/30'
-                    : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/25'
-                  : isLight
-                    ? 'text-[#7A6B58] hover:text-[#2A2118] hover:bg-[#EBE0CF]'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5 shrink-0" />
-              <span>Admin</span>
-            </button>
+            {/* Subtitle / Paragraph */}
+            <p className={`text-sm xl:text-base leading-relaxed max-w-xl font-normal ${
+              isLight ? 'text-[#6A5E53]' : 'text-slate-400'
+            }`}>
+              Sign in to manage records, monitor operations, and access classified digital services through a unified enterprise portal built for 2026.
+            </p>
+
+            {/* 3 Feature Cards */}
+            <div className="grid grid-cols-3 gap-3.5 max-w-lg pt-2">
+              <div className={`p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+                isLight 
+                  ? 'bg-white/80 border-[#EADECE] shadow-sm text-[#191512]' 
+                  : 'bg-white/5 border-white/10 text-white'
+              }`}>
+                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-3">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-bold">Zero Trust</div>
+                <div className={`text-[10px] mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>Protocol</div>
+              </div>
+
+              <div className={`p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+                isLight 
+                  ? 'bg-white/80 border-[#EADECE] shadow-sm text-[#191512]' 
+                  : 'bg-white/5 border-white/10 text-white'
+              }`}>
+                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-3">
+                  <Fingerprint className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-bold">Biometric Ready</div>
+                <div className={`text-[10px] mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>Passkey 2FA</div>
+              </div>
+
+              <div className={`p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+                isLight 
+                  ? 'bg-white/80 border-[#EADECE] shadow-sm text-[#191512]' 
+                  : 'bg-white/5 border-white/10 text-white'
+              }`}>
+                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-3">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-bold">256-bit TLS</div>
+                <div className={`text-[10px] mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>Cloudflare D1</div>
+              </div>
+            </div>
           </div>
 
-          {/* COMPANY LOGIN TAB */}
-          {activeTab === 'company' && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center mx-auto mb-3 shadow-md ${
-                  isLight 
-                    ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E] shadow-[#EA552E]/10' 
-                    : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-cyan-500/20'
-                }`}>
-                  <Building2 className="w-7 h-7" />
+          {/* RIGHT COLUMN: FLOATING CLEAN LOGIN CARD */}
+          <div className="w-full lg:col-span-5 max-w-md mx-auto">
+            <div className={`relative rounded-[2rem] p-6 sm:p-9 shadow-2xl transition-all duration-300 border ${
+              isLight 
+                ? 'bg-white/95 backdrop-blur-xl border-white/80 shadow-[0_25px_70px_rgba(234,85,46,0.12)] text-[#191512]' 
+                : 'bg-[#111622]/95 backdrop-blur-xl border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-white'
+            }`}>
+              {/* Floating Top Emblem */}
+              <div className="flex justify-center -mt-2 mb-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F5673C] to-[#EA552E] flex items-center justify-center text-white shadow-lg shadow-[#EA552E]/35">
+                  {activeTab === 'company' ? (
+                    <Building2 className="w-7 h-7" />
+                  ) : (
+                    <Fingerprint className="w-7 h-7" />
+                  )}
                 </div>
-                <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                  Company Portal Login
+              </div>
+
+              {/* Title & Subtitle */}
+              <div className="text-center mb-5">
+                <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isLight ? 'text-[#191512]' : 'text-white'}`}>
+                  {activeTab === 'company' ? 'Enterprise Portal' : 'Admin & Engineer Portal'}
                 </h2>
-                <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                  Enter your assigned ID & password
+                <p className={`text-xs mt-1 font-medium ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>
+                  Secure Digital Access - Management System
                 </p>
               </div>
 
-              <form onSubmit={handleCompanySubmit} className="space-y-4">
+              {/* Dual Tab Segmented Switcher */}
+              <div className={`p-1 rounded-xl border mb-5 grid grid-cols-2 gap-1 ${
+                isLight ? 'bg-[#F5EDE3] border-[#E8DEC8]' : 'bg-black/40 border-white/10'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('company'); setError(''); }}
+                  className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    activeTab === 'company'
+                      ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25'
+                      : isLight ? 'text-[#6A5E53] hover:text-[#191512]' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Company</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('admin'); setError(''); }}
+                  className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    activeTab === 'admin'
+                      ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25'
+                      : isLight ? 'text-[#6A5E53] hover:text-[#191512]' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </button>
+              </div>
+
+              {/* Notice */}
+              {notice && (
+                <div className={`mb-4 p-2.5 rounded-xl border text-xs font-medium text-center ${
+                  isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+                }`}>
+                  {notice}
+                </div>
+              )}
+
+              {/* FORM: COMPANY OR ADMIN */}
+              <form onSubmit={activeTab === 'company' ? handleCompanySubmit : handleAdminSubmit} className="space-y-4">
+                {/* Username / ID Field */}
                 <div className="space-y-1.5">
-                  <label className={`block text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                    Company ID / Code
+                  <label className={`block text-xs font-bold ${isLight ? 'text-[#3E352C]' : 'text-slate-300'}`}>
+                    {activeTab === 'company' ? 'Company ID / Code' : 'Mobile Number or Admin ID'}
                   </label>
-                  <div className="relative group">
-                    <Building2 className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
-                      isLight ? 'text-[#B5A892] group-focus-within:text-[#EA552E]' : 'text-slate-500 group-focus-within:text-cyan-400'
-                    }`} />
+                  <div className="relative">
                     <input
                       type="text"
                       required
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="e.g. CIRTICARE01"
-                      className={`w-full rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold transition-all uppercase outline-none border ${
+                      value={activeTab === 'company' ? companyName : adminUsername}
+                      onChange={(e) => activeTab === 'company' ? setCompanyName(e.target.value) : setAdminUsername(e.target.value)}
+                      placeholder={activeTab === 'company' ? 'Enter company code' : 'Enter mobile or admin ID'}
+                      className={`w-full rounded-xl px-4 py-3 text-sm font-medium transition-all outline-none border ${
                         isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
-                          : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
+                          ? 'bg-[#FBF7F2] border-[#E8DEC8] text-[#191512] placeholder:text-[#AFA193] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
+                          : 'bg-[#181F30] border-white/10 text-white placeholder:text-slate-500 focus:border-[#EA552E] focus:ring-2 focus:ring-[#EA552E]/20'
                       }`}
                     />
                   </div>
                 </div>
 
+                {/* Password Field */}
                 <div className="space-y-1.5">
-                  <label className={`block text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                  <label className={`block text-xs font-bold ${isLight ? 'text-[#3E352C]' : 'text-slate-300'}`}>
                     Password
                   </label>
-                  <div className="relative group">
-                    <KeyRound className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
-                      isLight ? 'text-[#B5A892] group-focus-within:text-[#EA552E]' : 'text-slate-500 group-focus-within:text-cyan-400'
-                    }`} />
+                  <div className="relative">
                     <input
-                      type={showCompanyPassword ? 'text' : 'password'}
+                      type={(activeTab === 'company' ? showCompanyPassword : showAdminPassword) ? 'text' : 'password'}
                       required
-                      value={companyPassword}
-                      onChange={(e) => setCompanyPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className={`w-full rounded-2xl pl-11 pr-11 py-3.5 text-xs font-bold transition-all outline-none border ${
+                      value={activeTab === 'company' ? companyPassword : adminPassword}
+                      onChange={(e) => activeTab === 'company' ? setCompanyPassword(e.target.value) : setAdminPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className={`w-full rounded-xl pl-4 pr-11 py-3 text-sm font-medium transition-all outline-none border ${
                         isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
-                          : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
+                          ? 'bg-[#FBF7F2] border-[#E8DEC8] text-[#191512] placeholder:text-[#AFA193] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
+                          : 'bg-[#181F30] border-white/10 text-white placeholder:text-slate-500 focus:border-[#EA552E] focus:ring-2 focus:ring-[#EA552E]/20'
                       }`}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowCompanyPassword(prev => !prev)}
-                      aria-label={showCompanyPassword ? 'Hide password' : 'Show password'}
-                      title={showCompanyPassword ? 'Hide password' : 'Show password'}
-                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors cursor-pointer ${
-                        isLight
-                          ? 'text-[#9C8F7D] hover:text-[#EA552E] hover:bg-[#F0E6D6]/70'
-                          : 'text-slate-400 hover:text-cyan-400 hover:bg-white/10'
+                      onClick={() => activeTab === 'company' ? setShowCompanyPassword(p => !p) : setShowAdminPassword(p => !p)}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors cursor-pointer ${
+                        isLight ? 'text-[#8E7E70] hover:text-[#EA552E]' : 'text-slate-400 hover:text-white'
                       }`}
+                      aria-label="Toggle password visibility"
                     >
-                      {showCompanyPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {(activeTab === 'company' ? showCompanyPassword : showAdminPassword) ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
 
+                {/* Remember Me & Forgot Password Row */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <label className={`flex items-center gap-2 cursor-pointer select-none ${
+                    isLight ? 'text-[#5A4F44]' : 'text-slate-400'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#EA552E] focus:ring-[#EA552E] border-gray-300 accent-[#EA552E]"
+                    />
+                    <span className="font-medium">Remember me</span>
+                  </label>
+
+                  <a
+                    href="https://wa.me/919754253070?text=Hello%20Zentrixs,%20I%20need%20help%20recovering%20my%20login%20password."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#EA552E] hover:underline font-semibold"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+
                 {error && (
-                  <div className={`p-3 rounded-xl border text-xs font-bold text-center ${
+                  <div className={`p-3 rounded-xl border text-xs font-semibold text-center ${
                     isLight ? 'bg-red-50 border-red-200 text-red-600' : 'bg-red-500/10 border-red-500/30 text-red-400'
                   }`}>
                     {error}
                   </div>
                 )}
 
+                {/* Sign In Primary Button */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-3.5 rounded-2xl font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 text-white disabled:opacity-50 cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] ${
-                    isLight 
-                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30' 
-                      : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/25'
-                  }`}
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.99] cursor-pointer disabled:opacity-60 bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}
-                  {!loading && <ChevronRight className="w-4 h-4" />}
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>Sign in securely</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </form>
-            </div>
-          )}
 
-          {/* SUPER ADMIN & ENGINEER LOGIN TAB */}
-          {activeTab === 'admin' && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center mx-auto mb-3 shadow-md relative ${
-                  isLight 
-                    ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E] shadow-[#EA552E]/10' 
-                    : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-cyan-500/20'
-                }`}>
-                  <Fingerprint className="w-7 h-7" />
-                  <div className="absolute inset-0 border border-current rounded-2xl animate-ping opacity-20 pointer-events-none" />
-                </div>
-                <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                  Admin & Engineer Console
-                </h2>
-                <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                  Login via Master ID or Engineer Mobile Number
-                </p>
+              {/* Security Badges Row below button matching reference */}
+              <div className="flex items-center justify-center gap-4 text-[10px] font-medium pt-4 text-slate-500">
+                <span className="inline-flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#EA552E]" />
+                  <span>Secure Login</span>
+                </span>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>SSL Protected</span>
+                </span>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1">
+                  <KeyRound className="w-3.5 h-3.5 text-blue-500" />
+                  <span>256-bit</span>
+                </span>
               </div>
 
-              <form onSubmit={handleAdminSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className={`block text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                    Mobile Number or Admin ID
-                  </label>
-                  <div className="relative group">
-                    <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
-                      isLight ? 'text-[#B5A892] group-focus-within:text-[#EA552E]' : 'text-slate-500 group-focus-within:text-cyan-400'
-                    }`} />
-                    <input
-                      type="text"
-                      required
-                      value={adminUsername}
-                      onChange={(e) => setAdminUsername(e.target.value)}
-                      placeholder="e.g. 9876543210 or ADMIN"
-                      className={`w-full rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold transition-all outline-none border ${
-                        isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
-                          : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className={`block text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                    Password
-                  </label>
-                  <div className="relative group">
-                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
-                      isLight ? 'text-[#B5A892] group-focus-within:text-[#EA552E]' : 'text-slate-500 group-focus-within:text-cyan-400'
-                    }`} />
-                    <input
-                      type={showAdminPassword ? 'text' : 'password'}
-                      required
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className={`w-full rounded-2xl pl-11 pr-11 py-3.5 text-xs font-bold transition-all outline-none border ${
-                        isLight 
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
-                          : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowAdminPassword(prev => !prev)}
-                      aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
-                      title={showAdminPassword ? 'Hide password' : 'Show password'}
-                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors cursor-pointer ${
-                        isLight
-                          ? 'text-[#9C8F7D] hover:text-[#EA552E] hover:bg-[#F0E6D6]/70'
-                          : 'text-slate-400 hover:text-cyan-400 hover:bg-white/10'
-                      }`}
-                    >
-                      {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className={`p-3 rounded-xl border text-xs font-bold text-center ${
-                    isLight ? 'bg-red-50 border-red-200 text-red-600' : 'bg-red-500/10 border-red-500/30 text-red-400'
-                  }`}>
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full py-3.5 rounded-2xl font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 text-white disabled:opacity-50 cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] ${
-                    isLight 
-                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30' 
-                      : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/25'
-                  }`}
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}
-                  {!loading && <ChevronRight className="w-4 h-4" />}
-                </button>
-              </form>
-            </div>
-          )}
-
-            {/* Footer Security Badge */}
-            <div className="mt-6 pt-4 border-t border-inherit/40 text-center space-y-1">
-              <p className={`text-[10px] font-mono flex items-center justify-center gap-1.5 ${
-                isLight ? 'text-[#9C8F7D]' : 'text-slate-500'
+              {/* Agreement Subtext */}
+              <p className={`text-[10px] text-center mt-4 leading-normal ${
+                isLight ? 'text-[#8E7E70]' : 'text-slate-500'
               }`}>
-                <Lock className="w-3 h-3 text-emerald-500" />
-                <span>End-to-End Encrypted Tunnel</span>
-              </p>
-              <p className={`text-[9px] font-bold uppercase tracking-wider ${
-                isLight ? 'text-[#8A7B68]' : 'text-slate-400'
-              }`}>
-                Powered by <span className={isLight ? 'text-[#EA552E]' : 'text-cyan-400'}>Zentrixs</span>
+                By signing in you agree to the Portal's <a href="/privacy-policy" className="underline hover:text-[#EA552E]">Terms & Security Policy</a>
               </p>
             </div>
           </div>
-        </div>
+        </main>
+
+        {/* FOOTER */}
+        <footer className="w-full pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between text-xs font-medium gap-2">
+          <p className={isLight ? 'text-[#8E7E70]' : 'text-slate-500'}>
+            © 2026 Zentrixs Portal. All rights reserved.
+          </p>
+
+          <p className={isLight ? 'text-[#8E7E70]' : 'text-slate-500'}>
+            Powered by <span className="font-bold text-[#EA552E]">Zentrixs</span>
+          </p>
+        </footer>
       </div>
     </div>
   );
