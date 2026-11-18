@@ -97,7 +97,7 @@ import ThemeSelector from './ThemeSelector';
 import DashboardMobileBar from './DashboardMobileBar';
 import DashboardSidebarDrawer from './DashboardSidebarDrawer';
 import FacebookNotificationPanel from './FacebookNotificationPanel';
-import { startLiveTicketWatcher } from '../services/notificationService';
+import { startLiveTicketWatcher, sendOutsideNotification } from '../services/notificationService';
 
 interface SuperAdminConsoleProps {
   onLogout: () => void;
@@ -723,6 +723,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       setSavingCompletion(false);
       if (res.success) {
         showToast('Delegation marked as Completed with resolution proofs!');
+        
+        // Send real push notification for completed delegation task
+        sendOutsideNotification({
+          title: `✅ Delegation Task Completed`,
+          body: `"${completingDelegation.title}" has been completed by ${completingDelegation.assignedTo || 'Engineer'}. Remark: ${completionRemark.trim() || 'Work verified and done.'}`,
+          tag: `delegation-complete-${completingDelegation.id}`,
+          data: { url: '/dashboard', tab: 'delegation' }
+        }).catch(() => {});
+
         setCompletingDelegation(null);
         setCompletionRemark('');
         setCompletionFilesList([]);
@@ -744,6 +753,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       setSavingCompletion(false);
       if (res.success) {
         showToast('Task marked as Completed with multiple resolution attachments!');
+        
+        // Send real push notification for completed client ticket
+        sendOutsideNotification({
+          title: `✅ Ticket #${completingTask.ticketNumber} Completed`,
+          body: `${completingTask.partyName} - ${completingTask.systemName || completingTask.typeOfWork} completed by ${completingTask.assignedTo || 'Engineer'}. Remark: ${completionRemark.trim() || 'Work verified and done.'}`,
+          tag: `task-complete-${completingTask.id}`,
+          data: { url: '/dashboard', ticketId: completingTask.id }
+        }).catch(() => {});
+
         setCompletingTask(null);
         setCompletionRemark('');
         setCompletionFilesList([]);
@@ -781,6 +799,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     setCreatingDelegation(false);
     if (res.success) {
       showToast(`Task successfully delegated to ${delegationAssignee}!`);
+      
+      // Send real push notification for new delegation assignment
+      sendOutsideNotification({
+        title: `📋 New Task Delegated: ${delegationTitle.trim()}`,
+        body: `Assigned to ${delegationAssignee} • Priority: ${delegationPriority} • Deadline: ${formatDateDDMMYYYY(delegationDeadline)}`,
+        tag: `delegation-assign-${Date.now()}`,
+        data: { url: '/dashboard', tab: 'delegation' }
+      }).catch(() => {});
+
       setShowAddDelegationModal(false);
       setDelegationTitle('');
       setDelegationDesc('');

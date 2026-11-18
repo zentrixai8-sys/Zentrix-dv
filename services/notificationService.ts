@@ -334,6 +334,10 @@ let liveWatcherVisibilityHandler: (() => void) | null = null;
 const trackedTaskIds = new Set<string>();
 const trackedTaskStatuses = new Map<string, string>();
 const trackedTaskAssignees = new Map<string, string>();
+
+const trackedDelegationIds = new Set<string>();
+const trackedDelegationStatuses = new Map<string, string>();
+const trackedDelegationAssignees = new Map<string, string>();
 let isWatcherInitialized = false;
 
 export const startLiveTicketWatcher = (
@@ -365,7 +369,7 @@ export const startLiveTicketWatcher = (
     // no notification can ever fire in the background. Cost stays negligible
     // because an unchanged poll only transfers the small pulse digest below.
     try {
-      const { fetchTasks, fetchTasksPulse } = await import('./taskService');
+      const { fetchTasks, fetchTasksPulse, fetchDelegations } = await import('./taskService');
       const scopedCompanyId = role === 'company' && companyId ? companyId : undefined;
 
       // Cheap constant-size digest first. While nothing has changed this is the
@@ -389,6 +393,20 @@ export const startLiveTicketWatcher = (
           trackedTaskStatuses.set(t.id, t.status);
           trackedTaskAssignees.set(t.id, t.assignedTo || 'Unassigned');
         });
+
+        if (role === 'admin') {
+          try {
+            const delegations = await fetchDelegations();
+            if (Array.isArray(delegations)) {
+              delegations.forEach((d) => {
+                trackedDelegationIds.add(d.id);
+                trackedDelegationStatuses.set(d.id, d.status);
+                trackedDelegationAssignees.set(d.id, d.assignedTo || 'Unassigned');
+              });
+            }
+          } catch (_) {}
+        }
+
         isWatcherInitialized = true;
         return;
       }
@@ -456,6 +474,53 @@ export const startLiveTicketWatcher = (
             hasChanges = true;
           }
         }
+      }
+
+      // Check for Delegation changes for Admin & Engineers
+      if (role === 'admin') {
+        try {
+          const latestDelegations = await fetchDelegations();
+          if (Array.isArray(latestDelegations)) {
+            for (const d of latestDelegations) {
+              if (!trackedDelegationIds.has(d.id)) {
+                // New Delegation Task Assigned
+                const delivered = await sendOutsideNotification({
+                  title: `📋 New Task Assigned: ${d.title}`,
+                  body: `Assigned to ${d.assignedTo} • Priority: ${d.priority} • Due: ${d.targetDate}`,
+                  tag: `delegation-new-${d.id}`,
+                  data: { url: '/dashboard', tab: 'delegation', delegationId: d.id }
+                });
+                if (delivered) {
+                  trackedDelegationIds.add(d.id);
+                  trackedDelegationStatuses.set(d.id, d.status);
+                  trackedDelegationAssignees.set(d.id, d.assignedTo || 'Unassigned');
+                } else {
+                  deliveryPending = true;
+                }
+                hasChanges = true;
+              } else {
+                // Status Change (e.g. Completed)
+                const oldStatus = trackedDelegationStatuses.get(d.id);
+                if (oldStatus && oldStatus !== d.status) {
+                  const isDone = d.status === 'Completed';
+                  const delivered = await sendOutsideNotification({
+                    title: isDone
+                      ? `✅ Delegation Task Completed`
+                      : `⚡ Delegation Task: ${d.status}`,
+                    body: isDone
+                      ? `"${d.title}" marked as Completed by ${d.assignedTo || 'Engineer'}.`
+                      : `"${d.title}" moved to ${d.status}.`,
+                    tag: `delegation-status-${d.id}-${d.status}`,
+                    data: { url: '/dashboard', tab: 'delegation', delegationId: d.id }
+                  });
+                  if (delivered) trackedDelegationStatuses.set(d.id, d.status);
+                  else deliveryPending = true;
+                  hasChanges = true;
+                }
+              }
+            }
+          }
+        } catch (_) {}
       }
 
       // If anything failed to deliver, drop the digest so the next poll
