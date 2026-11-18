@@ -6,15 +6,19 @@ export type PortalTheme = 'dark' | 'light';
 export const applyStatusBarTheme = async (theme: PortalTheme): Promise<void> => {
   if (typeof window === 'undefined' || !Capacitor.isNativePlatform()) return;
   try {
+    // overlaysWebView: false ensures webview is pushed down below the status bar,
+    // so content never collides with camera punch-holes or status bar icons.
+    await StatusBar.setOverlaysWebView({ overlay: false });
+
     if (theme === 'light') {
-      // In @capacitor/status-bar:
-      // Style.Light = Dark content (battery, wifi, network, time icons turn dark on light backgrounds)
+      // In Capacitor StatusBar:
+      // Style.Light = Dark icons (Battery, Wifi, Cell Tower, Clock turn dark on light backgrounds)
       await StatusBar.setStyle({ style: Style.Light });
-      await StatusBar.setBackgroundColor({ color: '#FFFCF8' });
+      await StatusBar.setBackgroundColor({ color: '#FAF3EA' });
     } else {
-      // Style.Dark = Light content (battery, wifi, network, time icons turn white on dark backgrounds)
+      // Style.Dark = Light/White icons (Battery, Wifi, Cell Tower, Clock turn white on dark backgrounds)
       await StatusBar.setStyle({ style: Style.Dark });
-      await StatusBar.setBackgroundColor({ color: '#070A11' });
+      await StatusBar.setBackgroundColor({ color: '#0A0D14' });
     }
   } catch (err) {
     console.warn('Status bar update skipped:', err);
@@ -22,12 +26,13 @@ export const applyStatusBarTheme = async (theme: PortalTheme): Promise<void> => 
 };
 
 export const getStoredTheme = (): PortalTheme => {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   try {
     const saved = localStorage.getItem('zentrix_theme');
-    return saved === 'light' ? 'light' : 'dark';
+    // Default to 'light' as requested by the user
+    return saved === 'dark' ? 'dark' : 'light';
   } catch {
-    return 'dark';
+    return 'light';
   }
 };
 
