@@ -944,35 +944,15 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <Menu className="w-4 h-4" />
               </button>
               <Link to="/" className="flex items-center space-x-2.5 sm:space-x-3.5 group cursor-pointer min-w-0" title="Go to Zentrixs Website">
-                <div className="relative shrink-0">
-                  <div className={`absolute inset-0 blur-xl opacity-20 group-hover:opacity-60 transition-opacity ${isLight ? 'bg-[#EA552E]' : 'bg-blue-500'}`}></div>
-                  <div className={`relative w-8 h-8 sm:w-11 sm:h-11 overflow-hidden rounded-xl border group-hover:scale-105 transition-transform duration-300 flex items-center justify-center shadow-lg ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-zinc-900 border-white/10'
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src={isLight ? '/zentrixs-logo-full.png' : '/zentrixs-logo-white.png'}
+                    alt="Zentrixs"
+                    className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
+                  />
+                  <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black font-mono border shrink-0 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
                     }`}>
-                    <img
-                      src={LOGO_URL}
-                      alt={`${COMPANY_NAME} Logo`}
-                      width="44"
-                      height="44"
-                      className="w-full h-full object-contain p-1"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d47353039331e11a6839.svg";
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className={`text-base sm:text-2xl font-black tracking-[0.15em] sm:tracking-[0.3em] uppercase transition-colors truncate ${isLight ? 'text-[#2A2118] group-hover:text-[#EA552E]' : 'text-white group-hover:text-blue-500'
-                      }`}>
-                      ZEN<span className={isLight ? 'font-extralight text-[#EA552E]' : 'font-extralight text-blue-500'}>TRIXS</span>
-                    </span>
-                    <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black font-mono border shrink-0 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                      }`}>
-                      {isSuperAdmin ? 'SUPER ADMIN' : 'ENGINEER CONSOLE'}
-                    </span>
-                  </div>
-                  <span className="hidden sm:block text-[8px] text-gray-400 font-bold uppercase tracking-[0.3em] sm:tracking-[0.5em] mt-[-2px] group-hover:text-gray-500 transition-colors truncate">
-                    {isSuperAdmin ? 'Automation Command Center' : `${currentUserName} • Workspaces & Tasks`}
+                    {isSuperAdmin ? 'SUPER ADMIN' : 'ENGINEER CONSOLE'}
                   </span>
                 </div>
               </Link>

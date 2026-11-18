@@ -98,24 +98,11 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuc
             className="flex items-center gap-3.5 group cursor-pointer"
             aria-label={`${COMPANY_NAME} Home`}
           >
-            <div className="relative w-10 h-10 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-cyan-500/50 group-hover:scale-105 transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-              <img
-                src={LOGO_URL}
-                alt={COMPANY_NAME}
-                className="w-full h-full object-contain p-1.5"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/logo.png";
-                }}
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-black tracking-[0.25em] text-white uppercase group-hover:text-cyan-400 transition-colors">
-                ZEN<span className="font-light text-cyan-400">TRIXS</span>
-              </span>
-              <span className="text-[7px] text-zinc-400 font-mono font-bold uppercase tracking-[0.45em] -mt-1">
-                Automation
-              </span>
-            </div>
+            <img
+              src="/zentrixs-logo-white.png"
+              alt={COMPANY_NAME}
+              className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
+            />
           </Link>
 
           {/* Desktop Links */}

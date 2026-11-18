@@ -103,28 +103,11 @@ const Footer: React.FC = () => {
           {/* Col 1: Brand & Bio & NAP (Span 4) */}
           <div className="lg:col-span-4 space-y-6">
             <Link to="/" className="flex items-center gap-4 group w-fit" aria-label={`${COMPANY_NAME} Home`}>
-              <div className="relative">
-                <div className="absolute inset-0 bg-blue-600 blur-lg opacity-20"></div>
-                <div className="relative w-14 h-14 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 flex items-center justify-center">
-                  <img
-                    src={LOGO_URL}
-                    alt={`${COMPANY_NAME} Logo`}
-                    width="40"
-                    height="40"
-                    loading="eager"
-                    decoding="async"
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-              </div>
-              <div>
-                <span className="text-3xl font-black tracking-[0.2em] block leading-none text-white uppercase italic">
-                  ZEN<span className="text-blue-500">TRIXS</span>
-                </span>
-                <span className="text-[9px] text-blue-500/80 uppercase tracking-[0.4em] font-black mt-2 block">
-                  {TAGLINE}
-                </span>
-              </div>
+              <img
+                src="/zentrixs-logo-white.png"
+                alt={COMPANY_NAME}
+                className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+              />
             </Link>
 
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm font-medium">
