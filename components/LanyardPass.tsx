@@ -6,7 +6,7 @@ const PAPER = '#121418';
 const INK = '#F2F1EC';
 const ACCENT = '#5B6B86';
 const STRAP = '#181a20';
-const DEMO_LOGO = 'https://i.ibb.co/P2msKBd/Logo.png';
+const DEMO_LOGO = '/logo.png';
 const DEMO_PHOTO = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
 const PAD_MIN = 28;

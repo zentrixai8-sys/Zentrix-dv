@@ -17,6 +17,7 @@ export const GEO_COORDINATES = {
 };
 export const SITE_URL = "https://www.zentrixs.in";
 export const LOGO_URL = "/logo.png";
+export const LOGO_FULL_URL = "/zentrixs-logo-full.png";
 
 export const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/zentrix.ai8/",

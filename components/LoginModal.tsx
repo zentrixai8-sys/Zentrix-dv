@@ -5,6 +5,7 @@ import { loginCompany, loginAdmin, setAuthSession } from '../services/taskServic
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
 import ThemeSelector from './ThemeSelector';
 import { Capacitor } from '@capacitor/core';
+import { LOGO_FULL_URL, LOGO_URL } from '../constants';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -147,13 +148,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
         <header className="flex items-center justify-between w-full pt-1 pb-4">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#EA552E] flex items-center justify-center text-white shadow-md shadow-[#EA552E]/30">
-              <Building2 className="w-5 h-5" />
+            <div className="h-10 px-2 py-1 rounded-xl bg-white/80 border border-[#E8DEC8] flex items-center justify-center shadow-sm">
+              <img
+                src={LOGO_FULL_URL}
+                alt="Zentrixs"
+                className="h-7 w-auto object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = LOGO_URL;
+                }}
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className={`text-base font-black tracking-tight ${isLight ? 'text-[#1D1B18]' : 'text-white'}`}>
-                  Zentrixs Portal
+                  Portal
                 </span>
               </div>
               <span className={`text-[11px] font-semibold block -mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>

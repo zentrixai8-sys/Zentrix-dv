@@ -104,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, userRole, onLogout, onLoginSuc
                 alt={COMPANY_NAME}
                 className="w-full h-full object-contain p-1.5"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://i.ibb.co/P2msKBd/Logo.png";
+                  (e.target as HTMLImageElement).src = "/logo.png";
                 }}
               />
             </div>
