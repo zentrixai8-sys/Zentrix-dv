@@ -220,12 +220,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
               size="sm"
             />
 
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-xs ${
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-xs ${
               isLight 
                 ? 'bg-[#FDF3E7] text-[#EA552E] border-[#F5D5C3]' 
                 : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25 shadow-cyan-500/10'
             }`}>
-              <Zap className="w-3 h-3 text-[#EA552E] dark:text-cyan-400" />
               <span>Powered by Zentrixs</span>
             </div>
 
