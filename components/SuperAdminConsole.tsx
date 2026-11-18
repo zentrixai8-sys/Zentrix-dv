@@ -5124,6 +5124,9 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       <DashboardMobileBar
         role="admin"
         activeTab={activeTab}
+        isSuperAdmin={isSuperAdmin}
+        delegationsCount={delegations.length}
+        employeesCount={employees.length}
         onTabChange={(tab) => {
           setActiveTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });

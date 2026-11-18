@@ -3,8 +3,9 @@ import {
   Home, 
   FileText, 
   Headphones, 
-  User, 
-  PlusCircle
+  PlusCircle,
+  ListTodo,
+  Users
 } from 'lucide-react';
 
 interface DashboardMobileBarProps {
@@ -14,6 +15,9 @@ interface DashboardMobileBarProps {
   onCenterAction?: () => void;
   onOpenMenu?: () => void;
   unreadCount?: number;
+  delegationsCount?: number;
+  employeesCount?: number;
+  isSuperAdmin?: boolean;
   isLight?: boolean;
 }
 
@@ -24,6 +28,9 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
   onCenterAction,
   onOpenMenu,
   unreadCount = 0,
+  delegationsCount = 0,
+  employeesCount = 0,
+  isSuperAdmin = true,
   isLight = false
 }) => {
   const isCompany = role === 'company';
@@ -37,7 +44,8 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
   // Admin tabs
   const isAdminHome = activeTab === 'overview';
   const isAdminTickets = activeTab === 'console' || activeTab === 'tickets';
-  const isAdminClients = activeTab === 'companies';
+  const isAdminDelegation = activeTab === 'delegation';
+  const isAdminEmployees = activeTab === 'employees';
 
   const items = isCompany
     ? [
@@ -88,19 +96,24 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
           onClick: () => onTabChange('console')
         },
         {
-          id: 'companies',
-          label: 'Clients',
-          icon: Headphones,
-          isActive: isAdminClients,
-          onClick: () => onTabChange('companies')
+          id: 'delegation',
+          label: 'Delegation',
+          icon: ListTodo,
+          isActive: isAdminDelegation,
+          badge: delegationsCount > 0 ? (delegationsCount > 9 ? '9+' : delegationsCount) : undefined,
+          onClick: () => onTabChange('delegation')
         },
         {
-          id: 'account',
-          label: 'Admin',
-          icon: User,
-          isActive: false,
+          id: 'employees',
+          label: isSuperAdmin ? 'Workload' : 'My Tasks',
+          icon: Users,
+          isActive: isAdminEmployees,
           onClick: () => {
-            if (onOpenMenu) onOpenMenu();
+            if (isSuperAdmin) {
+              onTabChange('employees');
+            } else {
+              onTabChange('delegation');
+            }
           }
         }
       ];
@@ -141,7 +154,7 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
     <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),14px)] pt-2 px-3 pointer-events-none select-none">
       <nav
         ref={navRef}
-        className={`relative max-w-[395px] mx-auto p-1.5 rounded-full border shadow-[0_20px_50px_rgba(0,0,0,0.25)] backdrop-blur-3xl flex items-center justify-between gap-1 pointer-events-auto transition-colors duration-500 overflow-hidden ${
+        className={`relative max-w-[400px] mx-auto p-1.5 rounded-full border shadow-[0_20px_50px_rgba(0,0,0,0.25)] backdrop-blur-3xl flex items-center justify-between gap-1 pointer-events-auto transition-colors duration-500 overflow-hidden ${
           isLight
             ? 'bg-white/95 border-[#E8DEC8] text-[#2A2118]'
             : 'bg-[#0B0F19]/95 border-white/15 text-white'
@@ -173,7 +186,7 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
               onClick={item.onClick}
               className={`relative z-10 flex items-center justify-center transition-all duration-300 rounded-full cursor-pointer focus:outline-none active:scale-90 ${
                 active
-                  ? 'px-5 py-2.5 text-white gap-2 font-bold'
+                  ? 'px-4 sm:px-5 py-2.5 text-white gap-2 font-bold'
                   : isLight
                     ? 'text-[#8A7B68] hover:text-[#1C1610] p-2.5 flex-1'
                     : 'text-zinc-400 hover:text-white p-2.5 flex-1'
