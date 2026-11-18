@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ChevronRight, Sparkles, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ChevronRight, Sparkles, KeyRound, Eye, EyeOff, Zap } from 'lucide-react';
 import { validateLogin } from '../services/sheetService';
 import { loginCompany, loginAdmin, setAuthSession } from '../services/taskService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
@@ -139,13 +139,22 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
         }`} />
 
         <div className="p-6 sm:p-8">
-          {/* Header Bar: Theme Selector + Close Button */}
+          {/* Header Bar: Theme Selector + Powered By Zentrixs + Close Button */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-inherit/40">
             <ThemeSelector
               theme={theme}
               onChange={handleThemeChange}
               size="sm"
             />
+
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-xs ${
+              isLight 
+                ? 'bg-[#FDF3E7] text-[#EA552E] border-[#F5D5C3]' 
+                : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25 shadow-cyan-500/10'
+            }`}>
+              <Zap className="w-3 h-3 text-[#EA552E] dark:text-cyan-400" />
+              <span>Powered by Zentrixs</span>
+            </div>
 
             {!Capacitor.isNativePlatform() && (
               <button
@@ -427,12 +436,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
           )}
 
           {/* Footer Security Badge */}
-          <div className="mt-6 pt-4 border-t border-inherit/40 text-center">
+          <div className="mt-6 pt-4 border-t border-inherit/40 text-center space-y-1">
             <p className={`text-[10px] font-mono flex items-center justify-center gap-1.5 ${
               isLight ? 'text-[#9C8F7D]' : 'text-slate-500'
             }`}>
               <Lock className="w-3 h-3 text-emerald-500" />
               <span>End-to-End Encrypted Tunnel</span>
+            </p>
+            <p className={`text-[9px] font-bold uppercase tracking-wider ${
+              isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+            }`}>
+              Powered by <span className={isLight ? 'text-[#EA552E]' : 'text-cyan-400'}>Zentrixs</span>
             </p>
           </div>
         </div>
