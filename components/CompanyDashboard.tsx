@@ -59,6 +59,7 @@ import TroubleshootCenter from './TroubleshootCenter';
 import DashboardMobileBar from './DashboardMobileBar';
 import DashboardSidebarDrawer from './DashboardSidebarDrawer';
 import AutoScrollBanner from './AutoScrollBanner';
+import FacebookNotificationPanel from './FacebookNotificationPanel';
 import { startLiveTicketWatcher } from '../services/notificationService';
 
 interface CompanyDashboardProps {
@@ -149,6 +150,39 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
   // Detail view modal
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
+
+  // Facebook Notification Panel
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+  const [readTicketIds, setReadTicketIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('zentrix_company_read_tickets_v1');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const markTicketAsRead = (ticketId: string) => {
+    setReadTicketIds(prev => {
+      if (prev.includes(ticketId)) return prev;
+      const updated = [...prev, ticketId];
+      try {
+        localStorage.setItem('zentrix_company_read_tickets_v1', JSON.stringify(updated));
+      } catch (_) { }
+      return updated;
+    });
+  };
+
+  const markAllTicketsAsRead = () => {
+    const allIds = tasks.map(t => t.id);
+    setReadTicketIds(allIds);
+    try {
+      localStorage.setItem('zentrix_company_read_tickets_v1', JSON.stringify(allIds));
+    } catch (_) { }
+    showToast('All notifications marked as read');
+  };
+
+  const unreadCount = tasks.filter(t => !readTicketIds.includes(t.id)).length;
 
   // AI chat state
   const [aiMessages, setAiMessages] = useState<{ role: 'ai' | 'user'; text: string }[]>([
@@ -397,18 +431,23 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Quick Action: Notification Bell (Matching Reference App) */}
             <button
-              onClick={() => setShowMobileDrawer(true)}
+              onClick={() => setShowNotificationPanel(!showNotificationPanel)}
               title="Notifications"
               className={`relative p-2 sm:p-2.5 rounded-full border transition-all active:scale-95 cursor-pointer shadow-sm ${
-                isLight
-                  ? 'bg-white border-[#EDE2D3] text-[#2A2118] hover:bg-[#FDF3E7]'
-                  : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                showNotificationPanel
+                  ? isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-blue-600/20 text-cyan-400 border-cyan-500/40'
+                  : isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118] hover:bg-[#FDF3E7]' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
               }`}
               aria-label="View notifications"
             >
               <Bell className="w-4 h-4" />
-              {/* Green/Orange Live Notification Dot */}
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black animate-pulse" />
+              {unreadCount > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              ) : (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
+              )}
             </button>
 
             {/* Desktop Theme Selector (Hidden on Mobile, available in Drawer side panel) */}
@@ -477,6 +516,22 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
             </button>
           </div>
         </div>
+
+        {/* Facebook Style Notification Dropdown Panel for Company Portal */}
+        <FacebookNotificationPanel
+          isOpen={showNotificationPanel}
+          onClose={() => setShowNotificationPanel(false)}
+          tasks={tasks}
+          readIds={readTicketIds}
+          onMarkAsRead={markTicketAsRead}
+          onMarkAllAsRead={markAllTicketsAsRead}
+          onSelectTask={(task) => {
+            setViewingTask(task);
+            setActiveTab('all_tickets');
+            setShowNotificationPanel(false);
+          }}
+          isLight={isLight}
+        />
 
         {/* Row 2: Primary Navigation — desktop & tablet navigation tabs (Hidden on mobile since Bottom Navigation Bar & Drawer handle it) */}
         <div className={`hidden md:block -mx-4 sm:-mx-8 mt-3 px-4 sm:px-8 pt-2.5 border-t overflow-x-auto no-scrollbar ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
