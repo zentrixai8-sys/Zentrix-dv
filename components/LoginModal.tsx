@@ -148,11 +148,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
           {/* Logo & Brand */}
           <div className="flex items-center gap-2.5">
             <img
-              src="/zentrixs-logo-full.png"
+              src={isLight ? '/zentrixs-logo-full.png' : '/zentrixs-logo-white.png'}
               alt="Zentrixs"
               className="h-7 sm:h-8 w-auto object-contain"
             />
-            <div className="border-l border-zinc-300/80 dark:border-white/10 pl-2.5 py-0.5">
+            <div className={`border-l pl-2.5 py-0.5 ${isLight ? 'border-zinc-300' : 'border-white/20'}`}>
               <span className={`text-xs font-black tracking-tight block leading-tight ${isLight ? 'text-[#1D1B18]' : 'text-white'}`}>
                 Portal
               </span>
