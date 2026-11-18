@@ -1492,6 +1492,8 @@ export const createDelegation = async (input: Partial<Delegation>): Promise<{ su
     priority: input.priority || 'High',
     targetDate: formatDateDDMMYYYY(input.targetDate) || '31-03-2026',
     linkUrl: input.linkUrl?.trim() || undefined,
+    uploadFileUrl: input.uploadFileUrl?.trim() || undefined,
+    uploadFileName: input.uploadFileName?.trim() || undefined,
     status: 'Pending',
     createdAt: formattedDate,
     updatedAt: formattedDate

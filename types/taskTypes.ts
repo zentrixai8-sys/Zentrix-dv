@@ -98,6 +98,8 @@ export interface Delegation {
   priority: TaskPriority; // 'Low' | 'Medium' | 'High' | 'Urgent'
   targetDate: string; // Expected completion date (YYYY-MM-DD)
   linkUrl?: string; // Reference Link / Specification
+  uploadFileUrl?: string; // Uploaded attachment / reference file
+  uploadFileName?: string;
   status: TaskStatus; // 'Pending' | 'In Progress' | 'In Review' | 'Completed' | 'Rejected'
   completionRemark?: string;
   completionFileUrl?: string;

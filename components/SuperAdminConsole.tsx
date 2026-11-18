@@ -275,6 +275,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [delegationPriority, setDelegationPriority] = useState<TaskPriority>('High');
   const [delegationCategory, setDelegationCategory] = useState('Workflow Automation');
   const [delegationLink, setDelegationLink] = useState('');
+  const [delegationFile, setDelegationFile] = useState<File | null>(null);
   const [creatingDelegation, setCreatingDelegation] = useState(false);
 
   // Delegation Tab Filter States
@@ -780,6 +781,14 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     }
 
     setCreatingDelegation(true);
+    let uploadedFileUrl = '';
+    if (delegationFile) {
+      const upRes = await uploadFileToCloudinary(delegationFile);
+      if (upRes.success && upRes.url) {
+        uploadedFileUrl = upRes.url;
+      }
+    }
+
     const fullDesc = delegationDesc.trim()
       ? `${delegationTitle.trim()}\n\nScope & Briefing:\n${delegationDesc.trim()}`
       : delegationTitle.trim();
@@ -793,6 +802,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       targetDate: formatDateDDMMYYYY(delegationDeadline) || '31-03-2026',
       assignedTo: delegationAssignee,
       linkUrl: delegationLink.trim() || undefined,
+      uploadFileUrl: uploadedFileUrl || undefined,
+      uploadFileName: delegationFile ? delegationFile.name : undefined,
       status: 'Pending'
     });
 
@@ -813,6 +824,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       setDelegationDesc('');
       setDelegationAssignee('');
       setDelegationLink('');
+      setDelegationFile(null);
       setDelegationPriority('High');
       await loadData();
     } else {
@@ -1888,6 +1900,17 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                       >
                                         <ExternalLink className="w-3 h-3" />
                                         <span>Reference / Docs Link</span>
+                                      </a>
+                                    )}
+                                    {dlg.uploadFileUrl && (
+                                      <a
+                                        href={dlg.uploadFileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] text-[#EA552E] dark:text-cyan-400 hover:underline flex items-center gap-1 mt-0.5 font-semibold"
+                                      >
+                                        <FileText className="w-3 h-3" />
+                                        <span>{dlg.uploadFileName || 'Attached File'}</span>
                                       </a>
                                     )}
                                   </div>
@@ -3624,6 +3647,26 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 </div>
               )}
 
+              {selectedDelegation.uploadFileUrl && (
+                <div className={`p-3 rounded-2xl border flex items-center justify-between ${isLight ? 'bg-amber-50/60 border-amber-200' : 'bg-amber-950/20 border-amber-500/30'}`}>
+                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                    <FileText className="w-4 h-4 text-[#EA552E] dark:text-cyan-400 shrink-0" />
+                    <span className="font-bold text-xs truncate text-[#2A2118] dark:text-white">
+                      {selectedDelegation.uploadFileName || 'Attached Specification File'}
+                    </span>
+                  </div>
+                  <a
+                    href={selectedDelegation.uploadFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 rounded-xl text-xs font-bold text-white bg-[#EA552E] hover:bg-[#D9481F] transition-colors flex items-center gap-1.5 shrink-0"
+                  >
+                    <span>View File</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
               {/* Resolution Proofs & Remarks */}
               {(selectedDelegation.completionRemark || selectedDelegation.completionFileUrl || (selectedDelegation.completionFiles && selectedDelegation.completionFiles.length > 0)) && (
                 <div className={`p-4 rounded-2xl border space-y-3 ${isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'}`}>
@@ -3908,6 +3951,51 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       : 'bg-black/50 border-white/10 text-white placeholder:text-slate-500 focus:border-cyan-400'
                     }`}
                 />
+              </div>
+
+              {/* Upload File / Document / Screenshot */}
+              <div>
+                <label className={`block font-bold mb-1.5 uppercase tracking-wider text-[11px] ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                  Upload Document / Attachment (Optional)
+                </label>
+                <div className={`border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center transition-colors relative ${
+                  isLight 
+                    ? 'border-[#EDE2D3] hover:border-[#EA552E]/50 bg-[#FBF5EC]' 
+                    : 'border-white/10 hover:border-cyan-400/50 bg-black/30'
+                }`}>
+                  <input
+                    type="file"
+                    onChange={(e) => setDelegationFile(e.target.files?.[0] || null)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  <UploadCloud className={`w-6 h-6 mx-auto mb-1.5 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+                  {delegationFile ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono truncate max-w-xs">
+                        ✓ {delegationFile.name}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDelegationFile(null);
+                        }}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${isLight ? 'bg-red-100 text-red-600' : 'bg-red-500/20 text-red-400'}`}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className={`text-xs font-bold ${isLight ? 'text-[#5C5244]' : 'text-slate-200'}`}>
+                        Click to upload file or drag & drop
+                      </p>
+                      <p className={`text-[10px] mt-0.5 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`}>
+                        PDF, DOCX, XLSX, ZIP, PNG, JPG up to 25MB
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
               </div>
 

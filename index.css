@@ -7,6 +7,45 @@
   --accent-glow: rgba(6, 182, 212, 0.4);
 }
 
+/* Light Theme High-Contrast Visibility Enhancements */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light textarea,
+html.light select,
+body.light input:not([type="checkbox"]):not([type="radio"]),
+body.light textarea,
+body.light select {
+  background-color: #FFFFFF !important;
+  border-color: #D6C7B2 !important;
+  color: #1A1612 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+html.light input:not([type="checkbox"]):not([type="radio"])::placeholder,
+html.light textarea::placeholder,
+body.light input:not([type="checkbox"]):not([type="radio"])::placeholder,
+body.light textarea::placeholder {
+  color: #786C5E !important;
+  opacity: 1 !important;
+}
+
+html.light input:not([type="checkbox"]):not([type="radio"]):focus,
+html.light textarea:focus,
+html.light select:focus,
+body.light input:not([type="checkbox"]):not([type="radio"]):focus,
+body.light textarea:focus,
+body.light select:focus {
+  border-color: #EA552E !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(234, 85, 46, 0.18) !important;
+}
+
+/* Modal and card crisp light visibility */
+html.light label,
+body.light label {
+  color: #2E2419 !important;
+  font-weight: 700;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: #000;

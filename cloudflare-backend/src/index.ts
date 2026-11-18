@@ -612,6 +612,8 @@ const ensureDelegationTable = async (db: any) => {
         target_date TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'Pending',
         link_url TEXT,
+        upload_file_url TEXT,
+        upload_file_name TEXT,
         completion_remark TEXT,
         completion_file_url TEXT,
         completion_file_name TEXT,
@@ -665,6 +667,8 @@ app.get('/api/delegations', async (c) => {
         targetDate: row.target_date,
         status: row.status || 'Pending',
         linkUrl: row.link_url,
+        uploadFileUrl: row.upload_file_url,
+        uploadFileName: row.upload_file_name,
         completionRemark: row.completion_remark,
         completionFileUrl: row.completion_file_url,
         completionFileName: row.completion_file_name,
@@ -692,11 +696,16 @@ app.post('/api/delegations', async (c) => {
     const delegationNumber = body.delegationNumber || `DLG-2026-${Math.floor(100 + Math.random() * 900)}`;
     const now = new Date().toISOString();
 
+    try {
+      await db.prepare('ALTER TABLE delegation ADD COLUMN upload_file_url TEXT').run();
+      await db.prepare('ALTER TABLE delegation ADD COLUMN upload_file_name TEXT').run();
+    } catch (_) {}
+
     await db.prepare(`
       INSERT INTO delegation (
         id, delegation_number, title, description, assigned_to, assigned_by,
-        category, priority, target_date, status, link_url, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        category, priority, target_date, status, link_url, upload_file_url, upload_file_name, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       delegationNumber,
@@ -709,6 +718,8 @@ app.post('/api/delegations', async (c) => {
       body.targetDate || '2026-03-31',
       body.status || 'Pending',
       body.linkUrl || null,
+      body.uploadFileUrl || null,
+      body.uploadFileName || null,
       now,
       now
     ).run();
