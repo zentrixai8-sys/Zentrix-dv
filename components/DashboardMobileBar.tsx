@@ -1,11 +1,10 @@
 import React from 'react';
 import { 
-  LayoutDashboard, 
-  Ticket, 
-  Plus, 
-  Cpu, 
-  Building2, 
-  Menu
+  Home, 
+  FileText, 
+  Headphones, 
+  User, 
+  PlusCircle
 } from 'lucide-react';
 
 interface DashboardMobileBarProps {
@@ -27,260 +26,182 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
   unreadCount = 0,
   isLight = false
 }) => {
-  // Common container styling - 100% OPAQUE to prevent any background text bleed
-  const navBg = isLight 
-    ? 'bg-white border-t border-[#E8DEC8] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] text-[#2A2118]' 
-    : 'bg-[#090C14] border-t border-cyan-500/25 shadow-[0_-10px_35px_rgba(0,0,0,0.95)] text-white';
-
   if (role === 'company') {
-    const isTicketsActive = activeTab === 'all_tickets' || activeTab === 'pending' || activeTab === 'completed';
+    const isHome = activeTab === 'overview';
+    const isBookings = activeTab === 'all_tickets' || activeTab === 'pending' || activeTab === 'completed';
+    const isRaise = activeTab === 'raise';
+    const isSupport = activeTab === 'troubleshoot' || activeTab === 'ai';
+
+    const navItems = [
+      {
+        id: 'overview',
+        label: 'Home',
+        icon: Home,
+        isActive: isHome,
+        onClick: () => onTabChange('overview')
+      },
+      {
+        id: 'all_tickets',
+        label: 'Tickets',
+        icon: FileText,
+        isActive: isBookings,
+        badge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
+        onClick: () => onTabChange('all_tickets')
+      },
+      {
+        id: 'raise',
+        label: 'Raise Ticket',
+        icon: PlusCircle,
+        isActive: isRaise,
+        onClick: () => onTabChange('raise')
+      },
+      {
+        id: 'troubleshoot',
+        label: 'Support',
+        icon: Headphones,
+        isActive: isSupport,
+        onClick: () => onTabChange('troubleshoot')
+      }
+    ];
 
     return (
-      <nav
-        className={`fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),10px)] pt-2 transition-all ${navBg}`}
-        aria-label="Company Portal Mobile Navigation"
-      >
-        <div className="max-w-md mx-auto px-3 flex items-center justify-between relative">
-          {/* TAB 1: Home */}
-          <button
-            onClick={() => onTabChange('overview')}
-            className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none"
-          >
-            <div className={`p-1.5 rounded-xl transition-all ${
-              activeTab === 'overview'
-                ? isLight ? 'bg-[#EA552E]/15 text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-            }`}>
-              <LayoutDashboard className="w-5 h-5" />
-            </div>
-            <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${
-              activeTab === 'overview'
-                ? isLight ? 'text-[#EA552E] font-bold' : 'text-cyan-400 font-bold'
-                : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-            }`}>
-              Home
-            </span>
-          </button>
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),12px)] pt-2 px-4 pointer-events-none">
+        {/* Floating Capsule Bar Container */}
+        <nav
+          className={`max-w-[340px] mx-auto p-1.5 rounded-full border shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl flex items-center justify-between gap-1 pointer-events-auto transition-all ${
+            isLight
+              ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118]'
+              : 'bg-[#090D18]/95 border-white/15 text-white'
+          }`}
+          aria-label="Company Portal Mobile Navigation"
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.isActive;
 
-          {/* TAB 2: Tickets */}
-          <button
-            onClick={() => onTabChange('all_tickets')}
-            className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none relative"
-          >
-            <div className={`p-1.5 rounded-xl transition-all relative ${
-              isTicketsActive
-                ? isLight ? 'bg-[#EA552E]/15 text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-            }`}>
-              <Ticket className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-pulse">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </div>
-            <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${
-              isTicketsActive
-                ? isLight ? 'text-[#EA552E] font-bold' : 'text-cyan-400 font-bold'
-                : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-            }`}>
-              Tickets
-            </span>
-          </button>
+            return (
+              <button
+                key={item.id}
+                onClick={item.onClick}
+                className={`relative flex items-center justify-center transition-all duration-300 rounded-full cursor-pointer focus:outline-none active:scale-95 ${
+                  active
+                    ? isLight
+                      ? 'bg-[#1C1610] text-white px-4 py-2 shadow-md gap-2'
+                      : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black px-4 py-2 shadow-[0_0_15px_rgba(6,182,212,0.4)] gap-2'
+                    : isLight
+                      ? 'text-[#8A7B68] hover:text-[#2A2118] p-2.5 flex-1'
+                      : 'text-zinc-400 hover:text-white p-2.5 flex-1'
+                }`}
+              >
+                <div className="relative">
+                  <Icon className="w-4 h-4 stroke-[2.2]" />
+                  {item.badge && (
+                    <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-pulse">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
 
-          {/* TAB 3: CENTER ACTION BUTTON - + Raise */}
-          <div className="flex-1 flex flex-col items-center justify-center -mt-5">
-            <button
-              onClick={() => {
-                if (onCenterAction) onCenterAction();
-                else onTabChange('raise');
-              }}
-              className="relative group active:scale-90 transition-transform focus:outline-none cursor-pointer"
-              aria-label="Raise Ticket"
-            >
-              {/* Outer Glow */}
-              <div className={`absolute -inset-1 rounded-full blur-md opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse ${
-                isLight ? 'bg-[#EA552E]' : 'bg-cyan-400'
-              }`} />
-              
-              {/* Crisp Elevated Circle Button */}
-              <div className={`relative w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl ${
-                isLight 
-                  ? 'bg-gradient-to-tr from-[#EA552E] to-[#F0653A] border-2 border-white' 
-                  : 'bg-gradient-to-tr from-cyan-500 to-blue-600 border-2 border-[#090C14]'
-              }`}>
-                <Plus className="w-6 h-6 stroke-[2.5]" />
-              </div>
-            </button>
-            <span className={`text-[10px] font-mono font-bold tracking-wider uppercase mt-1 ${
-              isLight ? 'text-[#EA552E]' : 'text-cyan-300'
-            }`}>
-              Raise
-            </span>
-          </div>
-
-          {/* TAB 4: Systems */}
-          <button
-            onClick={() => onTabChange('systems')}
-            className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none"
-          >
-            <div className={`p-1.5 rounded-xl transition-all ${
-              activeTab === 'systems'
-                ? isLight ? 'bg-[#EA552E]/15 text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-            }`}>
-              <Cpu className="w-5 h-5" />
-            </div>
-            <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${
-              activeTab === 'systems'
-                ? isLight ? 'text-[#EA552E] font-bold' : 'text-cyan-400 font-bold'
-                : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-            }`}>
-              Systems
-            </span>
-          </button>
-
-          {/* TAB 5: Menu (Opens Side Drawer) */}
-          <button
-            onClick={onOpenMenu}
-            className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none"
-            aria-label="Open Side Menu"
-          >
-            <div className={`p-1.5 rounded-xl transition-all ${
-              isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-zinc-400 hover:text-white'
-            }`}>
-              <Menu className="w-5 h-5" />
-            </div>
-            <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${isLight ? 'text-[#8A7B68]' : 'text-zinc-400'}`}>
-              Menu
-            </span>
-          </button>
-        </div>
-      </nav>
+                {/* Show Label ONLY for the active item, exactly matching reference image */}
+                {active && (
+                  <span className="text-xs font-bold font-sans tracking-tight">
+                    {item.label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     );
   }
 
   // Admin Bottom Bar
+  const isAdminHome = activeTab === 'overview';
+  const isAdminTickets = activeTab === 'console' || activeTab === 'tickets';
+  const isAdminClients = activeTab === 'companies';
+
+  const adminItems = [
+    {
+      id: 'overview',
+      label: 'Home',
+      icon: Home,
+      isActive: isAdminHome,
+      onClick: () => onTabChange('overview')
+    },
+    {
+      id: 'console',
+      label: 'Tickets',
+      icon: FileText,
+      isActive: isAdminTickets,
+      badge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
+      onClick: () => onTabChange('console')
+    },
+    {
+      id: 'companies',
+      label: 'Clients',
+      icon: Headphones,
+      isActive: isAdminClients,
+      onClick: () => onTabChange('companies')
+    },
+    {
+      id: 'account',
+      label: 'Admin',
+      icon: User,
+      isActive: false,
+      onClick: () => {
+        if (onOpenMenu) onOpenMenu();
+      }
+    }
+  ];
+
   return (
-    <nav
-      className={`fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),10px)] pt-2 transition-all ${navBg}`}
-      aria-label="Admin Console Mobile Navigation"
-    >
-      <div className="max-w-md mx-auto px-3 flex items-center justify-between relative">
-        {/* TAB 1: Dashboard */}
-        <button
-          onClick={() => onTabChange('overview')}
-          className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none"
-        >
-          <div className={`p-1.5 rounded-xl transition-all ${
-            activeTab === 'overview'
-              ? isLight ? 'bg-[#EA552E]/15 text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-              : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-          }`}>
-            <LayoutDashboard className="w-5 h-5" />
-          </div>
-          <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${
-            activeTab === 'overview'
-              ? isLight ? 'text-[#EA552E] font-bold' : 'text-cyan-400 font-bold'
-              : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-          }`}>
-            Home
-          </span>
-        </button>
+    <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),12px)] pt-2 px-4 pointer-events-none">
+      <nav
+        className={`max-w-[340px] mx-auto p-1.5 rounded-full border shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl flex items-center justify-between gap-1 pointer-events-auto transition-all ${
+          isLight
+            ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118]'
+            : 'bg-[#090D18]/95 border-white/15 text-white'
+        }`}
+        aria-label="Admin Console Mobile Navigation"
+      >
+        {adminItems.map((item) => {
+          const Icon = item.icon;
+          const active = item.isActive;
 
-        {/* TAB 2: Tickets */}
-        <button
-          onClick={() => onTabChange('console')}
-          className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none relative"
-        >
-          <div className={`p-1.5 rounded-xl transition-all relative ${
-            activeTab === 'console'
-              ? isLight ? 'bg-[#EA552E]/15 text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-              : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-          }`}>
-            <Ticket className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-pulse">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </div>
-          <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${
-            activeTab === 'console'
-              ? isLight ? 'text-[#EA552E] font-bold' : 'text-cyan-400 font-bold'
-              : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-          }`}>
-            Tickets
-          </span>
-        </button>
+          return (
+            <button
+              key={item.id}
+              onClick={item.onClick}
+              className={`relative flex items-center justify-center transition-all duration-300 rounded-full cursor-pointer focus:outline-none active:scale-95 ${
+                active
+                  ? isLight
+                    ? 'bg-[#1C1610] text-white px-4 py-2 shadow-md gap-2'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black px-4 py-2 shadow-[0_0_15px_rgba(6,182,212,0.4)] gap-2'
+                  : isLight
+                    ? 'text-[#8A7B68] hover:text-[#2A2118] p-2.5 flex-1'
+                    : 'text-zinc-400 hover:text-white p-2.5 flex-1'
+              }`}
+            >
+              <div className="relative">
+                <Icon className="w-4 h-4 stroke-[2.2]" />
+                {item.badge && (
+                  <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-pulse">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
 
-        {/* TAB 3: CENTER ACTION BUTTON - + Delegate */}
-        <div className="flex-1 flex flex-col items-center justify-center -mt-5">
-          <button
-            onClick={() => {
-              if (onCenterAction) onCenterAction();
-              else onTabChange('delegation');
-            }}
-            className="relative group active:scale-90 transition-transform focus:outline-none cursor-pointer"
-            aria-label="Delegate Task"
-          >
-            {/* Outer Glow */}
-            <div className={`absolute -inset-1 rounded-full blur-md opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse ${
-              isLight ? 'bg-[#EA552E]' : 'bg-cyan-400'
-            }`} />
-            
-            {/* Crisp Elevated Circle Button */}
-            <div className={`relative w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl ${
-              isLight 
-                ? 'bg-gradient-to-tr from-[#EA552E] to-[#F0653A] border-2 border-white' 
-                : 'bg-gradient-to-tr from-cyan-500 to-blue-600 border-2 border-[#090C14]'
-            }`}>
-              <Plus className="w-6 h-6 stroke-[2.5]" />
-            </div>
-          </button>
-          <span className={`text-[10px] font-mono font-bold tracking-wider uppercase mt-1 ${
-            isLight ? 'text-[#EA552E]' : 'text-cyan-300'
-          }`}>
-            Assign
-          </span>
-        </div>
-
-        {/* TAB 4: Clients */}
-        <button
-          onClick={() => onTabChange('companies')}
-          className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none"
-        >
-          <div className={`p-1.5 rounded-xl transition-all ${
-            activeTab === 'companies'
-              ? isLight ? 'bg-[#EA552E]/15 text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-              : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-          }`}>
-            <Building2 className="w-5 h-5" />
-          </div>
-          <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${
-            activeTab === 'companies'
-              ? isLight ? 'text-[#EA552E] font-bold' : 'text-cyan-400 font-bold'
-              : isLight ? 'text-[#8A7B68]' : 'text-zinc-400'
-          }`}>
-            Clients
-          </span>
-        </button>
-
-        {/* TAB 5: Menu (Opens Side Drawer) */}
-        <button
-          onClick={onOpenMenu}
-          className="flex-1 flex flex-col items-center justify-center py-1 active:scale-90 transition-transform focus:outline-none"
-          aria-label="Open Side Menu"
-        >
-          <div className={`p-1.5 rounded-xl transition-all ${isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-zinc-400 hover:text-white'}`}>
-            <Menu className="w-5 h-5" />
-          </div>
-          <span className={`text-[10px] font-mono tracking-wider mt-0.5 ${isLight ? 'text-[#8A7B68]' : 'text-zinc-400'}`}>
-            Menu
-          </span>
-        </button>
-      </div>
-    </nav>
+              {active && (
+                <span className="text-xs font-bold font-sans tracking-tight">
+                  {item.label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 };
 

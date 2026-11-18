@@ -228,7 +228,7 @@ export const ScrollZoomReveal: React.FC<ScrollZoomRevealProps> = ({
         >
           <div className="flex items-center justify-start gap-2 text-blue-400/80 mb-1">
             <span className="text-[10px] tracking-[0.3em] font-sans font-black">THE REVELATION</span>
-            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <Zap className="w-3 h-3 text-cyan-400" />
           </div>
           <span className="text-zinc-300">{rightText}</span>
         </div>

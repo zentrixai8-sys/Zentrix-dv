@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ChevronRight, Sparkles, KeyRound } from 'lucide-react';
+import { X, Shield, Lock, User, Loader2, Fingerprint, Building2, ChevronRight, Sparkles, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { validateLogin } from '../services/sheetService';
-import { loginCompany, loginAdmin } from '../services/taskService';
+import { loginCompany, loginAdmin, setAuthSession } from '../services/taskService';
 import { getStoredTheme, setStoredTheme, PortalTheme } from '../services/themeService';
 import ThemeSelector from './ThemeSelector';
 import { Capacitor } from '@capacitor/core';
@@ -9,9 +9,10 @@ import { Capacitor } from '@capacitor/core';
 interface LoginModalProps {
   onClose: () => void;
   onSuccess: (user: string, role: 'admin' | 'company') => void;
+  notice?: string;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) => {
   const [activeTab, setActiveTab] = useState<'company' | 'admin'>('company');
   const [theme, setTheme] = useState<PortalTheme>(getStoredTheme);
 
@@ -25,10 +26,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
   // Company Form State (Only ID & Password)
   const [companyName, setCompanyName] = useState('');
   const [companyPassword, setCompanyPassword] = useState('');
+  const [showCompanyPassword, setShowCompanyPassword] = useState(false);
 
   // Admin Form State (Only ID & Password)
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,9 +41,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
     setLoading(true);
     setError('');
 
+    const cleanCompany = companyName.trim();
+    const cleanPass = companyPassword.trim();
+    if (!cleanCompany || !cleanPass) {
+      setError('Please enter both Company ID and Password.');
+      setLoading(false);
+      return;
+    }
+
     const res = await loginCompany({
-      companyNameOrCode: companyName.trim(),
-      password: companyPassword.trim()
+      companyNameOrCode: cleanCompany,
+      password: cleanPass
     });
 
     if (res.success && res.session) {
@@ -56,28 +67,43 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
     setLoading(true);
     setError('');
 
+    const cleanUser = adminUsername.trim();
+    const cleanPass = adminPassword.trim();
+    if (!cleanUser || !cleanPass) {
+      setError('Please enter both Admin ID and Password.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const sheetResult = await validateLogin(adminUsername.trim(), adminUsername.trim(), adminPassword.trim());
+      const sheetResult = await validateLogin(cleanUser, cleanUser, cleanPass);
       if (sheetResult.success) {
-        await loginAdmin({ username: sheetResult.user || adminUsername.trim(), idCode: adminUsername.trim() });
-        onSuccess(sheetResult.user || adminUsername.trim(), 'admin');
+        const verifiedUser = sheetResult.user || cleanUser;
+        setAuthSession({
+          user: verifiedUser,
+          role: 'admin',
+          isSuperAdmin: true,
+          idCode: (sheetResult as any).idCode || cleanUser,
+          email: 'admin@zentrixs.com'
+        });
+        onSuccess(verifiedUser, 'admin');
         setLoading(false);
         return;
       }
     } catch {
-      // Continue to local/cloudflare admin
+      // Continue to Cloudflare D1 admin verification
     }
 
     const res = await loginAdmin({
-      username: adminUsername.trim(),
-      idCode: adminUsername.trim(),
-      password: adminPassword.trim()
+      username: cleanUser,
+      idCode: cleanUser,
+      password: cleanPass
     });
 
     if (res.success && res.session) {
       onSuccess(res.session.user, 'admin');
     } else {
-      setError('Access Denied: Invalid Admin ID or Password.');
+      setError(res.error || 'Access Denied: Invalid Admin ID or Password.');
     }
     setLoading(false);
   };
@@ -126,7 +152,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
                 ? 'bg-[#FDF3E7] text-[#EA552E] border-[#F5D5C3]' 
                 : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25 shadow-cyan-500/10'
             }`}>
-              <Sparkles className="w-3 h-3" />
+              <Shield className="w-3 h-3" />
               <span>Secure Gateway</span>
             </div>
 
@@ -144,6 +170,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
               </button>
             )}
           </div>
+
+          {/* Session Expiry / Info Notice */}
+          {notice && (
+            <div className={`mb-5 p-3 rounded-xl border text-xs font-bold text-center ${
+              isLight
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+            }`}>
+              {notice}
+            </div>
+          )}
 
           {/* Segmented Dual Switcher Tabs */}
           <div className={`p-1.5 rounded-2xl border mb-7 grid grid-cols-2 gap-1.5 shadow-inner ${
@@ -243,17 +280,30 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
                       isLight ? 'text-[#B5A892] group-focus-within:text-[#EA552E]' : 'text-slate-500 group-focus-within:text-cyan-400'
                     }`} />
                     <input
-                      type="password"
+                      type={showCompanyPassword ? 'text' : 'password'}
                       required
                       value={companyPassword}
                       onChange={(e) => setCompanyPassword(e.target.value)}
                       placeholder="••••••••"
-                      className={`w-full rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold transition-all outline-none border ${
+                      className={`w-full rounded-2xl pl-11 pr-11 py-3.5 text-xs font-bold transition-all outline-none border ${
                         isLight 
                           ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
                           : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
                       }`}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowCompanyPassword(prev => !prev)}
+                      aria-label={showCompanyPassword ? 'Hide password' : 'Show password'}
+                      title={showCompanyPassword ? 'Hide password' : 'Show password'}
+                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors cursor-pointer ${
+                        isLight
+                          ? 'text-[#9C8F7D] hover:text-[#EA552E] hover:bg-[#F0E6D6]/70'
+                          : 'text-slate-400 hover:text-cyan-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {showCompanyPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
@@ -281,7 +331,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* SUPER ADMIN LOGIN TAB */}
+          {/* SUPER ADMIN & ENGINEER LOGIN TAB */}
           {activeTab === 'admin' && (
             <div className="space-y-6">
               <div className="text-center">
@@ -294,17 +344,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
                   <div className="absolute inset-0 border border-current rounded-2xl animate-ping opacity-20 pointer-events-none" />
                 </div>
                 <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                  Super Admin Access
+                  Admin & Engineer Console
                 </h2>
                 <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                  Enter master admin credentials
+                  Login via Master ID or Engineer Mobile Number
                 </p>
               </div>
 
               <form onSubmit={handleAdminSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className={`block text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                    Admin Username / ID
+                    Mobile Number or Admin ID
                   </label>
                   <div className="relative group">
                     <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
@@ -315,8 +365,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
                       required
                       value={adminUsername}
                       onChange={(e) => setAdminUsername(e.target.value)}
-                      placeholder="ADMIN ID"
-                      className={`w-full rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold transition-all uppercase outline-none border ${
+                      placeholder="e.g. 9876543210 or ADMIN"
+                      className={`w-full rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold transition-all outline-none border ${
                         isLight 
                           ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
                           : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
@@ -327,24 +377,37 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
 
                 <div className="space-y-1.5">
                   <label className={`block text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                    Admin Password
+                    Password
                   </label>
                   <div className="relative group">
                     <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
                       isLight ? 'text-[#B5A892] group-focus-within:text-[#EA552E]' : 'text-slate-500 group-focus-within:text-cyan-400'
                     }`} />
                     <input
-                      type="password"
+                      type={showAdminPassword ? 'text' : 'password'}
                       required
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       placeholder="••••••••"
-                      className={`w-full rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold transition-all outline-none border ${
+                      className={`w-full rounded-2xl pl-11 pr-11 py-3.5 text-xs font-bold transition-all outline-none border ${
                         isLight 
                           ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
                           : 'bg-black/50 border-white/10 text-white placeholder:text-slate-600 focus:border-cyan-400 focus:bg-[#0E1526] focus:ring-2 focus:ring-cyan-500/20'
                       }`}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminPassword(prev => !prev)}
+                      aria-label={showAdminPassword ? 'Hide password' : 'Show password'}
+                      title={showAdminPassword ? 'Hide password' : 'Show password'}
+                      className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors cursor-pointer ${
+                        isLight
+                          ? 'text-[#9C8F7D] hover:text-[#EA552E] hover:bg-[#F0E6D6]/70'
+                          : 'text-slate-400 hover:text-cyan-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 

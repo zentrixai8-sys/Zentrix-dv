@@ -75,14 +75,14 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ tasks, systems, i
 
   // ---------- Theme tokens ----------
   const accentHex = isLight ? '#EA552E' : '#22d3ee';
-  const cardBase = `rounded-2xl border p-5 transition-all duration-300 ${
+  const cardBase = `rounded-2xl border p-4 sm:p-5 transition-all duration-300 ${
     isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_28px_rgba(234,85,46,0.08)]' : 'bg-[#0F172A]/80 border-white/10 hover:border-white/20'
   }`;
-  const mutedText = isLight ? 'text-[#9C8F7D]' : 'text-slate-400';
-  const subText = isLight ? 'text-[#6B5D4A]' : 'text-slate-300';
-  const inkText = isLight ? 'text-[#2A2118]' : 'text-white';
-  const trackCol = isLight ? '#F3EADC' : 'rgba(255,255,255,0.06)';
-  const gridCol = isLight ? '#F3EADC' : 'rgba(255,255,255,0.07)';
+  const mutedText = isLight ? 'text-[#7D6E5B]' : 'text-slate-400';
+  const subText = isLight ? 'text-[#504434]' : 'text-slate-200';
+  const inkText = isLight ? 'text-[#1C1610]' : 'text-white';
+  const trackCol = isLight ? '#EAE0D0' : 'rgba(255,255,255,0.06)';
+  const gridCol = isLight ? '#EAE0D0' : 'rgba(255,255,255,0.07)';
 
   // ---------- Derived data ----------
   const statusData = useMemo(() =>
@@ -206,98 +206,99 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ tasks, systems, i
     </div>
   );
 
-  return (
-    <div className="space-y-5">
-      {/* ============ HERO: Ticket Activity Trend ============ */}
-      <div className={`stagger-item ${cardBase}`}>
-        <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <TrendingUp className={`w-4 h-4 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
-              <h3 className={`text-sm font-black uppercase tracking-wide ${inkText}`}>Ticket Activity</h3>
-            </div>
-            <p className={`text-[11px] ${mutedText}`}>
-              {hasTrendData ? `Tickets raised per month · ${year}` : `No tickets raised yet in ${year}`}
-            </p>
+  const ticketActivityCard = (
+    <div className={`stagger-item ${cardBase}`}>
+      <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <TrendingUp className={`w-4 h-4 ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`} />
+            <h3 className={`text-sm font-black uppercase tracking-wide ${inkText}`}>Ticket Activity</h3>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className={`text-xl font-black ${inkText}`}>{total}</div>
-              <div className={`text-[9px] font-bold uppercase tracking-widest ${mutedText}`}>Total YTD</div>
-            </div>
-            <div className={`w-px h-8 ${isLight ? 'bg-[#EDE2D3]' : 'bg-white/10'}`}></div>
-            <div className="text-right">
-              <div className="text-xl font-black text-emerald-500">{completedCount}</div>
-              <div className={`text-[9px] font-bold uppercase tracking-widest ${mutedText}`}>Resolved</div>
-            </div>
+          <p className={`text-[11px] ${mutedText}`}>
+            {hasTrendData ? `Tickets raised per month · ${year}` : `No tickets raised yet in ${year}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className={`text-xl font-black ${inkText}`}>{total}</div>
+            <div className={`text-[9px] font-bold uppercase tracking-widest ${mutedText}`}>Total YTD</div>
+          </div>
+          <div className={`w-px h-8 ${isLight ? 'bg-[#EDE2D3]' : 'bg-white/10'}`}></div>
+          <div className="text-right">
+            <div className="text-xl font-black text-emerald-500">{completedCount}</div>
+            <div className={`text-[9px] font-bold uppercase tracking-widest ${mutedText}`}>Resolved</div>
           </div>
         </div>
-
-        <svg viewBox={`0 0 ${vbW} ${vbH}`} className="w-full h-auto">
-          <defs>
-            <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={accentHex} stopOpacity={isLight ? 0.2 : 0.3} />
-              <stop offset="100%" stopColor={accentHex} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-
-          {yTicks.map((tick, i) => {
-            const y = padT + (1 - tick / niceMax) * chartH;
-            return (
-              <g key={i}>
-                <line x1={padL} y1={y} x2={vbW - padR} y2={y} stroke={gridCol} strokeWidth={1} />
-                <text x={padL - 10} y={y + 4} textAnchor="end" fontSize="12" fontFamily="monospace" fill={isLight ? '#B5A892' : '#64748b'}>{tick}</text>
-              </g>
-            );
-          })}
-
-          <path d={areaPath} fill="url(#trendFill)" stroke="none" />
-          <path
-            d={linePath}
-            fill="none"
-            stroke={accentHex}
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              strokeDasharray: mounted ? 'none' : '2600',
-              strokeDashoffset: mounted ? 0 : 2600,
-              transition: 'stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s',
-            }}
-          />
-
-          {hoveredMonth !== null && (
-            <g>
-              <line x1={trendPoints[hoveredMonth].x} y1={padT} x2={trendPoints[hoveredMonth].x} y2={padT + chartH} stroke={accentHex} strokeWidth={1.5} strokeDasharray="4 4" opacity={0.5} />
-              <circle cx={trendPoints[hoveredMonth].x} cy={trendPoints[hoveredMonth].y} r={7} fill={accentHex} stroke={isLight ? '#fff' : '#0F172A'} strokeWidth={3} />
-            </g>
-          )}
-
-          {trendPoints.map((p, i) => (
-            <text key={i} x={p.x} y={vbH - 8} textAnchor="middle" fontSize="12" fontWeight={hoveredMonth === i ? 700 : 500} fontFamily="system-ui, sans-serif" fill={hoveredMonth === i ? accentHex : (isLight ? '#9C8F7D' : '#64748b')}>{p.label}</text>
-          ))}
-
-          {trendPoints.map((p, i) => {
-            const zoneW = chartW / trendPoints.length;
-            return <rect key={i} x={p.x - zoneW / 2} y={padT} width={zoneW} height={chartH} fill="transparent" onMouseEnter={() => setHoveredMonth(i)} onMouseLeave={() => setHoveredMonth(null)} className="cursor-crosshair" />;
-          })}
-
-          {hoveredMonth !== null && (() => {
-            const p = trendPoints[hoveredMonth];
-            const tipW = 128, tipH = 42;
-            const tipX = Math.min(Math.max(p.x - tipW / 2, padL), vbW - padR - tipW);
-            const tipY = Math.max(p.y - tipH - 14, padT);
-            return (
-              <g style={{ pointerEvents: 'none' }}>
-                <rect x={tipX} y={tipY} width={tipW} height={tipH} rx={10} fill={isLight ? '#2A2118' : '#1e293b'} opacity={0.96} />
-                <text x={tipX + tipW / 2} y={tipY + 17} textAnchor="middle" fontSize="12.5" fontWeight={700} fill="#fff">{p.label} {year}</text>
-                <text x={tipX + tipW / 2} y={tipY + 33} textAnchor="middle" fontSize="12.5" fontFamily="monospace" fill={accentHex}>{p.value} raised</text>
-              </g>
-            );
-          })()}
-        </svg>
       </div>
 
+      <svg viewBox={`0 0 ${vbW} ${vbH}`} className="w-full h-auto">
+        <defs>
+          <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={accentHex} stopOpacity={isLight ? 0.2 : 0.3} />
+            <stop offset="100%" stopColor={accentHex} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+
+        {yTicks.map((tick, i) => {
+          const y = padT + (1 - tick / niceMax) * chartH;
+          return (
+            <g key={i}>
+              <line x1={padL} y1={y} x2={vbW - padR} y2={y} stroke={gridCol} strokeWidth={1} />
+              <text x={padL - 10} y={y + 4} textAnchor="end" fontSize="12" fontFamily="monospace" fill={isLight ? '#B5A892' : '#64748b'}>{tick}</text>
+            </g>
+          );
+        })}
+
+        <path d={areaPath} fill="url(#trendFill)" stroke="none" />
+        <path
+          d={linePath}
+          fill="none"
+          stroke={accentHex}
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{
+            strokeDasharray: mounted ? 'none' : '2600',
+            strokeDashoffset: mounted ? 0 : 2600,
+            transition: 'stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s',
+          }}
+        />
+
+        {hoveredMonth !== null && (
+          <g>
+            <line x1={trendPoints[hoveredMonth].x} y1={padT} x2={trendPoints[hoveredMonth].x} y2={padT + chartH} stroke={accentHex} strokeWidth={1.5} strokeDasharray="4 4" opacity={0.5} />
+            <circle cx={trendPoints[hoveredMonth].x} cy={trendPoints[hoveredMonth].y} r={7} fill={accentHex} stroke={isLight ? '#fff' : '#0F172A'} strokeWidth={3} />
+          </g>
+        )}
+
+        {trendPoints.map((p, i) => (
+          <text key={i} x={p.x} y={vbH - 8} textAnchor="middle" fontSize="12" fontWeight={hoveredMonth === i ? 700 : 500} fontFamily="system-ui, sans-serif" fill={hoveredMonth === i ? accentHex : (isLight ? '#9C8F7D' : '#64748b')}>{p.label}</text>
+        ))}
+
+        {trendPoints.map((p, i) => {
+          const zoneW = chartW / trendPoints.length;
+          return <rect key={i} x={p.x - zoneW / 2} y={padT} width={zoneW} height={chartH} fill="transparent" onMouseEnter={() => setHoveredMonth(i)} onMouseLeave={() => setHoveredMonth(null)} className="cursor-crosshair" />;
+        })}
+
+        {hoveredMonth !== null && (() => {
+          const p = trendPoints[hoveredMonth];
+          const tipW = 128, tipH = 42;
+          const tipX = Math.min(Math.max(p.x - tipW / 2, padL), vbW - padR - tipW);
+          const tipY = Math.max(p.y - tipH - 14, padT);
+          return (
+            <g style={{ pointerEvents: 'none' }}>
+              <rect x={tipX} y={tipY} width={tipW} height={tipH} rx={10} fill={isLight ? '#2A2118' : '#1e293b'} opacity={0.96} />
+              <text x={tipX + tipW / 2} y={tipY + 17} textAnchor="middle" fontSize="12.5" fontWeight={700} fill="#fff">{p.label} {year}</text>
+              <text x={tipX + tipW / 2} y={tipY + 33} textAnchor="middle" fontSize="12.5" fontFamily="monospace" fill={accentHex}>{p.value} raised</text>
+            </g>
+          );
+        })()}
+      </svg>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
       {/* ============ ROW: Resolution Gauge | Status Donut | Priority ============ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Resolution Rate gauge */}
@@ -539,6 +540,9 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ tasks, systems, i
           )}
         </div>
       </div>
+
+      {/* ============ TICKET ACTIVITY (Moved directly below the 3 status cards) ============ */}
+      {ticketActivityCard}
     </div>
   );
 };

@@ -408,12 +408,46 @@ const saveTasks = (tasks: Task[]) => {
 };
 
 // --- AUTHENTICATION ---
+export const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour auto-logout
+
+export const clearAuthSession = () => {
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    localStorage.removeItem(STORAGE_KEYS.AUTH);
+    window.dispatchEvent(new Event('zentrix_auth_change'));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 export const getAuthSession = (): AuthSession | null => {
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
     const raw = localStorage.getItem(STORAGE_KEYS.AUTH);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as AuthSession;
+    const now = Date.now();
+
+    // Reject legacy sessions (without timestamps), malformed sessions, or expired (> 1 hour) sessions
+    const hasValidRole = parsed?.role === 'admin' || parsed?.role === 'company';
+    const hasValidUser = typeof parsed?.user === 'string' && parsed.user.trim().length > 0;
+    const hasValidTimestamps =
+      typeof parsed?.loginAt === 'number' &&
+      typeof parsed?.expiresAt === 'number' &&
+      parsed.expiresAt > parsed.loginAt &&
+      parsed.expiresAt - parsed.loginAt <= SESSION_DURATION_MS + 1000;
+
+    if (!hasValidRole || !hasValidUser || !hasValidTimestamps || now >= parsed.expiresAt!) {
+      localStorage.removeItem(STORAGE_KEYS.AUTH);
+      return null;
+    }
+
+    return parsed;
   } catch {
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEYS.AUTH);
+    } catch {}
     return null;
   }
 };
@@ -421,19 +455,23 @@ export const getAuthSession = (): AuthSession | null => {
 export const setAuthSession = (session: AuthSession) => {
   try {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(session));
+    const now = Date.now();
+    const sessionWithExpiry: AuthSession = {
+      ...session,
+      loginAt: now,
+      expiresAt: now + SESSION_DURATION_MS
+    };
+    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(sessionWithExpiry));
+    window.dispatchEvent(new Event('zentrix_auth_change'));
   } catch (e) {
     console.error(e);
   }
 };
 
-export const clearAuthSession = () => {
-  try {
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-    localStorage.removeItem(STORAGE_KEYS.AUTH);
-  } catch (e) {
-    console.error(e);
-  }
+export const getSessionRemainingMs = (): number => {
+  const session = getAuthSession();
+  if (!session || typeof session.expiresAt !== 'number') return 0;
+  return Math.max(0, session.expiresAt - Date.now());
 };
 
 const getStoredCompanies = (): Company[] => {
@@ -552,6 +590,83 @@ export const updateCompanyLogo = async (companyId: string, logoUrl: string): Pro
   return true;
 };
 
+export const updateCompany = async (companyId: string, updates: Partial<Company>): Promise<{ success: boolean; company?: Company; error?: string }> => {
+  const companies = getStoredCompanies();
+  const searchId = (companyId || '').trim().toLowerCase();
+  const idx = companies.findIndex(c => 
+    (c.id && c.id.toLowerCase() === searchId) || 
+    (c.code && c.code.toLowerCase() === searchId) ||
+    (c.name && c.name.toLowerCase() === searchId)
+  );
+
+  if (idx === -1) {
+    return { success: false, error: 'Company not found' };
+  }
+
+  const existing = companies[idx];
+  const updatedCompany: Company = {
+    ...existing,
+    name: updates.name !== undefined ? updates.name : existing.name,
+    code: updates.code !== undefined ? updates.code : existing.code,
+    password: updates.password !== undefined ? updates.password : existing.password,
+    contactPerson: updates.contactPerson !== undefined ? updates.contactPerson : existing.contactPerson,
+    email: updates.email !== undefined ? updates.email : existing.email,
+    phone: updates.phone !== undefined ? updates.phone : existing.phone,
+    logoUrl: updates.logoUrl !== undefined ? updates.logoUrl : existing.logoUrl,
+    avatar: updates.avatar !== undefined ? updates.avatar : existing.avatar,
+  };
+
+  companies[idx] = updatedCompany;
+  saveCompanies(companies);
+
+  if (CLOUDFLARE_API_URL) {
+    try {
+      const res = await fetch(`${CLOUDFLARE_API_URL}/api/companies/${encodeURIComponent(companyId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedCompany)
+      });
+      if (!res.ok) {
+        console.warn('Cloudflare D1 company update rejected');
+      }
+    } catch (e) {
+      console.warn('Remote company update error', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('zentrix_companies_updated', { detail: { company: updatedCompany } }));
+  }
+
+  return { success: true, company: updatedCompany };
+};
+
+export const deleteCompany = async (companyId: string): Promise<boolean> => {
+  const companies = getStoredCompanies();
+  const searchId = (companyId || '').trim().toLowerCase();
+  const filtered = companies.filter(c => 
+    c.id.toLowerCase() !== searchId && 
+    (c.code ? c.code.toLowerCase() !== searchId : true)
+  );
+  saveCompanies(filtered);
+
+  if (CLOUDFLARE_API_URL) {
+    try {
+      await fetch(`${CLOUDFLARE_API_URL}/api/companies/${encodeURIComponent(companyId)}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {
+      console.warn('Remote company delete error', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('zentrix_companies_updated'));
+  }
+
+  return true;
+};
+
 export const fetchCompanies = async (): Promise<Company[]> => {
   const cached = readRefCache<Company[]>('companies');
   if (cached) return cached;
@@ -607,20 +722,33 @@ export const loginCompany = async (params: {
   userName?: string;
   password?: string;
 }): Promise<{ success: boolean; session?: AuthSession; error?: string }> => {
+  const search = (params.companyNameOrCode || '').toLowerCase().trim();
+  const enteredPass = (params.password || '').trim();
+
+  if (!search || !enteredPass) {
+    return {
+      success: false,
+      error: 'Company ID aur Password dono zaroori hain.'
+    };
+  }
+
   // If Cloudflare API URL is configured, try remote login first
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/auth/company-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params)
+        body: JSON.stringify({ ...params, companyNameOrCode: params.companyNameOrCode.trim(), password: enteredPass })
       });
       if (res.ok) {
         const data = await res.json();
-        setAuthSession(data.session);
-        return { success: true, session: data.session };
+        if (data?.success && data?.session) {
+          setAuthSession(data.session);
+          return { success: true, session: getAuthSession() || data.session };
+        }
+        return { success: false, error: data?.error || 'Access Denied: Invalid Company ID or Password' };
       } else {
-        const errData = await res.json();
+        const errData = await res.json().catch(() => ({}));
         return { success: false, error: errData.error || 'Access Denied: Invalid Company ID or Password' };
       }
     } catch (e) {
@@ -630,8 +758,6 @@ export const loginCompany = async (params: {
 
   // Strict check against registered companies only!
   const companies = getStoredCompanies();
-  const search = (params.companyNameOrCode || '').toLowerCase().trim();
-  const enteredPass = (params.password || '').trim();
 
   const found = companies.find(
     c => c.code.toLowerCase() === search || c.name.toLowerCase() === search
@@ -644,7 +770,7 @@ export const loginCompany = async (params: {
     };
   }
 
-  if (found.password && found.password !== enteredPass) {
+  if (!found.password || found.password !== enteredPass) {
     return {
       success: false,
       error: 'Access Denied: Password galat hai. Kripya Admin dwara set kiya gaya password dalein.'
@@ -661,7 +787,7 @@ export const loginCompany = async (params: {
   };
 
   setAuthSession(session);
-  return { success: true, session };
+  return { success: true, session: getAuthSession() || session };
 };
 
 export const loginAdmin = async (params: {
@@ -669,33 +795,85 @@ export const loginAdmin = async (params: {
   idCode: string;
   password?: string;
 }): Promise<{ success: boolean; session?: AuthSession; error?: string }> => {
+  const cleanUser = (params.username || '').trim();
+  const cleanPass = (params.password || '').trim();
+
+  if (!cleanUser || !cleanPass) {
+    return { success: false, error: 'Admin / Engineer ID and Password are required.' };
+  }
+
+  // First, check if logging in as an Engineer / Employee (Username is Phone Number)
+  const cleanPhone = cleanUser.replace(/\s+/g, '').replace(/^\+91/, '');
+  const employees = getStoredEmployees();
+  const foundEmp = employees.find(e => {
+    const empCleanPhone = (e.phone || '').replace(/\s+/g, '').replace(/^\+91/, '');
+    return (
+      (empCleanPhone && empCleanPhone === cleanPhone) ||
+      (e.id && e.id.toLowerCase() === cleanUser.toLowerCase()) ||
+      (e.email && e.email.toLowerCase() === cleanUser.toLowerCase()) ||
+      (e.name && e.name.toLowerCase() === cleanUser.toLowerCase())
+    );
+  });
+
+  if (foundEmp) {
+    const expectedPass = foundEmp.password || foundEmp.phone?.replace(/\s+/g, '') || 'zentrix@123';
+    if (cleanPass === expectedPass) {
+      // Check if employee has super-admin level (e.g. Director/Admin or Admin role) vs regular engineer
+      const empRole = (foundEmp.role || '').toLowerCase();
+      const empDesig = (foundEmp.designation || '').toLowerCase();
+      const isDirectorOrSuper = empRole === 'superadmin' || empDesig.includes('director') || empDesig.includes('super admin');
+
+      const session: AuthSession = {
+        user: foundEmp.name,
+        role: 'admin',
+        isSuperAdmin: isDirectorOrSuper,
+        employeeId: foundEmp.id,
+        designation: foundEmp.designation || foundEmp.role,
+        email: foundEmp.email,
+        idCode: foundEmp.phone || foundEmp.id
+      };
+      setAuthSession(session);
+      return { success: true, session: getAuthSession() || session };
+    }
+  }
+
   if (CLOUDFLARE_API_URL) {
     try {
       const res = await fetch(`${CLOUDFLARE_API_URL}/api/auth/admin-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params)
+        body: JSON.stringify({
+          username: cleanUser,
+          idCode: (params.idCode || cleanUser).trim(),
+          password: cleanPass
+        })
       });
-      if (res.ok) {
-        const data = await res.json();
-        setAuthSession(data.session);
-        return { success: true, session: data.session };
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.success && data?.session) {
+        const sessionData: AuthSession = {
+          ...data.session,
+          isSuperAdmin: true // Direct admin login via Cloudflare admin credentials is Super Admin
+        };
+        setAuthSession(sessionData);
+        return { success: true, session: getAuthSession() || sessionData };
       }
+      return {
+        success: false,
+        error: data?.error || 'Access Denied: Invalid Mobile / Admin ID or Password.'
+      };
     } catch (e) {
-      console.warn('Cloudflare admin auth failed, fallback to local', e);
+      console.warn('Cloudflare admin auth failed:', e);
+      return {
+        success: false,
+        error: 'Access Denied: Unable to verify credentials.'
+      };
     }
   }
 
-  // Local verification
-  const session: AuthSession = {
-    user: params.username || 'Super Admin',
-    role: 'admin',
-    idCode: params.idCode || 'ADM-001',
-    email: 'admin@zentrixs.com'
+  return {
+    success: false,
+    error: 'Access Denied: Invalid Mobile / Admin ID or Password.'
   };
-
-  setAuthSession(session);
-  return { success: true, session };
 };
 
 // --- IN-MEMORY CACHE TO MINIMIZE CLOUDFLARE D1 READS (Prevents hitting free limits) ---
@@ -1031,6 +1209,7 @@ export const createEmployee = async (empInput: {
   designation?: string;
   phone?: string;
   email?: string;
+  password?: string;
   avatar?: string;
 }): Promise<{ success: boolean; employee?: Employee; error?: string }> => {
   if (!empInput.name.trim()) {
@@ -1042,13 +1221,16 @@ export const createEmployee = async (empInput: {
   const empId = `emp_${Date.now()}`;
   const now = new Date().toISOString();
   const desig = empInput.designation?.trim() || empInput.role.trim() || 'Systems Support Engineer';
+  const cleanPhone = (empInput.phone || '').trim();
+  const assignedPassword = empInput.password?.trim() || cleanPhone || 'zentrix@123';
 
   const newEmp: Employee = {
     id: empId,
     name: empInput.name.trim(),
     role: empInput.role.trim() || 'employee',
     designation: desig,
-    phone: empInput.phone?.trim() || '',
+    phone: cleanPhone,
+    password: assignedPassword,
     email: empInput.email?.trim() || `${empInput.name.toLowerCase().replace(/\s+/g, '.')}@zentrixs.com`,
     avatar: avatarUrl,
     activeTasksCount: 0,
@@ -1064,12 +1246,12 @@ export const createEmployee = async (empInput: {
         body: JSON.stringify({
           id: empId,
           name: newEmp.name,
-          username: newEmp.phone || newEmp.email || newEmp.name.toLowerCase().replace(/\s+/g, '.'),
-          idCode: `ENG-${Math.floor(100 + Math.random() * 900)}`,
-          password: newEmp.phone || 'zentrix@123',
+          username: cleanPhone || newEmp.email || newEmp.name.toLowerCase().replace(/\s+/g, '.'),
+          idCode: cleanPhone || `ENG-${Math.floor(100 + Math.random() * 900)}`,
+          password: assignedPassword,
           role: newEmp.role,
           designation: desig,
-          phone: newEmp.phone,
+          phone: cleanPhone,
           email: newEmp.email,
           avatar: newEmp.avatar,
           dpUrl: newEmp.avatar
@@ -1105,6 +1287,7 @@ export const updateEmployee = async (
     role: updates.role !== undefined ? updates.role.trim() : employees[index].role,
     designation: updates.designation !== undefined ? updates.designation.trim() : (employees[index].designation || employees[index].role),
     phone: updates.phone !== undefined ? updates.phone.trim() : employees[index].phone,
+    password: updates.password !== undefined ? updates.password.trim() : employees[index].password,
     email: updates.email !== undefined ? updates.email.trim() : employees[index].email,
     avatar: updates.avatar !== undefined ? updates.avatar : employees[index].avatar
   };
@@ -1120,6 +1303,7 @@ export const updateEmployee = async (
           role: updated.role,
           designation: updated.designation,
           username: updated.phone || updated.email,
+          password: updated.password,
           phone: updated.phone,
           email: updated.email,
           avatar: updated.avatar,

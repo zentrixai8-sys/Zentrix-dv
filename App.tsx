@@ -15,7 +15,7 @@ import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
 import CompanyDashboard from './components/CompanyDashboard';
 import SuperAdminConsole from './components/SuperAdminConsole';
-import { getAuthSession, clearAuthSession } from './services/taskService';
+import { getAuthSession, clearAuthSession, getSessionRemainingMs } from './services/taskService';
 import { applyStatusBarTheme, getStoredTheme } from './services/themeService';
 import LegalPage from './components/LegalPage';
 import ServiceDetailPage from './components/ServiceDetailPage';
@@ -30,6 +30,7 @@ import EcosystemSection from './components/EcosystemSection';
 import CookieConsentModal from './components/CookieConsentModal';
 import { PHONE_NUMBER, AI_BOT_NUMBER } from './constants';
 import { MessageCircle, Phone, ChevronUp } from 'lucide-react';
+import PullToRefresh from './components/PullToRefresh';
 
 // Wrapper to handle scroll-to-top on route change
 export const ScrollToTop = () => {
@@ -136,7 +137,8 @@ export const LandingPage = () => {
 
 // Protected Route - bina login ke dashboard nahi khulega
 const ProtectedRoute: React.FC<{ authRole: 'admin' | 'company' | null; children: React.ReactNode }> = ({ authRole, children }) => {
-  if (!authRole) {
+  const session = getAuthSession();
+  if (!authRole || !session) {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
@@ -146,18 +148,21 @@ const ProtectedRoute: React.FC<{ authRole: 'admin' | 'company' | null; children:
 export const AppContent: React.FC = () => {
   const [authRole, setAuthRole] = useState<'admin' | 'company' | null>(() => {
     const session = getAuthSession();
-    return session ? (session.role === 'admin' ? 'admin' : 'company') : null;
+    if (!session) return null;
+    return session.role === 'admin' ? 'admin' : session.role === 'company' ? 'company' : null;
   });
   const [, setCurrentUser] = useState<string>(() => {
     const session = getAuthSession();
     return session?.user || '';
   });
+  const [sessionNotice, setSessionNotice] = useState<string>('');
 
   const location = useLocation();
   const navigate = useNavigate();
   const isDashboardRoute = location.pathname === '/dashboard';
 
   const handleLoginSuccess = (user: string, role: 'admin' | 'company') => {
+    setSessionNotice('');
     setAuthRole(role);
     setCurrentUser(user);
   };
@@ -166,7 +171,70 @@ export const AppContent: React.FC = () => {
     clearAuthSession();
     setAuthRole(null);
     setCurrentUser('');
+    setSessionNotice('');
   };
+
+  // Auto-logout after 1 hour & sync auth state across tabs/focus/sleep
+  useEffect(() => {
+    const handleStorageSync = (e: StorageEvent) => {
+      if (e.key && e.key !== 'zentrix_portal_auth_session_v1') return;
+      const session = getAuthSession();
+      if (!session) {
+        setAuthRole(null);
+        setCurrentUser('');
+      } else {
+        setAuthRole(session.role === 'admin' ? 'admin' : session.role === 'company' ? 'company' : null);
+        setCurrentUser(session.user || '');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageSync);
+    return () => window.removeEventListener('storage', handleStorageSync);
+  }, []);
+
+  useEffect(() => {
+    if (!authRole) return;
+
+    const expireSession = () => {
+      clearAuthSession();
+      setAuthRole(null);
+      setCurrentUser('');
+      setSessionNotice('Session expired after 1 hour. Please login again.');
+      if (location.pathname === '/dashboard') {
+        navigate('/login', { replace: true });
+      }
+    };
+
+    const checkSession = () => {
+      const remaining = getSessionRemainingMs();
+      if (remaining <= 0) {
+        expireSession();
+        return 0;
+      }
+      return remaining;
+    };
+
+    const remainingMs = checkSession();
+    if (remainingMs <= 0) return;
+
+    const logoutTimer = window.setTimeout(expireSession, remainingMs);
+    const intervalId = window.setInterval(checkSession, 30 * 1000);
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        checkSession();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', checkSession);
+
+    return () => {
+      window.clearTimeout(logoutTimer);
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', checkSession);
+    };
+  }, [authRole, location.pathname, navigate]);
 
   useEffect(() => {
     applyStatusBarTheme(getStoredTheme());
@@ -187,6 +255,7 @@ export const AppContent: React.FC = () => {
       return (
         <div className="min-h-screen bg-[#06080E] flex flex-col items-center justify-center p-4">
           <LoginModal
+            notice={sessionNotice}
             onClose={() => {}}
             onSuccess={(user, role) => {
               handleLoginSuccess(user, role);
@@ -250,6 +319,7 @@ export const AppContent: React.FC = () => {
             ) : (
               <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
                 <LoginModal
+                  notice={sessionNotice}
                   onClose={() => navigate('/')}
                   onSuccess={(user, role) => {
                     handleLoginSuccess(user, role);
@@ -273,7 +343,9 @@ export const AppContent: React.FC = () => {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <PullToRefresh>
+        <AppContent />
+      </PullToRefresh>
     </BrowserRouter>
   );
 }

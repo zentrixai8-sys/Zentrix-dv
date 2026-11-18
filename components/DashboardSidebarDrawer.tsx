@@ -15,7 +15,7 @@ import {
   Bell, 
   Cpu, 
   ShieldCheck, 
-  Sparkles,
+  Bot,
   ChevronRight
 } from 'lucide-react';
 import { sendOutsideNotification, isNotificationSupported, requestNotificationPermission } from '../services/notificationService';
@@ -93,23 +93,27 @@ export const DashboardSidebarDrawer: React.FC<DashboardSidebarDrawerProps> = ({
   };
 
   // Menu items for Admin
+  const isSuperAdmin = userRoleLabel === 'Command Center' || userName === 'Super Admin';
   const adminMenuItems = [
     { key: 'overview', label: 'Executive Dashboard', icon: LayoutDashboard, badge: undefined },
-    { key: 'console', label: 'Tickets Console', icon: Ticket, badge: totalTickets > 0 ? `${totalTickets}` : undefined },
-    { key: 'delegation', label: 'Task Delegation', icon: PlusCircle, badge: undefined },
-    { key: 'companies', label: 'Client Companies CRM', icon: Building2, badge: undefined },
-    { key: 'employees', label: 'Engineers & Staff', icon: Users, badge: undefined },
-    { key: 'whatsapp', label: 'WhatsApp Settings', icon: MessageSquare, badge: 'Live' },
-    { key: 'cms', label: 'Website CMS Controls', icon: Cpu, badge: undefined },
+    { key: 'console', label: isSuperAdmin ? 'Tickets Console' : 'My Assigned Tickets', icon: Ticket, badge: totalTickets > 0 ? `${totalTickets}` : undefined },
+    { key: 'delegation', label: isSuperAdmin ? 'Task Delegation' : 'My Delegated Tasks', icon: PlusCircle, badge: undefined },
+    ...(isSuperAdmin ? [
+      { key: 'companies', label: 'Client Companies CRM', icon: Building2, badge: undefined },
+      { key: 'employees', label: 'Engineers & Staff', icon: Users, badge: undefined },
+      { key: 'whatsapp', label: 'WhatsApp Settings', icon: MessageSquare, badge: 'Live' },
+      { key: 'cms', label: 'Website CMS Controls', icon: Cpu, badge: undefined },
+    ] : [])
   ];
 
   // Menu items for Company
   const companyMenuItems = [
     { key: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard, badge: undefined },
+    { key: 'profile', label: 'My Company Profile', icon: Building2, badge: 'Verified' },
     { key: 'all_tickets', label: 'All Support Tickets', icon: Ticket, badge: totalTickets > 0 ? `${totalTickets}` : undefined },
     { key: 'raise', label: '+ Raise New Ticket', icon: PlusCircle, badge: 'Quick' },
     { key: 'systems', label: 'Connected Systems', icon: Cpu, badge: undefined },
-    { key: 'ai', label: 'AI Support Copilot', icon: Sparkles, badge: 'AI' },
+    { key: 'ai', label: 'AI Support Copilot', icon: Bot, badge: 'AI' },
     { key: 'troubleshoot', label: 'Troubleshoot Guide', icon: Wrench, badge: undefined },
   ];
 
@@ -153,11 +157,21 @@ export const DashboardSidebarDrawer: React.FC<DashboardSidebarDrawerProps> = ({
 
           <div className="flex items-center gap-3.5 pr-8">
             {companyLogo ? (
-              <div className="w-13 h-13 rounded-2xl bg-white p-1.5 border border-black/10 shadow-md shrink-0 overflow-hidden flex items-center justify-center">
-                <img src={companyLogo} alt={companyName || userName} className="w-full h-full object-contain" />
+              <div 
+                style={{ width: '48px', height: '48px', minWidth: '48px', minHeight: '48px', maxWidth: '48px', maxHeight: '48px' }}
+                className="rounded-2xl bg-white p-1.5 border border-black/10 shadow-md shrink-0 overflow-hidden flex items-center justify-center relative"
+              >
+                <img 
+                  src={companyLogo} 
+                  alt={companyName || userName} 
+                  style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%' }}
+                  className="object-contain block" 
+                />
               </div>
             ) : (
-              <div className={`w-13 h-13 rounded-2xl flex items-center justify-center font-black text-lg text-white shadow-lg shrink-0 ${
+              <div 
+                style={{ width: '48px', height: '48px', minWidth: '48px', minHeight: '48px' }}
+                className={`rounded-2xl flex items-center justify-center font-black text-lg text-white shadow-lg shrink-0 ${
                 isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F]' : 'bg-gradient-to-br from-cyan-500 to-blue-600'
               }`}>
                 {(companyName || userName || 'Z').charAt(0).toUpperCase()}

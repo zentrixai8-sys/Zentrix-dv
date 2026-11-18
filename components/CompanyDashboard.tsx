@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   Layers,
   Wrench,
-  Sparkles,
+  Bot,
   LogOut,
   Search,
   RefreshCw,
@@ -33,7 +33,9 @@ import {
   Zap,
   Server,
   LayoutDashboard,
-  Menu
+  Menu,
+  Bell,
+  ShoppingBag
 } from 'lucide-react';
 import { Task, SystemItem, WorkType, TaskPriority, Company } from '../types/taskTypes';
 import {
@@ -56,6 +58,7 @@ import ThemeSelector from './ThemeSelector';
 import TroubleshootCenter from './TroubleshootCenter';
 import DashboardMobileBar from './DashboardMobileBar';
 import DashboardSidebarDrawer from './DashboardSidebarDrawer';
+import AutoScrollBanner from './AutoScrollBanner';
 import { startLiveTicketWatcher } from '../services/notificationService';
 
 interface CompanyDashboardProps {
@@ -119,7 +122,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
 
   // Navigation tabs styled like the admin pills
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'all_tickets' | 'raise' | 'pending' | 'completed' | 'systems' | 'troubleshoot' | 'ai'
+    'overview' | 'all_tickets' | 'raise' | 'pending' | 'completed' | 'systems' | 'troubleshoot' | 'ai' | 'profile'
   >('overview');
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -352,35 +355,26 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         </div>
       )}
 
-      <header className={`border-b sticky top-0 inset-x-0 z-40 px-4 sm:px-8 py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
+      <header className={`border-b sticky top-0 inset-x-0 z-40 px-3.5 sm:px-8 py-2.5 sm:py-3.5 transition-colors duration-300 ${isLight ? 'bg-[#FFFCF8]/90 border-[#EDE2D3] backdrop-blur-xl shadow-[0_2px_20px_rgba(234,85,46,0.06)] text-[#2A2118]' : 'bg-black/95 border-white/10 backdrop-blur-xl text-white'
         }`}>
-        {/* Row 1: Identity + Account Controls */}
-        <div className="w-full flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        {/* Row 1: Real Mobile App Header: [Hamburger] [Company Info] -------- [Profile DP] */}
+        <div className="w-full flex items-center justify-between gap-3">
+          {/* Left: Hamburger + Brand Info */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             {/* Mobile Hamburger Drawer Trigger */}
             <button
               onClick={() => setShowMobileDrawer(true)}
-              className={`p-2.5 rounded-xl border md:hidden active:scale-90 transition-transform ${
+              className={`p-2 sm:p-2.5 rounded-xl border md:hidden active:scale-90 transition-transform shrink-0 shadow-sm cursor-pointer ${
                 isLight ? 'bg-white border-[#EDE2D3] text-[#2A2118]' : 'bg-white/5 border-white/10 text-white'
               }`}
               aria-label="Open Navigation Menu"
             >
               <Menu className="w-4 h-4" />
             </button>
-            {companyLogo && !companyLogoError ? (
-              <div className={`w-11 h-11 rounded-2xl p-1.5 flex items-center justify-center shrink-0 overflow-hidden border shadow-sm ${isLight ? 'bg-[#FDF3E7] border-[#EDE2D3]' : 'bg-white/5 border-white/10'
-                }`}>
-                <img src={companyLogo} alt={companyName} loading="eager" decoding="async" className="w-full h-full object-contain" onError={() => setCompanyLogoError(true)} />
-              </div>
-            ) : (
-              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm tracking-wide shadow-sm ${isLight ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white' : 'bg-gradient-to-br from-blue-600 to-cyan-500 text-white'
-                }`}>
-                {companyInitials}
-              </div>
-            )}
+
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className={`text-base sm:text-lg font-black tracking-tight uppercase truncate max-w-[200px] sm:max-w-sm ${isLight ? 'text-[#2A2118]' : 'text-white'
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className={`text-sm sm:text-lg font-black tracking-tight uppercase truncate max-w-[200px] sm:max-w-sm ${isLight ? 'text-[#2A2118]' : 'text-white'
                   }`}>
                   {companyName}
                 </h1>
@@ -389,39 +383,103 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   CLIENT PORTAL
                 </span>
               </div>
-              <p className={`hidden md:flex text-[11px] items-center gap-1.5 mt-0.5 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
-                <span>Welcome back, <strong className={`font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{userName}</strong></span>
-                <span className="opacity-50">•</span>
-                <span className={`font-mono ${isLight ? 'text-[#EA552E]' : 'text-cyan-500'}`}>{currentTime || '10/1/2026 • 9:53:14 PM'}</span>
-                <span className="opacity-50">•</span>
-                <span className="text-emerald-600 font-semibold">{systems.length || 7} Systems Connected</span>
+              <p className={`text-[11px] flex items-center gap-1.5 mt-0.5 truncate ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
+                <span>Welcome, <strong className={`font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{userName}</strong></span>
+                <span className="opacity-50 hidden sm:inline">•</span>
+                <span className={`font-mono hidden sm:inline ${isLight ? 'text-[#EA552E]' : 'text-cyan-500'}`}>{currentTime || '10/1/2026 • 9:53:14 PM'}</span>
+                <span className="opacity-50 hidden sm:inline">•</span>
+                <span className="text-emerald-600 font-semibold hidden md:inline">{systems.length || 7} Systems Connected</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
-            {/* Theme Selector (Light / Dark) */}
-            <ThemeSelector theme={theme} onChange={setTheme} size="sm" />
+          {/* Right: Notification Bell, Desktop Controls + Profile DP */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Quick Action: Notification Bell (Matching Reference App) */}
+            <button
+              onClick={() => setShowMobileDrawer(true)}
+              title="Notifications"
+              className={`relative p-2 sm:p-2.5 rounded-full border transition-all active:scale-95 cursor-pointer shadow-sm ${
+                isLight
+                  ? 'bg-white border-[#EDE2D3] text-[#2A2118] hover:bg-[#FDF3E7]'
+                  : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+              }`}
+              aria-label="View notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {/* Green/Orange Live Notification Dot */}
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black animate-pulse" />
+            </button>
 
-            {/* Disconnect Button (Icon Only) */}
+            {/* Desktop Theme Selector (Hidden on Mobile, available in Drawer side panel) */}
+            <div className="hidden md:block">
+              <ThemeSelector theme={theme} onChange={setTheme} size="sm" />
+            </div>
+
+            {/* Desktop Disconnect Button (Hidden on Mobile, available in Drawer side panel) */}
             <button
               onClick={() => {
                 clearAuthSession();
                 onLogout();
               }}
               title="Disconnect / Logout"
-              className={`flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${isLight
+              className={`hidden md:flex items-center justify-center p-2.5 text-xs font-bold rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer ${isLight
                   ? 'text-[#D14343] hover:bg-[#FBEAEA] border-[#F3D5D5]'
                   : 'text-red-400 hover:text-white hover:bg-red-600/20 border-red-500/30'
                 }`}
             >
               <LogOut className="w-4 h-4" />
             </button>
+
+            {/* Top-Right Profile DP Avatar (Click opens Profile Page) */}
+            <button
+              onClick={() => {
+                setActiveTab('profile');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              title={`${userName} - Tap to view profile`}
+              className="relative group active:scale-95 transition-transform cursor-pointer focus:outline-none"
+              aria-label="Open profile page"
+            >
+              {companyLogo && !companyLogoError ? (
+                <div
+                  style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', maxWidth: '40px', maxHeight: '40px' }}
+                  className={`rounded-full p-1 flex items-center justify-center shrink-0 overflow-hidden border shadow-md relative transition-all group-hover:ring-2 ${
+                    isLight 
+                      ? 'bg-white border-[#EDE2D3] ring-[#EA552E]/30' 
+                      : 'bg-white/10 border-white/20 ring-cyan-400/40'
+                  }`}
+                >
+                  <img
+                    src={companyLogo}
+                    alt={companyName}
+                    loading="eager"
+                    decoding="async"
+                    style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%' }}
+                    className="object-contain block rounded-full"
+                    onError={() => setCompanyLogoError(true)}
+                  />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
+                </div>
+              ) : (
+                <div
+                  style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px' }}
+                  className={`rounded-full flex items-center justify-center shrink-0 font-black text-sm tracking-wide shadow-md relative transition-all group-hover:ring-2 ${
+                    isLight 
+                      ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F] text-white ring-[#EA552E]/30' 
+                      : 'bg-gradient-to-br from-blue-600 to-cyan-500 text-white ring-cyan-400/40'
+                  }`}
+                >
+                  {companyInitials}
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-black" />
+                </div>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Row 2: Primary Navigation — own row so nothing ever clips */}
-        <div className={`-mx-4 sm:-mx-8 mt-3 px-4 sm:px-8 pt-2.5 border-t overflow-x-auto no-scrollbar ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
+        {/* Row 2: Primary Navigation — desktop & tablet navigation tabs (Hidden on mobile since Bottom Navigation Bar & Drawer handle it) */}
+        <div className={`hidden md:block -mx-4 sm:-mx-8 mt-3 px-4 sm:px-8 pt-2.5 border-t overflow-x-auto no-scrollbar ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
           <div className="flex items-center gap-1 w-max">
             {([
               { key: 'overview', label: 'Dashboard', icon: LayoutDashboard },
@@ -451,7 +509,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   : isLight ? 'text-amber-600 hover:bg-amber-50 hover:text-[#2A2118]' : 'text-amber-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Bot className="w-3.5 h-3.5" />
               AI Consultant
             </button>
           </div>
@@ -459,10 +517,27 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
       </header>
 
       {/* Main Body - Full Canvas Width */}
-      <div className="w-full px-4 sm:px-8 py-6 space-y-6">
+      <div className="w-full px-3 sm:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6 pb-28 md:pb-8">
+        
+        {/* ========================================================================= */}
+        {/* AUTO-SCROLLING 5-SERVICE PROMO BANNER CAROUSEL (Mobile Only)               */}
+        {/* ========================================================================= */}
+        {activeTab === 'overview' && (
+          <div className="block md:hidden">
+            <AutoScrollBanner 
+              isLight={isLight} 
+              onActionClick={(link) => {
+                if (link.includes('raise')) setActiveTab('raise');
+                else if (link.includes('troubleshoot')) setActiveTab('troubleshoot');
+                else window.location.href = link;
+              }} 
+            />
+          </div>
+        )}
+
         {/* KPI Tiles — dynamic contextual metrics per tab */}
         {(activeTab === 'overview' || activeTab === 'completed' || activeTab === 'pending' || activeTab === 'all_tickets') && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {(() => {
               if (activeTab === 'completed') {
                 const comp = tasks.filter((t) => t.status === 'Completed').length;
@@ -670,7 +745,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                       tile.onClick?.();
                     }
                   }}
-                  className={`stagger-item group relative border rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 active:scale-[0.98] cursor-pointer select-none ring-1 ring-transparent ${p.ring} ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
+                  className={`stagger-item group relative border rounded-2xl p-3.5 sm:p-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 active:scale-[0.98] cursor-pointer select-none ring-1 ring-transparent ${p.ring} ${isLight ? 'bg-white border-[#EDE2D3] shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_14px_34px_rgba(234,85,46,0.12)]' : 'bg-[#0F172A]/80 border-white/10 hover:shadow-[0_14px_34px_rgba(0,0,0,0.45)]'
                     }`}
                   style={{ animationDelay: `${idx * 0.05}s` }}
                   title={`Click to view ${tile.label}`}
@@ -681,17 +756,17 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                     style={{ background: `radial-gradient(circle, rgba(${p.rgb},${isLight ? 0.5 : 0.65}) 0%, transparent 70%)` }}
                   ></div>
 
-                  <div className="relative flex items-start justify-between mb-3">
-                    <div className={`text-[10px] font-bold uppercase tracking-widest pt-1 ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>{tile.label}</div>
+                  <div className="relative flex items-start justify-between gap-1.5 mb-2 sm:mb-3">
+                    <div className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider pt-0.5 line-clamp-2 ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>{tile.label}</div>
                     <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 shadow-md`}
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${p.iconGrad} text-white transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 shadow-md`}
                       style={{ boxShadow: `0 6px 16px rgba(${p.rgb},${isLight ? 0.35 : 0.45})` }}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
 
-                  <div className={`relative text-[32px] leading-none font-black ${isLight ? p.numLight : p.numDark}`}>{tile.value}</div>
+                  <div className={`relative text-2xl sm:text-[32px] leading-none font-black ${isLight ? p.numLight : p.numDark}`}>{tile.value}</div>
 
                   {/* Share-of-total meter */}
                   <div className={`relative mt-3 h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-[#F3EADC]' : 'bg-white/10'}`}>
@@ -741,15 +816,6 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                <button
-                  onClick={loadData}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-xs font-bold transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30'
-                    }`}
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-
                 <CustomDropdown
                   options={[
                     { value: 'All', label: 'All Priorities' },
@@ -761,7 +827,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
                   value={priorityFilter}
                   onChange={setPriorityFilter}
                   isLight={isLight}
-                  className="w-36"
+                  className="w-full sm:w-44"
                 />
 
                 <button
@@ -1317,6 +1383,217 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
         )}
 
         {/* ========================================================================= */}
+        {/* TAB: PROFILE PAGE (Company Details, Contact, Security & Logo)             */}
+        {/* ========================================================================= */}
+        {activeTab === 'profile' && (
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Header Banner Card */}
+            <div className={`border rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300 ${
+              isLight ? 'bg-white border-[#EDE2D3] shadow-[0_4px_24px_rgba(0,0,0,0.05)]' : 'bg-[#0F172A] border-white/10 shadow-2xl'
+            }`}>
+              {/* Subtle Ambient Glow */}
+              <div 
+                className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30 pointer-events-none"
+                style={{ background: isLight ? 'rgba(234,85,46,0.3)' : 'rgba(6,182,212,0.3)' }}
+              />
+
+              <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                {/* Large DP / Logo */}
+                <div className="relative shrink-0">
+                  {companyLogo && !companyLogoError ? (
+                    <div 
+                      style={{ width: '88px', height: '88px', minWidth: '88px', minHeight: '88px' }}
+                      className={`rounded-3xl p-2 border-2 shadow-xl overflow-hidden flex items-center justify-center relative ${
+                        isLight ? 'bg-white border-[#EDE2D3]' : 'bg-white/10 border-white/20'
+                      }`}
+                    >
+                      <img 
+                        src={companyLogo} 
+                        alt={companyName}
+                        style={{ width: '100%', height: '100%' }}
+                        className="object-contain block rounded-2xl"
+                        onError={() => setCompanyLogoError(true)}
+                      />
+                    </div>
+                  ) : (
+                    <div 
+                      style={{ width: '88px', height: '88px', minWidth: '88px', minHeight: '88px' }}
+                      className={`rounded-3xl flex items-center justify-center font-black text-3xl shadow-xl text-white ${
+                        isLight 
+                          ? 'bg-gradient-to-br from-[#F0653A] to-[#D9481F]' 
+                          : 'bg-gradient-to-br from-blue-600 to-cyan-500'
+                      }`}
+                    >
+                      {companyInitials}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-black flex items-center justify-center" title="Active Connection">
+                    <Check className="w-3 h-3 text-white stroke-[3]" />
+                  </span>
+                </div>
+
+                {/* Company Title & Quick Info */}
+                <div className="flex-1 text-center sm:text-left space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono tracking-wider uppercase border ${
+                      isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                    }`}>
+                      Enterprise Account
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 font-bold border border-emerald-500/30">
+                      ● Active
+                    </span>
+                  </div>
+
+                  <h2 className={`text-xl sm:text-2xl font-black uppercase tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                    {companyName}
+                  </h2>
+                  <p className={`text-xs ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>
+                    Authorized Representative: <strong className={isLight ? 'text-[#2A2118]' : 'text-white'}>{userName}</strong>
+                  </p>
+                </div>
+
+                {/* Back to Home Button */}
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    isLight 
+                      ? 'bg-white hover:bg-[#FDF3E7] border-[#EDE2D3] text-[#2A2118]' 
+                      : 'bg-white/5 hover:bg-white/10 border-white/15 text-white'
+                  }`}
+                >
+                  ← Back to Home
+                </button>
+              </div>
+            </div>
+
+            {/* Account Details & Systems Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Account Credentials & Contact Card */}
+              <div className={`border rounded-2xl p-5 space-y-4 ${
+                isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+              }`}>
+                <div className="flex items-center gap-2.5 pb-3 border-b border-current/10">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                    isLight ? 'bg-[#FDEEE7] text-[#EA552E]' : 'bg-cyan-500/15 text-cyan-400'
+                  }`}>
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Account Information</h3>
+                    <p className={`text-[10px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Registered client profile details</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-current/5">
+                    <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Client ID Code:</span>
+                    <span className="font-mono font-bold text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded">
+                      {currentCompany?.code || companyId}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-current/5">
+                    <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Contact Person:</span>
+                    <span className={`font-semibold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                      {currentCompany?.contactPerson || userName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-current/5">
+                    <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Registered Email:</span>
+                    <span className={`font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                      {currentCompany?.email || 'Registered in Admin Console'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-current/5">
+                    <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Phone:</span>
+                    <span className={`font-mono ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                      {currentCompany?.phone || formPhone || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className={isLight ? 'text-[#8A7B68]' : 'text-slate-400'}>Account SLA Tier:</span>
+                    <span className="font-bold text-emerald-500">24/7 Enterprise Dedicated Support</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Connected Systems & Security Card */}
+              <div className={`border rounded-2xl p-5 space-y-4 ${
+                isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+              }`}>
+                <div className="flex items-center gap-2.5 pb-3 border-b border-current/10">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                    isLight ? 'bg-purple-100 text-purple-600' : 'bg-purple-500/15 text-purple-400'
+                  }`}>
+                    <Server className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Connected Systems ({systems.length || 7})</h3>
+                    <p className={`text-[10px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>Active monitored infrastructures</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-[170px] overflow-y-auto pr-1">
+                  {systems.map((sys) => (
+                    <div 
+                      key={sys.id}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${
+                        isLight ? 'bg-[#FDFBF7] border-[#EDE2D3]' : 'bg-white/[0.02] border-white/10'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className={`font-bold truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{sys.name}</p>
+                        <span className={`text-[10px] ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>{sys.category || 'Core System'}</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-500 shrink-0 border border-emerald-500/20">
+                        {sys.status || 'Active'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions Strip */}
+            <div className={`border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 ${
+              isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/10'
+            }`}>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTab('raise')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold text-white transition-all cursor-pointer ${
+                    isLight 
+                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-md shadow-[#EA552E]/25' 
+                      : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-md shadow-cyan-500/25'
+                  }`}
+                >
+                  + Raise New Ticket
+                </button>
+                <button
+                  onClick={() => setActiveTab('troubleshoot')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    isLight ? 'bg-[#FDFBF7] border-[#EDE2D3] text-[#2A2118]' : 'bg-white/5 border-white/10 text-white'
+                  }`}
+                >
+                  Troubleshoot Hub
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  clearAuthSession();
+                  onLogout();
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/10 border border-red-500/20 transition-all cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Disconnect & Logout</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* TAB: TROUBLESHOOT CENTER (Enterprise Diagnostics & Detailed Playbooks)     */}
         {/* ========================================================================= */}
         {activeTab === 'troubleshoot' && (
@@ -1338,7 +1615,7 @@ export const CompanyDashboard: React.FC<CompanyDashboardProps> = ({ onLogout }) 
             }`}>
             <div className={`flex items-center gap-3 pb-4 border-b ${isLight ? 'border-[#EDE2D3]' : 'border-white/10'}`}>
               <div className={`w-10 h-10 rounded-2xl border flex items-center justify-center ${isLight ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-amber-500/20 border-amber-500/40 text-amber-400'}`}>
-                <Sparkles className="w-5 h-5" />
+                <Bot className="w-5 h-5" />
               </div>
               <div>
                 <h3 className={`text-base font-bold ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Zentrixs AI System Consultant</h3>

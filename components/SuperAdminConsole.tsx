@@ -38,6 +38,7 @@ import {
   Phone,
   Mail,
   Trash2,
+  Lock,
   Briefcase,
   UserPlus,
   Edit3,
@@ -67,6 +68,8 @@ import {
   getCompanies,
   fetchCompanies,
   createCompany,
+  updateCompany,
+  deleteCompany,
   updateCompanyLogo,
   uploadFileToCloudinary,
   getEmployees,
@@ -75,6 +78,7 @@ import {
   updateEmployee,
   deleteEmployee,
   clearAuthSession,
+  getAuthSession,
   fetchDelegations,
   createDelegation,
   updateDelegationStatus,
@@ -99,6 +103,17 @@ interface SuperAdminConsoleProps {
 }
 
 export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }) => {
+  const currentSession = getAuthSession();
+  const currentUserName = currentSession?.user || '';
+  // Check if current user is Super Admin / Director
+  const isSuperAdmin = Boolean(
+    currentSession?.isSuperAdmin ||
+    !currentSession?.employeeId ||
+    currentUserName.toLowerCase().includes('admin') ||
+    currentUserName.toLowerCase().includes('super') ||
+    (currentSession?.designation && currentSession.designation.toLowerCase().includes('director'))
+  );
+
   const [activeTab, setActiveTab] = useState<'overview' | 'console' | 'delegation' | 'employees' | 'companies' | 'cms' | 'whatsapp'>('overview');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [delegations, setDelegations] = useState<Delegation[]>([]);
@@ -194,10 +209,21 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [editLogoPreview, setEditLogoPreview] = useState<string>('');
   const [savingLogo, setSavingLogo] = useState(false);
 
+  // Edit company full profile & credentials modal
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [editCompName, setEditCompName] = useState('');
+  const [editCompCode, setEditCompCode] = useState('');
+  const [editCompPass, setEditCompPass] = useState('');
+  const [editCompContact, setEditCompContact] = useState('');
+  const [editCompEmail, setEditCompEmail] = useState('');
+  const [editCompPhone, setEditCompPhone] = useState('');
+  const [savingEditComp, setSavingEditComp] = useState(false);
+
   // New Employee / Engineer Registration by Admin
   const [showAddEmpModal, setShowAddEmpModal] = useState(false);
   const [newEmpName, setNewEmpName] = useState('');
   const [newEmpPhone, setNewEmpPhone] = useState('');
+  const [newEmpPassword, setNewEmpPassword] = useState('');
   const [newEmpUserRole, setNewEmpUserRole] = useState<'admin' | 'user' | string>('admin');
   const [newEmpDesignation, setNewEmpDesignation] = useState('');
   const [newEmpEmail, setNewEmpEmail] = useState('');
@@ -214,6 +240,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [editEmpName, setEditEmpName] = useState('');
   const [editEmpPhone, setEditEmpPhone] = useState('');
+  const [editEmpPassword, setEditEmpPassword] = useState('');
   const [editEmpUserRole, setEditEmpUserRole] = useState<'admin' | 'user' | string>('admin');
   const [editEmpDesignation, setEditEmpDesignation] = useState('');
   const [editEmpEmail, setEditEmpEmail] = useState('');
@@ -259,6 +286,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     setEditingEmployee(emp);
     setEditEmpName(emp.name);
     setEditEmpPhone(emp.phone || '');
+    setEditEmpPassword(emp.password || '');
     setEditEmpUserRole((emp.role as any) || 'admin');
     setEditEmpDesignation(emp.designation || emp.role || '');
     setEditEmpEmail(emp.email || '');
@@ -319,6 +347,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       role: editEmpUserRole,
       designation: editEmpDesignation.trim() || editEmpUserRole,
       phone: editEmpPhone.trim(),
+      password: editEmpPassword.trim() || undefined,
       email: editEmpEmail.trim(),
       avatar: finalAvatar ? finalAvatar.trim() : undefined
     });
@@ -355,16 +384,18 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
       role: newEmpUserRole,
       designation: newEmpDesignation.trim() || newEmpUserRole,
       phone: newEmpPhone.trim(),
+      password: newEmpPassword.trim() || newEmpPhone.trim() || 'zentrix@123',
       email: newEmpEmail.trim(),
       avatar: finalAvatar ? finalAvatar.trim() : undefined
     });
 
     setCreatingEmp(false);
     if (res.success) {
-      showToast(`Engineer "${newEmpName.trim()}" added successfully!`);
+      showToast(`Engineer "${newEmpName.trim()}" registered! Login ID: ${newEmpPhone.trim()}`);
       setShowAddEmpModal(false);
       setNewEmpName('');
       setNewEmpPhone('');
+      setNewEmpPassword('');
       setNewEmpUserRole('admin');
       setNewEmpDesignation('');
       setNewEmpEmail('');
@@ -423,6 +454,48 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
     }
   };
 
+  const openEditCompanyModal = (comp: Company) => {
+    setEditingCompany(comp);
+    setEditCompName(comp.name);
+    setEditCompCode(comp.code || '');
+    setEditCompPass(comp.password || '');
+    setEditCompContact(comp.contactPerson || '');
+    setEditCompEmail(comp.email || '');
+    setEditCompPhone(comp.phone || '');
+  };
+
+  const handleSaveEditCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCompany || !editCompName.trim() || !editCompCode.trim()) return;
+    setSavingEditComp(true);
+
+    const res = await updateCompany(editingCompany.id, {
+      name: editCompName.trim(),
+      code: editCompCode.trim().toUpperCase(),
+      password: editCompPass.trim() || 'client@123',
+      contactPerson: editCompContact.trim() || 'Authorized Manager',
+      email: editCompEmail.trim(),
+      phone: editCompPhone.trim()
+    });
+
+    setSavingEditComp(false);
+    if (res.success) {
+      showToast(`Company "${editCompName.trim()}" updated successfully!`);
+      setEditingCompany(null);
+      await loadData();
+    } else {
+      showToast(res.error || 'Failed to update company');
+    }
+  };
+
+  const handleDeleteCompany = async (comp: Company) => {
+    if (window.confirm(`Are you sure you want to delete company "${comp.name}"? This action cannot be undone.`)) {
+      await deleteCompany(comp.id);
+      showToast(`Company "${comp.name}" deleted successfully.`);
+      await loadData();
+    }
+  };
+
   const handleUpdateLogo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingLogoCompany) return;
@@ -464,10 +537,33 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
         fetchEmployees(),
         fetchDelegations()
       ]);
-      setTasks(data);
-      setCompanies(compList);
-      setEmployees(empList);
-      setDelegations(dlgList);
+
+      // If logged in as an Employee/Engineer (not Super Admin), only show their assigned tasks and delegations
+      if (!isSuperAdmin && currentUserName) {
+        const myNameLower = currentUserName.toLowerCase().trim();
+        const myEmp = empList.find(e => e.name.toLowerCase().trim() === myNameLower || (currentSession?.employeeId && e.id === currentSession.employeeId));
+        const myIdLower = myEmp?.id ? myEmp.id.toLowerCase().trim() : '';
+
+        const myTasks = data.filter(t => {
+          const assigned = (t.assignedTo || '').toLowerCase().trim();
+          return assigned === myNameLower || (myIdLower && assigned === myIdLower);
+        });
+
+        const myDelegations = dlgList.filter(d => {
+          const assigned = (d.assignedTo || '').toLowerCase().trim();
+          return assigned === myNameLower || (myIdLower && assigned === myIdLower);
+        });
+
+        setTasks(myTasks);
+        setCompanies(compList);
+        setEmployees(empList);
+        setDelegations(myDelegations);
+      } else {
+        setTasks(data);
+        setCompanies(compList);
+        setEmployees(empList);
+        setDelegations(dlgList);
+      }
     } catch (err) {
       console.error('Failed to load admin data', err);
     } finally {
@@ -871,11 +967,11 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                     </span>
                     <span className={`hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black font-mono border shrink-0 ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
                       }`}>
-                      SUPER ADMIN
+                      {isSuperAdmin ? 'SUPER ADMIN' : 'ENGINEER CONSOLE'}
                     </span>
                   </div>
                   <span className="hidden sm:block text-[8px] text-gray-400 font-bold uppercase tracking-[0.3em] sm:tracking-[0.5em] mt-[-2px] group-hover:text-gray-500 transition-colors truncate">
-                    Automation Command Center
+                    {isSuperAdmin ? 'Automation Command Center' : `${currentUserName} • Workspaces & Tasks`}
                   </span>
                 </div>
               </Link>
@@ -951,44 +1047,48 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 <ListTodo className="w-3.5 h-3.5" />
                 <span>Task Delegation ({delegations.length})</span>
               </button>
-              <button
-                onClick={() => setActiveTab('employees')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'employees'
-                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                  }`}
-              >
-                Employee Workload ({employees.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('companies')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'companies'
-                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                  }`}
-              >
-                Companies ({companies.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('cms')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'cms'
-                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                  }`}
-              >
-                Website CMS
-              </button>
-              <button
-                onClick={() => setActiveTab('whatsapp')}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center gap-1.5 cursor-pointer ${activeTab === 'whatsapp'
-                  ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                  : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
-                  }`}
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                <span>WhatsApp Settings</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              </button>
+              {isSuperAdmin && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('employees')}
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'employees'
+                      ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                      }`}
+                  >
+                    Employee Workload ({employees.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('companies')}
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'companies'
+                      ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                      }`}
+                  >
+                    Companies ({companies.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('cms')}
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer ${activeTab === 'cms'
+                      ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                      }`}
+                  >
+                    Website CMS
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('whatsapp')}
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap shrink-0 transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center gap-1.5 cursor-pointer ${activeTab === 'whatsapp'
+                      ? isLight ? 'bg-[#EA552E] text-white shadow-lg shadow-[#EA552E]/25' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : isLight ? 'text-[#8A7B68] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'
+                      }`}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>WhatsApp Settings</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Theme Selector (Light / Dark) */}
@@ -1310,31 +1410,24 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   className="w-36"
                 />
 
-                {/* Assignee Filter */}
-                <CustomDropdown
-                  options={[
-                    { value: 'All', label: 'All Assignees' },
-                    ...employees.map((emp) => ({
-                      value: emp.name,
-                      label: emp.name,
-                      sublabel: emp.role,
-                      dotColor: 'bg-cyan-400'
-                    }))
-                  ]}
-                  value={selectedAssignee}
-                  onChange={setSelectedAssignee}
-                  isLight={isLight}
-                  className="w-40"
-                />
-
-                <button
-                  onClick={loadData}
-                  className={`p-2.5 rounded-xl border transition-all duration-200 hover:scale-[1.05] active:scale-95 cursor-pointer shadow-sm ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] hover:bg-[#EA552E] hover:text-white border-[#F5D5C3]' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border-blue-500/30'
-                    }`}
-                  title="Refresh Data"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                </button>
+                {/* Assignee Filter (Only Super Admin needs to filter across other engineers) */}
+                {isSuperAdmin && (
+                  <CustomDropdown
+                    options={[
+                      { value: 'All', label: 'All Assignees' },
+                      ...employees.map((emp) => ({
+                        value: emp.name,
+                        label: emp.name,
+                        sublabel: emp.role,
+                        dotColor: 'bg-cyan-400'
+                      }))
+                    ]}
+                    value={selectedAssignee}
+                    onChange={setSelectedAssignee}
+                    isLight={isLight}
+                    className="w-40"
+                  />
+                )}
               </div>
             </div>
 
@@ -1658,32 +1751,36 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                   <div className="flex items-center gap-2">
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border ${isLight ? 'bg-[#FDEEE7] text-[#EA552E] border-[#F5D5C3]' : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
                       }`}>
-                      INTERNAL TASK MANAGEMENT
+                      {isSuperAdmin ? 'INTERNAL TASK MANAGEMENT' : 'MY ASSIGNED TASKS & WORK'}
                     </span>
                     <span className="text-xs text-emerald-500 font-bold flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Zap className="w-3.5 h-3.5" />
                       Live Delegation Active
                     </span>
                   </div>
                   <h2 className={`text-2xl font-black tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
-                    Admin Task & Work Delegation
+                    {isSuperAdmin ? 'Admin Task & Work Delegation' : 'My Work Delegation & Tasks'}
                   </h2>
                   <p className={`text-xs ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
-                    Directly assign tasks to engineers, set completion deadlines, track real-time resolution and verify multiple image/document proofs.
+                    {isSuperAdmin
+                      ? 'Directly assign tasks to engineers, set completion deadlines, track real-time resolution and verify multiple image/document proofs.'
+                      : 'View your assigned tasks, work on deliverables, upload completion proof images/files and update status.'}
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowAddDelegationModal(true)}
-                  className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-white shadow-xl transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0 ${isLight
-                      ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30'
-                      : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/30'
-                    }`}
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>+ Assign New Task / Delegation</span>
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddDelegationModal(true)}
+                    className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-white shadow-xl transition-all duration-200 hover:scale-[1.03] active:scale-95 flex items-center justify-center gap-2 cursor-pointer shrink-0 ${isLight
+                        ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30'
+                        : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-cyan-500/30'
+                      }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Assign New Task / Delegation</span>
+                  </button>
+                )}
               </div>
 
               {/* KPI Metric Summary Cards */}
@@ -1761,23 +1858,25 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
 
                 {/* Dropdown Filters */}
                 <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-                  {/* Filter by Employee */}
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className={`font-bold hidden sm:inline ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Engineer:</span>
-                    <select
-                      value={delegationFilterEmployee}
-                      onChange={(e) => setDelegationFilterEmployee(e.target.value)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${isLight
-                          ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]'
-                          : 'bg-[#1E293B] border-white/10 text-white'
-                        }`}
-                    >
-                      <option value="All">All Engineers ({employees.length})</option>
-                      {employees.map(emp => (
-                        <option key={emp.id} value={emp.name}>{emp.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Filter by Employee (Only Super Admin needs to filter by other employees) */}
+                  {isSuperAdmin && (
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className={`font-bold hidden sm:inline ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>Engineer:</span>
+                      <select
+                        value={delegationFilterEmployee}
+                        onChange={(e) => setDelegationFilterEmployee(e.target.value)}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold outline-none border cursor-pointer ${isLight
+                            ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118]'
+                            : 'bg-[#1E293B] border-white/10 text-white'
+                          }`}
+                      >
+                        <option value="All">All Engineers ({employees.length})</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.name}>{emp.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Filter by Status */}
                   <div className="flex items-center gap-1.5 text-xs">
@@ -2825,7 +2924,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                 </td>
 
                                 <td className="py-4 px-4 text-right whitespace-nowrap">
-                                  <div className="flex items-center justify-end gap-2">
+                                  <div className="flex items-center justify-end gap-1.5">
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -2840,11 +2939,29 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                                       <span className="hidden sm:inline">Logo</span>
                                     </button>
                                     <button
+                                      type="button"
+                                      onClick={() => openEditCompanyModal(c)}
+                                      title="Edit Company Details & Credentials"
+                                      className={`p-2 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${isLight ? 'bg-white hover:bg-[#FDF8F2] text-[#8A7B68] hover:text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-400 border-white/10'}`}
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                      <span className="hidden sm:inline">Edit</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteCompany(c)}
+                                      title="Delete Company"
+                                      className="p-2 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span className="hidden sm:inline">Delete</span>
+                                    </button>
+                                    <button
                                       onClick={() => {
                                         setSelectedCompany(c.name);
                                         setActiveTab('console');
                                       }}
-                                      className={`px-4 py-2 text-white rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/20'}`}
+                                      className={`px-3 py-2 text-white rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F] shadow-md shadow-[#EA552E]/25' : 'bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/20'}`}
                                     >
                                       View Tickets <ChevronRight className="w-3.5 h-3.5" />
                                     </button>
@@ -2923,27 +3040,45 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                             )}
 
                             <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5 text-xs">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingLogoCompany(c);
-                                  setEditLogoPreview(c.logoUrl || c.avatar || '');
-                                  setEditLogoFile(null);
-                                }}
-                                className={`px-3 py-1.5 rounded-xl border flex items-center gap-1 text-xs font-semibold ${isLight ? 'bg-[#FDF3E7] text-[#D9481F] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'}`}
-                              >
-                                <Camera className="w-3.5 h-3.5" />
-                                <span>Logo</span>
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingLogoCompany(c);
+                                    setEditLogoPreview(c.logoUrl || c.avatar || '');
+                                    setEditLogoFile(null);
+                                  }}
+                                  className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1 text-[11px] font-semibold ${isLight ? 'bg-[#FDF3E7] text-[#D9481F] border-[#EDE2D3]' : 'bg-white/5 text-cyan-400 border-white/10'}`}
+                                >
+                                  <Camera className="w-3 h-3" />
+                                  <span>Logo</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openEditCompanyModal(c)}
+                                  className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1 text-[11px] font-semibold ${isLight ? 'bg-white text-[#2A2118] border-[#EDE2D3]' : 'bg-white/5 text-slate-300 border-white/10'}`}
+                                >
+                                  <Edit3 className="w-3 h-3 text-cyan-500" />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCompany(c)}
+                                  className="px-2.5 py-1.5 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 flex items-center gap-1 text-[11px] font-semibold"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  <span>Del</span>
+                                </button>
+                              </div>
 
                               <button
                                 onClick={() => {
                                   setSelectedCompany(c.name);
                                   setActiveTab('console');
                                 }}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-bold text-white flex items-center gap-1 ${isLight ? 'bg-[#EA552E] shadow-sm' : 'bg-blue-600 shadow-sm'}`}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold text-white flex items-center gap-1 ${isLight ? 'bg-[#EA552E] shadow-sm' : 'bg-blue-600 shadow-sm'}`}
                               >
-                                <span>View Tickets</span>
+                                <span>Tickets</span>
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -3038,7 +3173,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                           <div className={`text-xs ${isLight ? 'text-[#9C8F7D]' : 'text-slate-400'}`}>
                             Active Tickets: <strong className={isLight ? 'text-[#2A2118] font-bold' : 'text-white font-bold'}>{compTasks.length}</strong>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => {
@@ -3051,13 +3186,29 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                               <Camera className="w-3.5 h-3.5" /> Logo
                             </button>
                             <button
+                              type="button"
+                              onClick={() => openEditCompanyModal(c)}
+                              title="Edit Company"
+                              className={`p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${isLight ? 'bg-white hover:bg-[#FDF8F2] text-[#8A7B68] hover:text-[#EA552E] border-[#EDE2D3]' : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-400 border-white/10'}`}
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCompany(c)}
+                              title="Delete Company"
+                              className="p-2 rounded-xl text-xs font-semibold border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
                               onClick={() => {
                                 setSelectedCompany(c.name);
                                 setActiveTab('console');
                               }}
-                              className={`px-4 py-2 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F]' : 'bg-blue-600 hover:bg-blue-500'}`}
+                              className={`px-3.5 py-2 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-[#EA552E] hover:bg-[#D9481F]' : 'bg-blue-600 hover:bg-blue-500'}`}
                             >
-                              View Tickets <ChevronRight className="w-3.5 h-3.5" />
+                              Tickets <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
@@ -4097,6 +4248,155 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
         </div>
       )}
 
+      {/* EDIT COMPANY PROFILE & CREDENTIALS MODAL */}
+      {editingCompany && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
+          <div className={`w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col border rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-[#EDE2D3]' : 'bg-[#0F172A] border-white/20'}`}>
+            <div className={`flex items-start justify-between px-4 py-3 sm:px-6 sm:py-4 border-b shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+                <div className={`p-2 sm:p-2.5 rounded-2xl border shrink-0 ${isLight ? 'bg-[#FDEEE7] border-[#F5D5C3] text-[#EA552E]' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
+                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className={`font-mono font-bold text-[10px] uppercase tracking-wider block ${isLight ? 'text-[#D9481F]' : 'text-cyan-400'}`}>CLIENT CREDENTIALS</span>
+                  <h3 className={`text-base sm:text-lg font-bold mt-0.5 truncate ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>Edit Company & Login Details</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingCompany(null)}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer shrink-0 ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118] hover:bg-[#FDF3E7]' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditCompany} className="flex-1 flex flex-col overflow-hidden text-xs">
+              <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                {/* Company Name */}
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                    Company Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editCompName}
+                    onChange={(e) => setEditCompName(e.target.value)}
+                    placeholder="e.g. Criti Care Hospital"
+                    className={`w-full border rounded-xl px-4 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                  />
+                </div>
+
+                {/* Login ID / Code & Password */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                      Login ID / Code <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editCompCode}
+                      onChange={(e) => setEditCompCode(e.target.value)}
+                      placeholder="e.g. CRITICARE01"
+                      className={`w-full border rounded-xl px-4 py-3 focus:outline-none uppercase font-mono transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                    <span className="text-[10px] text-cyan-500 font-mono mt-1 block">Client will use this ID to login</span>
+                  </div>
+
+                  <div>
+                    <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                      Portal Password <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editCompPass}
+                      onChange={(e) => setEditCompPass(e.target.value)}
+                      placeholder="e.g. Criti@123"
+                      className={`w-full border rounded-xl px-4 py-3 focus:outline-none font-mono transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                    <span className="text-[10px] text-amber-500 font-mono mt-1 block">Assign client portal password</span>
+                  </div>
+                </div>
+
+                {/* Contact Person */}
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                    Authorized Contact Person
+                  </label>
+                  <div className="relative">
+                    <User className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                    <input
+                      type="text"
+                      value={editCompContact}
+                      onChange={(e) => setEditCompContact(e.target.value)}
+                      placeholder="e.g. Dr. R.K Murty"
+                      className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Phone & Email in 2 cols */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                      Official Phone / WhatsApp
+                    </label>
+                    <div className="relative">
+                      <Phone className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                      <input
+                        type="tel"
+                        value={editCompPhone}
+                        onChange={(e) => setEditCompPhone(e.target.value)}
+                        placeholder="e.g. +91 94255 04049"
+                        className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                      Official Email
+                    </label>
+                    <div className="relative">
+                      <Mail className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                      <input
+                        type="email"
+                        value={editCompEmail}
+                        onChange={(e) => setEditCompEmail(e.target.value)}
+                        placeholder="e.g. contact@criticare.com"
+                        className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Sticky Footer */}
+              <div className={`flex items-center justify-end gap-2.5 sm:gap-3 px-4 py-3 sm:px-6 sm:py-3.5 border-t shrink-0 ${isLight ? 'border-[#EDE2D3] bg-[#FDFBF7]' : 'border-white/10 bg-white/[0.02]'}`}>
+                <button
+                  type="button"
+                  onClick={() => setEditingCompany(null)}
+                  className={`px-4 sm:px-5 py-2.5 rounded-xl font-bold transition-colors ${isLight ? 'text-[#9C8F7D] hover:text-[#2A2118]' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEditComp || !editCompName.trim() || !editCompCode.trim()}
+                  className={`px-5 sm:px-6 py-2.5 text-white rounded-xl font-bold transition-all disabled:opacity-50 hover:scale-[1.03] active:scale-95 ${isLight ? 'bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-lg shadow-[#EA552E]/25' : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25'}`}
+                >
+                  {savingEditComp ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* EDIT COMPANY LOGO MODAL */}
       {editingLogoCompany && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in duration-200">
@@ -4352,7 +4652,7 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                    Mobile Number <span className="text-red-400">*</span>
+                    Mobile Number (Login ID) <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
                     <Phone className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
@@ -4362,6 +4662,44 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       value={newEmpPhone}
                       onChange={(e) => setNewEmpPhone(e.target.value)}
                       placeholder="+91 98765 43210"
+                      className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-cyan-500 font-mono mt-1 block">Engineer will use this mobile number to log in</span>
+                </div>
+
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                    Assign Login Password <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                    <input
+                      type="text"
+                      value={newEmpPassword}
+                      onChange={(e) => setNewEmpPassword(e.target.value)}
+                      placeholder="e.g. Rahul@2026 or 123456"
+                      className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors font-mono ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-zinc-500 font-mono mt-1 block">Leave empty to use mobile number as password</span>
+                </div>
+              </div>
+
+              {/* Designation / Job Title & User Role in 2 cols */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                    Designation / Job Title <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <Briefcase className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                    <input
+                      type="text"
+                      required
+                      value={newEmpDesignation}
+                      onChange={(e) => setNewEmpDesignation(e.target.value)}
+                      placeholder="e.g. Director/Admin, Sr Developer, Automation Architect"
                       className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
                     />
                   </div>
@@ -4378,29 +4716,11 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       onChange={(e) => setNewEmpUserRole(e.target.value as any)}
                       className={`w-full border rounded-xl pl-9 pr-8 py-3 focus:outline-none transition-colors appearance-none cursor-pointer ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-[#0F172A] border-white/10 text-white focus:border-cyan-400'}`}
                     >
-                      <option value="admin">Admin</option>
-                      <option value="user">User</option>
+                      <option value="admin">Admin / Engineer Console</option>
+                      <option value="user">Staff Member</option>
                     </select>
                     <ChevronDown className={`w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
                   </div>
-                </div>
-              </div>
-
-              {/* Designation / Job Title */}
-              <div>
-                <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                  Designation / Job Title <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <Briefcase className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
-                  <input
-                    type="text"
-                    required
-                    value={newEmpDesignation}
-                    onChange={(e) => setNewEmpDesignation(e.target.value)}
-                    placeholder="e.g. Director/Admin, Sr Developer, Automation Architect"
-                    className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
-                  />
                 </div>
               </div>
 
@@ -4808,11 +5128,11 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                 />
               </div>
 
-              {/* Mobile Number & User Role in 2 cols */}
+              {/* Mobile Number & Password in 2 cols */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                    Mobile Number <span className="text-red-400">*</span>
+                    Mobile Number (Login ID) <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
                     <Phone className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
@@ -4822,6 +5142,44 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       value={editEmpPhone}
                       onChange={(e) => setEditEmpPhone(e.target.value)}
                       placeholder="+91 98765 43210"
+                      className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-cyan-500 font-mono mt-1 block">Login ID</span>
+                </div>
+
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                    Change Password
+                  </label>
+                  <div className="relative">
+                    <Lock className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                    <input
+                      type="text"
+                      value={editEmpPassword}
+                      onChange={(e) => setEditEmpPassword(e.target.value)}
+                      placeholder="Leave unchanged or enter new"
+                      className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors font-mono ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-zinc-500 font-mono mt-1 block">Update engineer login password</span>
+                </div>
+              </div>
+
+              {/* Designation / Job Title & User Role in 2 cols */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
+                    Designation / Job Title <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <Briefcase className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
+                    <input
+                      type="text"
+                      required
+                      value={editEmpDesignation}
+                      onChange={(e) => setEditEmpDesignation(e.target.value)}
+                      placeholder="e.g. Director/Admin, Sr Developer, Automation Architect"
                       className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
                     />
                   </div>
@@ -4838,29 +5196,11 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
                       onChange={(e) => setEditEmpUserRole(e.target.value as any)}
                       className={`w-full border rounded-xl pl-9 pr-8 py-3 focus:outline-none transition-colors appearance-none cursor-pointer ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] focus:border-[#EA552E]' : 'bg-[#0F172A] border-white/10 text-white focus:border-cyan-400'}`}
                     >
-                      <option value="admin">Admin</option>
-                      <option value="user">User</option>
+                      <option value="admin">Admin / Engineer Console</option>
+                      <option value="user">Staff Member</option>
                     </select>
                     <ChevronDown className={`w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
                   </div>
-                </div>
-              </div>
-
-              {/* Designation / Job Title */}
-              <div>
-                <label className={`block font-bold mb-1.5 uppercase tracking-wider ${isLight ? 'text-[#6B5D4A]' : 'text-slate-300'}`}>
-                  Designation / Job Title <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <Briefcase className={`w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? 'text-[#B5A892]' : 'text-slate-500'}`} />
-                  <input
-                    type="text"
-                    required
-                    value={editEmpDesignation}
-                    onChange={(e) => setEditEmpDesignation(e.target.value)}
-                    placeholder="e.g. Director/Admin, Sr Developer, Automation Architect"
-                    className={`w-full border rounded-xl pl-9 pr-3 py-3 focus:outline-none transition-colors ${isLight ? 'bg-[#FBF5EC] border-[#EDE2D3] text-[#2A2118] placeholder:text-[#B5A892] focus:border-[#EA552E]' : 'bg-black/50 border-white/10 text-white focus:border-cyan-400'}`}
-                  />
                 </div>
               </div>
 
@@ -4952,8 +5292,8 @@ export const SuperAdminConsole: React.FC<SuperAdminConsoleProps> = ({ onLogout }
           setActiveTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        userName="Super Admin"
-        userRoleLabel="Command Center"
+        userName={isSuperAdmin ? "Super Admin" : currentUserName}
+        userRoleLabel={isSuperAdmin ? "Command Center" : (currentSession?.designation || "Support Engineer")}
         companyName="Zentrixs Global"
         theme={theme}
         onToggleTheme={toggleTheme}

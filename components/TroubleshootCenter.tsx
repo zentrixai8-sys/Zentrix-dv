@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
-  Sparkles,
+  Bot,
   RefreshCw,
   Zap,
   Activity,
@@ -805,7 +805,7 @@ export const TroubleshootCenter: React.FC<TroubleshootCenterProps> = ({
                   onClick={() => onAskAi(`Help me diagnose this issue for ${companyName}: ${searchQuery}`)}
                   className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Bot className="w-3.5 h-3.5" />
                   Ask AI Consultant
                 </button>
               )}
@@ -1018,7 +1018,7 @@ export const TroubleshootCenter: React.FC<TroubleshootCenterProps> = ({
                                   : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
                               }`}
                             >
-                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              <Bot className="w-3.5 h-3.5 text-amber-500" />
                               Ask AI Consultant
                             </button>
                           )}

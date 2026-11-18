@@ -471,23 +471,37 @@ export const updateSettingsInSheet = async (settings: Record<string, string>) =>
 
 export const validateLogin = async (username: string, id: string, pass: string) => {
   try {
+    const cleanUser = (username || '').toString().trim().toLowerCase();
+    const cleanId = (id || '').toString().trim().toLowerCase();
+    const cleanPass = (pass || '').toString().trim();
+
+    if (!cleanUser || !cleanPass) {
+      return { success: false, error: "Username/ID and Password are required." };
+    }
+
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=login`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Auth node unreachable');
     const text = await response.text();
     const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
     const json = JSON.parse(jsonStr);
-    const users = json.table.rows.map((row: any) => ({
-      userName: (row.c[0]?.v || '').toString().trim(),
-      userId: (row.c[1]?.v || '').toString().trim(),
-      userPassword: (row.c[2]?.v || '').toString().trim()
+    const users = (json.table?.rows || []).map((row: any) => ({
+      userName: (row.c?.[0]?.v || '').toString().trim(),
+      userId: (row.c?.[1]?.v || '').toString().trim(),
+      userPassword: (row.c?.[2]?.v || '').toString().trim()
     }));
-    const found = users.find((u: any) =>
-      u.userName.toLowerCase() === username.toLowerCase().trim() &&
-      u.userId.toString() === id.toString().trim() &&
-      u.userPassword.toString() === pass.toString().trim()
-    );
-    return found ? { success: true, user: found.userName } : { success: false, error: "Access Denied." };
+    const found = users.find((u: any) => {
+      if (!u.userPassword || u.userPassword !== cleanPass) return false;
+      const uName = u.userName.toLowerCase();
+      const uId = u.userId.toLowerCase();
+      if (cleanUser === cleanId) {
+        return (uName !== '' && uName === cleanUser) || (uId !== '' && uId === cleanId);
+      }
+      return uName === cleanUser && uId === cleanId;
+    });
+    return found
+      ? { success: true, user: found.userName || found.userId, idCode: found.userId }
+      : { success: false, error: "Access Denied." };
   } catch (error) {
     return { success: false, error: "Authentication Failed." };
   }

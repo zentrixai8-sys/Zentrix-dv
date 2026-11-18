@@ -333,6 +333,7 @@ let liveWatcherInterval: any = null;
 let liveWatcherVisibilityHandler: (() => void) | null = null;
 const trackedTaskIds = new Set<string>();
 const trackedTaskStatuses = new Map<string, string>();
+const trackedTaskAssignees = new Map<string, string>();
 let isWatcherInitialized = false;
 
 export const startLiveTicketWatcher = (
@@ -382,12 +383,11 @@ export const startLiveTicketWatcher = (
       if (!Array.isArray(latestTasks)) return;
 
       // First run: Seed current existing tasks into memory so we don't spam old notifications.
-      // This must also mark an empty table as seeded, otherwise the first ticket
-      // ever created would arrive as a seed instead of a notification.
       if (!isWatcherInitialized) {
         latestTasks.forEach((t) => {
           trackedTaskIds.add(t.id);
           trackedTaskStatuses.set(t.id, t.status);
+          trackedTaskAssignees.set(t.id, t.assignedTo || 'Unassigned');
         });
         isWatcherInitialized = true;
         return;
@@ -395,21 +395,15 @@ export const startLiveTicketWatcher = (
 
       if (latestTasks.length === 0) return;
 
-      // Collapse every change found in this poll into a single refresh callback,
-      // so N changed tickets cost one reload instead of N.
       let hasChanges = false;
       let deliveryPending = false;
 
-      // A ticket is only marked as seen once its notification actually went out.
-      // Marking it up front meant any failure (permission still pending, service
-      // worker not ready yet, transient error) silently dropped that ticket
-      // forever - this was the main reason notifications arrived only sometimes.
       for (const t of latestTasks) {
         if (!trackedTaskIds.has(t.id)) {
-          // Fire native OS notification outside app
+          // 1. New Ticket Raised Notification
           const delivered = await sendOutsideNotification({
-            title: `🔔 New Ticket #${t.ticketNumber}`,
-            body: `${t.partyName}: ${t.typeOfWork || 'New Task'} - ${t.systemName || ''}`,
+            title: `🔔 New Ticket Raised: #${t.ticketNumber}`,
+            body: `${t.partyName}: ${t.typeOfWork || 'New Task'} • ${t.systemName || ''}`,
             tag: `new-ticket-${t.id}`,
             data: { url: '/dashboard', ticketId: t.id }
           });
@@ -417,19 +411,41 @@ export const startLiveTicketWatcher = (
           if (delivered) {
             trackedTaskIds.add(t.id);
             trackedTaskStatuses.set(t.id, t.status);
+            trackedTaskAssignees.set(t.id, t.assignedTo || 'Unassigned');
           } else {
-            // Leave it untracked and retry on the next poll.
             deliveryPending = true;
           }
 
           hasChanges = true;
         } else {
-          // Check for status changes on existing tickets
+          // 2. Check for Employee Assignment Change
+          const oldAssignee = trackedTaskAssignees.get(t.id) || 'Unassigned';
+          const newAssignee = t.assignedTo || 'Unassigned';
+          if (newAssignee !== 'Unassigned' && newAssignee !== oldAssignee) {
+            const delivered = await sendOutsideNotification({
+              title: `👨‍💻 Ticket #${t.ticketNumber} Assigned`,
+              body: `Assigned to ${newAssignee} for ${t.systemName || t.partyName}`,
+              tag: `assigned-${t.id}-${newAssignee}`,
+              data: { url: '/dashboard', ticketId: t.id }
+            });
+
+            if (delivered) trackedTaskAssignees.set(t.id, newAssignee);
+            else deliveryPending = true;
+
+            hasChanges = true;
+          }
+
+          // 3. Check for Status Change (Especially Ticket Close / Completed)
           const oldStatus = trackedTaskStatuses.get(t.id);
           if (oldStatus && oldStatus !== t.status) {
+            const isClosed = t.status === 'Completed';
             const delivered = await sendOutsideNotification({
-              title: `⚡ Ticket #${t.ticketNumber} ${t.status}`,
-              body: `${t.systemName || t.partyName} status changed from ${oldStatus} to ${t.status}`,
+              title: isClosed
+                ? `✅ Ticket #${t.ticketNumber} Resolved & Closed`
+                : `⚡ Ticket #${t.ticketNumber} ${t.status}`,
+              body: isClosed
+                ? `${t.systemName || t.partyName} has been verified and resolved by ${t.assignedTo || 'Engineer'}.`
+                : `${t.systemName || t.partyName} moved from ${oldStatus} to ${t.status}`,
               tag: `status-${t.id}-${t.status}`,
               data: { url: '/dashboard', ticketId: t.id }
             });

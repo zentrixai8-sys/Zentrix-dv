@@ -67,6 +67,7 @@ export interface Employee {
   designation?: string;
   email?: string;
   phone?: string;
+  password?: string; // Assigned password for employee login (Phone number is ID)
   activeTasksCount?: number;
   avatar?: string;
   createdAt?: string;
@@ -79,6 +80,11 @@ export interface AuthSession {
   companyName?: string;
   email?: string;
   idCode?: string;
+  isSuperAdmin?: boolean;
+  employeeId?: string;
+  designation?: string;
+  loginAt?: number;
+  expiresAt?: number;
 }
 
 export interface Delegation {

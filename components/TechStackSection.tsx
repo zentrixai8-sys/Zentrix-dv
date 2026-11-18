@@ -27,7 +27,7 @@ const NEEDS_LIGHT_FILL = new Set(['Express', 'Next.js', 'Vercel', 'OpenAI', 'AWS
 
 const TECH_CATEGORIES = [
   { id: 'all', name: 'All Ecosystem', color: '#06b6d4', icon: Orbit },
-  { id: 'ai', name: 'AI & Automation', color: '#06b6d4', icon: Sparkles },
+  { id: 'ai', name: 'AI & Automation', color: '#06b6d4', icon: Cpu },
   { id: 'cloud', name: 'Cloud & DevOps', color: '#f97316', icon: Zap },
   { id: 'database', name: 'Database', color: '#f59e0b', icon: Layers },
   { id: 'backend', name: 'Backend', color: '#10b981', icon: Cpu },
@@ -589,7 +589,7 @@ const TechStackSection: React.FC = () => {
           isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'
         }`}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-5 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin-slow" />
+            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
             <span className="text-cyan-400 font-black tracking-widest text-xs uppercase">Enterprise Architecture</span>
           </div>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-white w-full tracking-tight mb-4">

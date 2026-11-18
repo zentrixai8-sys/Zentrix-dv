@@ -2,6 +2,10 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { sendWebPush, PushSubscriptionRecord, VapidConfig } from './webpush';
 
+// Declare D1Database & fetch fallback types for local editors/toolchains when @cloudflare/workers-types is not installed locally
+type D1Database = any;
+declare const fetch: any;
+
 export interface Env {
   DB: D1Database;
   JWT_SECRET?: string;
@@ -182,37 +186,44 @@ app.post('/api/push/test', async (c) => {
 // ==========================================
 // 1. AUTHENTICATION ENDPOINTS
 // ==========================================
+const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
 // Company Login
 app.post('/api/auth/company-login', async (c) => {
   try {
     const { companyNameOrCode, userName, password } = await c.req.json();
-    if (!companyNameOrCode) {
-      return c.json({ error: 'Company Name or Code is required' }, 400);
+    const cleanCompany = (companyNameOrCode || '').toString().trim();
+    const cleanPassword = (password || '').toString().trim();
+
+    if (!cleanCompany || !cleanPassword) {
+      return c.json({ error: 'Company ID and Password are required' }, 400);
     }
 
     const db = c.env.DB;
     // Find company by code or name
-    const company = await db
-      .prepare('SELECT * FROM companies WHERE LOWER(code) = LOWER(?) OR LOWER(name) LIKE LOWER(?)')
-      .bind(companyNameOrCode.trim(), `%${companyNameOrCode.trim()}%`)
+    const company: any = await db
+      .prepare('SELECT * FROM companies WHERE LOWER(code) = LOWER(?) OR LOWER(name) = LOWER(?)')
+      .bind(cleanCompany, cleanCompany)
       .first();
 
     if (!company) {
       return c.json({ error: 'Access Denied: Company not registered. Please contact Zentrixs Admin.' }, 404);
     }
 
-    if (company.password && password && company.password !== password) {
+    if (!company.password || String(company.password).trim() !== cleanPassword) {
       return c.json({ error: 'Galat Password! Kripya sahi password enter karein.' }, 401);
     }
 
+    const loginAt = Date.now();
     const session = {
       user: userName || company.contact_person,
       role: 'company',
       companyId: company.id,
       companyName: company.name,
       email: company.email,
-      idCode: company.code
+      idCode: company.code,
+      loginAt,
+      expiresAt: loginAt + SESSION_DURATION_MS
     };
 
     return c.json({ success: true, session });
@@ -225,19 +236,36 @@ app.post('/api/auth/company-login', async (c) => {
 app.post('/api/auth/admin-login', async (c) => {
   try {
     const { username, idCode, password } = await c.req.json();
-    
-    // In production, compare with hashed password in D1 users table:
-    // const user = await c.env.DB.prepare('SELECT * FROM users WHERE role = "admin" AND ...').first();
+    const cleanIdentifier = (username || idCode || '').toString().trim();
+    const cleanPassword = (password || '').toString().trim();
 
-    if (!username) {
-      return c.json({ error: 'Admin username is required' }, 400);
+    if (!cleanIdentifier || !cleanPassword) {
+      return c.json({ error: 'Admin ID and Password are required' }, 400);
     }
 
+    const db = c.env.DB;
+    const adminUser: any = await db
+      .prepare(
+        `SELECT * FROM users
+         WHERE (LOWER(username) = LOWER(?) OR LOWER(id_code) = LOWER(?) OR LOWER(email) = LOWER(?) OR LOWER(name) = LOWER(?))
+           AND LOWER(COALESCE(role, '')) LIKE '%admin%'
+         LIMIT 1`
+      )
+      .bind(cleanIdentifier, cleanIdentifier, cleanIdentifier, cleanIdentifier)
+      .first();
+
+    if (!adminUser || !adminUser.password || String(adminUser.password).trim() !== cleanPassword) {
+      return c.json({ success: false, error: 'Access Denied: Invalid Admin ID or Password.' }, 401);
+    }
+
+    const loginAt = Date.now();
     const session = {
-      user: username,
+      user: adminUser.name || adminUser.username,
       role: 'admin',
-      idCode: idCode || 'ADM-001',
-      email: 'admin@zentrixs.com'
+      idCode: adminUser.id_code || cleanIdentifier,
+      email: adminUser.email || 'admin@zentrixs.com',
+      loginAt,
+      expiresAt: loginAt + SESSION_DURATION_MS
     };
 
     return c.json({ success: true, session });
@@ -462,6 +490,26 @@ app.put('/api/tasks/:id/assign', async (c) => {
       `Assigned to ${assignedTo}`
     ).run();
 
+    // Fetch task details for push notification
+    const task: any = await db
+      .prepare('SELECT ticket_number, company_id, party_name, system_name, type_of_work FROM tasks WHERE id = ?')
+      .bind(taskId)
+      .first();
+
+    // Broadcast Push Notification: Employee Assigned
+    c.executionCtx.waitUntil(
+      broadcastPush(
+        c.env,
+        {
+          title: `👨‍💻 Ticket Assigned: #${task?.ticket_number || ''}`,
+          body: `Assigned to ${assignedTo} for ${task?.system_name || task?.party_name || 'System'}`,
+          tag: `assigned-${taskId}-${Date.now()}`,
+          data: { url: '/dashboard', ticketId: taskId }
+        },
+        task?.company_id || null
+      )
+    );
+
     return c.json({ success: true, message: `Task assigned to ${assignedTo}` });
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
@@ -511,16 +559,25 @@ app.put('/api/tasks/:id/status', async (c) => {
 
     if (status) {
       const task: any = await db
-        .prepare('SELECT ticket_number, company_id, party_name, system_name FROM tasks WHERE id = ?')
+        .prepare('SELECT ticket_number, company_id, party_name, system_name, assigned_to FROM tasks WHERE id = ?')
         .bind(taskId)
         .first();
+
+      const isCompleted = status === 'Completed';
+      const pushTitle = isCompleted
+        ? `✅ Ticket #${task?.ticket_number || ''} Resolved & Closed`
+        : `⚡ Ticket #${task?.ticket_number || ''} Status: ${status}`;
+
+      const pushBody = isCompleted
+        ? `${task?.system_name || task?.party_name || 'Ticket'} has been verified and closed by ${performedBy || task?.assigned_to || 'Zentrixs Engineer'}.`
+        : `${task?.system_name || task?.party_name || 'Ticket'} status is now ${status}.`;
 
       c.executionCtx.waitUntil(
         broadcastPush(
           c.env,
           {
-            title: `⚡ Ticket #${task?.ticket_number || ''} ${status}`,
-            body: `${task?.system_name || task?.party_name || 'Ticket'} is now ${status}`,
+            title: pushTitle,
+            body: pushBody,
             tag: `status-${taskId}-${status}`,
             data: { url: '/dashboard', ticketId: taskId }
           },

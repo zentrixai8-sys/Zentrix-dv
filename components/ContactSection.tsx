@@ -71,7 +71,7 @@ const ContactSection: React.FC = () => {
                   </div>
                   <div className="min-w-0 pr-12">
                     <h4 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mb-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Zentrix AI Assistant (Chatbot)
+                      <Bot className="w-3.5 h-3.5" /> Zentrix AI Assistant (Chatbot)
                     </h4>
                     <p className="text-2xl sm:text-3xl font-black text-white tracking-wider font-mono hover:text-cyan-300 transition-colors">
                       +91 {AI_BOT_NUMBER}
