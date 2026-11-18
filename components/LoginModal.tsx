@@ -120,14 +120,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
         onClick={onClose}
       />
 
-      {/* Main Glassmorphic Modal Card */}
-      <div className={`relative w-full max-w-md rounded-[2.25rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 border transition-all my-6 ${
+      {/* Main Glassmorphic Modal Card - Enhanced 2-Column on Desktop */}
+      <div className={`relative w-full max-w-md md:max-w-4xl rounded-[2.25rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 border transition-all my-auto ${
         isLight 
-          ? 'bg-gradient-to-b from-[#FFFFFF] via-[#FDFBF7] to-[#F7F2EA] border-[#E8DEC8] text-[#2A2118] shadow-[0_25px_60px_-15px_rgba(234,85,46,0.18)]' 
-          : 'bg-gradient-to-b from-[#0F1422]/95 via-[#0B0E17]/95 to-[#06080E]/98 border-white/15 text-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_rgba(6,182,212,0.12)]'
+          ? 'bg-gradient-to-b from-[#FFFFFF] via-[#FDFBF7] to-[#F7F2EA] border-[#E8DEC8] text-[#2A2118] shadow-[0_30px_90px_-15px_rgba(234,85,46,0.22)]' 
+          : 'bg-gradient-to-b from-[#0F1422]/98 via-[#0B0E17]/98 to-[#06080E]/98 border-white/15 text-white shadow-[0_30px_90px_-15px_rgba(0,0,0,0.95),0_0_50px_rgba(6,182,212,0.15)]'
       }`}>
         {/* Subtle Ambient Top Glow */}
-        <div className={`absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full blur-3xl pointer-events-none ${
+        <div className={`absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-40 rounded-full blur-3xl pointer-events-none ${
           isLight ? 'bg-orange-400/20' : 'bg-cyan-500/20'
         }`} />
 
@@ -138,7 +138,80 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
             : 'bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500'
         }`} />
 
-        <div className="p-6 sm:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 min-h-full">
+          {/* LEFT DESKTOP BRANDING & HIGHLIGHT SHOWCASE PANEL (Visible on md+) */}
+          <div className={`hidden md:flex md:col-span-5 flex-col justify-between p-8 border-r relative overflow-hidden ${
+            isLight 
+              ? 'bg-gradient-to-br from-[#FFF8EE] via-[#FDF4E7] to-[#F7ECE0] border-[#E8DEC8]' 
+              : 'bg-gradient-to-br from-[#0B101E] via-[#090D18] to-[#04060B] border-white/10'
+          }`}>
+            {/* Ambient Graphic Circle */}
+            <div className={`absolute -bottom-16 -left-16 w-48 h-48 rounded-full blur-2xl pointer-events-none ${
+              isLight ? 'bg-orange-300/30' : 'bg-blue-600/20'
+            }`} />
+
+            {/* Brand Logo & Title */}
+            <div className="space-y-4 relative z-10">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shadow-md ${
+                  isLight ? 'bg-[#EA552E] text-white border-[#EA552E]/30' : 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-black border-cyan-400/40'
+                }`}>
+                  <Zap className="w-5 h-5 fill-current" />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-black tracking-wider uppercase font-sans ${isLight ? 'text-[#1C1610]' : 'text-white'}`}>
+                    ZENTRIXS
+                  </h3>
+                  <span className={`text-[10px] font-bold tracking-widest uppercase block ${isLight ? 'text-[#EA552E]' : 'text-cyan-400'}`}>
+                    SYSTEM CLOUD
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <h4 className={`text-xl font-black leading-tight tracking-tight ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>
+                  {activeTab === 'company' ? 'Enterprise Client Gateway' : 'Engineering Command & Workload'}
+                </h4>
+                <p className={`text-xs mt-2 leading-relaxed font-medium ${isLight ? 'text-[#7A6B58]' : 'text-slate-400'}`}>
+                  {activeTab === 'company'
+                    ? 'Raise instant priority support tickets, monitor connected enterprise systems, verify milestones and collaborate seamlessly with our engineering architects.'
+                    : 'Manage task delegation, track company ticket queues, resolve bug updates and monitor live team workload in real time.'}
+                </p>
+              </div>
+
+              {/* Feature Points */}
+              <div className="space-y-2.5 pt-4">
+                {[
+                  { title: 'Cloudflare D1 & Sync', desc: 'Encrypted low-latency live persistence' },
+                  { title: 'Strict Role Privacy', desc: 'Secure authorized access for clients & team' },
+                  { title: 'Instant Push Alerts', desc: 'Strict notifications on ticket dispatch & close' },
+                ].map((feat, i) => (
+                  <div key={i} className={`p-2.5 rounded-2xl border text-xs flex items-center gap-2.5 transition-all ${
+                    isLight ? 'bg-white/70 border-[#EDE2D3] shadow-xs' : 'bg-white/5 border-white/5 shadow-inner'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${isLight ? 'bg-[#EA552E]' : 'bg-cyan-400'}`} />
+                    <div className="min-w-0">
+                      <span className={`font-bold block text-[11px] ${isLight ? 'text-[#2A2118]' : 'text-white'}`}>{feat.title}</span>
+                      <span className={`text-[10px] block truncate ${isLight ? 'text-[#8A7B68]' : 'text-slate-400'}`}>{feat.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom Left Badge */}
+            <div className="pt-6 relative z-10">
+              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border shadow-xs ${
+                isLight ? 'bg-white border-[#EDE2D3] text-[#7A6B58]' : 'bg-black/40 border-white/10 text-slate-400'
+              }`}>
+                <Lock className="w-3 h-3 text-emerald-500" />
+                <span>256-bit Encrypted Portal</span>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT LOGIN FORM PANEL (7 cols on md+) */}
+          <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between">
           {/* Header Bar: Theme Selector + Powered By Zentrixs + Close Button */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-inherit/40">
             <ThemeSelector
@@ -435,19 +508,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
             </div>
           )}
 
-          {/* Footer Security Badge */}
-          <div className="mt-6 pt-4 border-t border-inherit/40 text-center space-y-1">
-            <p className={`text-[10px] font-mono flex items-center justify-center gap-1.5 ${
-              isLight ? 'text-[#9C8F7D]' : 'text-slate-500'
-            }`}>
-              <Lock className="w-3 h-3 text-emerald-500" />
-              <span>End-to-End Encrypted Tunnel</span>
-            </p>
-            <p className={`text-[9px] font-bold uppercase tracking-wider ${
-              isLight ? 'text-[#8A7B68]' : 'text-slate-400'
-            }`}>
-              Powered by <span className={isLight ? 'text-[#EA552E]' : 'text-cyan-400'}>Zentrixs</span>
-            </p>
+            {/* Footer Security Badge */}
+            <div className="mt-6 pt-4 border-t border-inherit/40 text-center space-y-1">
+              <p className={`text-[10px] font-mono flex items-center justify-center gap-1.5 ${
+                isLight ? 'text-[#9C8F7D]' : 'text-slate-500'
+              }`}>
+                <Lock className="w-3 h-3 text-emerald-500" />
+                <span>End-to-End Encrypted Tunnel</span>
+              </p>
+              <p className={`text-[9px] font-bold uppercase tracking-wider ${
+                isLight ? 'text-[#8A7B68]' : 'text-slate-400'
+              }`}>
+                Powered by <span className={isLight ? 'text-[#EA552E]' : 'text-cyan-400'}>Zentrixs</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
