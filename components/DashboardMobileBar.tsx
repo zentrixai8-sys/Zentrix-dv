@@ -65,10 +65,10 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
     ];
 
     return (
-      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),12px)] pt-2 px-4 pointer-events-none">
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),14px)] pt-2 px-3 pointer-events-none">
         {/* Floating Capsule Bar Container */}
         <nav
-          className={`max-w-[340px] mx-auto p-1.5 rounded-full border shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl flex items-center justify-between gap-1 pointer-events-auto transition-all ${
+          className={`max-w-[390px] mx-auto p-2 rounded-full border shadow-[0_16px_48px_rgba(0,0,0,0.22)] backdrop-blur-2xl flex items-center justify-between gap-1.5 pointer-events-auto transition-all ${
             isLight
               ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118]'
               : 'bg-[#090D18]/95 border-white/15 text-white'
@@ -86,17 +86,17 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
                 className={`relative flex items-center justify-center transition-all duration-300 rounded-full cursor-pointer focus:outline-none active:scale-95 ${
                   active
                     ? isLight
-                      ? 'bg-[#1C1610] text-white px-4 py-2 shadow-md gap-2'
-                      : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black px-4 py-2 shadow-[0_0_15px_rgba(6,182,212,0.4)] gap-2'
+                      ? 'bg-[#1C1610] text-white px-5 py-2.5 shadow-md gap-2.5'
+                      : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black px-5 py-2.5 shadow-[0_0_18px_rgba(6,182,212,0.45)] gap-2.5'
                     : isLight
-                      ? 'text-[#8A7B68] hover:text-[#2A2118] p-2.5 flex-1'
-                      : 'text-zinc-400 hover:text-white p-2.5 flex-1'
+                      ? 'text-[#8A7B68] hover:text-[#2A2118] p-3 flex-1'
+                      : 'text-zinc-400 hover:text-white p-3 flex-1'
                 }`}
               >
                 <div className="relative">
-                  <Icon className="w-4 h-4 stroke-[2.2]" />
+                  <Icon className="w-5 h-5 stroke-[2.2]" />
                   {item.badge && (
-                    <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-pulse">
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
                       {item.badge}
                     </span>
                   )}
@@ -104,7 +104,7 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
 
                 {/* Show Label ONLY for the active item, exactly matching reference image */}
                 {active && (
-                  <span className="text-xs font-bold font-sans tracking-tight">
+                  <span className="text-sm font-bold font-sans tracking-tight whitespace-nowrap">
                     {item.label}
                   </span>
                 )}
@@ -156,9 +156,9 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),12px)] pt-2 px-4 pointer-events-none">
+    <div className="fixed bottom-0 inset-x-0 z-40 md:hidden pb-[max(env(safe-area-inset-bottom),14px)] pt-2 px-3 pointer-events-none">
       <nav
-        className={`max-w-[340px] mx-auto p-1.5 rounded-full border shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl flex items-center justify-between gap-1 pointer-events-auto transition-all ${
+        className={`max-w-[390px] mx-auto p-2 rounded-full border shadow-[0_16px_48px_rgba(0,0,0,0.22)] backdrop-blur-2xl flex items-center justify-between gap-1.5 pointer-events-auto transition-all ${
           isLight
             ? 'bg-white/95 border-[#EDE2D3] text-[#2A2118]'
             : 'bg-[#090D18]/95 border-white/15 text-white'
@@ -176,24 +176,24 @@ export const DashboardMobileBar: React.FC<DashboardMobileBarProps> = ({
               className={`relative flex items-center justify-center transition-all duration-300 rounded-full cursor-pointer focus:outline-none active:scale-95 ${
                 active
                   ? isLight
-                    ? 'bg-[#1C1610] text-white px-4 py-2 shadow-md gap-2'
-                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black px-4 py-2 shadow-[0_0_15px_rgba(6,182,212,0.4)] gap-2'
+                    ? 'bg-[#1C1610] text-white px-5 py-2.5 shadow-md gap-2.5'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black px-5 py-2.5 shadow-[0_0_18px_rgba(6,182,212,0.45)] gap-2.5'
                   : isLight
-                    ? 'text-[#8A7B68] hover:text-[#2A2118] p-2.5 flex-1'
-                    : 'text-zinc-400 hover:text-white p-2.5 flex-1'
+                    ? 'text-[#8A7B68] hover:text-[#2A2118] p-3 flex-1'
+                    : 'text-zinc-400 hover:text-white p-3 flex-1'
               }`}
             >
               <div className="relative">
-                <Icon className="w-4 h-4 stroke-[2.2]" />
+                <Icon className="w-5 h-5 stroke-[2.2]" />
                 {item.badge && (
-                  <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center shadow-md animate-pulse">
+                  <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
                     {item.badge}
                   </span>
                 )}
               </div>
 
               {active && (
-                <span className="text-xs font-bold font-sans tracking-tight">
+                <span className="text-sm font-bold font-sans tracking-tight whitespace-nowrap">
                   {item.label}
                 </span>
               )}
