@@ -160,6 +160,7 @@ export const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isDashboardRoute = location.pathname === '/dashboard';
+  const isLoginRoute = location.pathname === '/login';
 
   const handleLoginSuccess = (user: string, role: 'admin' | 'company') => {
     setSessionNotice('');
@@ -280,7 +281,7 @@ export const AppContent: React.FC = () => {
     <div className="min-h-screen bg-[#010101] selection:bg-blue-600/40 text-white">
       <SEOHead />
       <ScrollToTop />
-      {(!isDashboardRoute || !authRole) && (
+      {(!isDashboardRoute && !isLoginRoute || !authRole && !isLoginRoute) && (
         <Header
           isAdmin={authRole === 'admin'}
           userRole={authRole}
@@ -317,16 +318,14 @@ export const AppContent: React.FC = () => {
             authRole ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
-                <LoginModal
-                  notice={sessionNotice}
-                  onClose={() => navigate('/')}
-                  onSuccess={(user, role) => {
-                    handleLoginSuccess(user, role);
-                    navigate('/dashboard');
-                  }}
-                />
-              </div>
+              <LoginModal
+                notice={sessionNotice}
+                onClose={() => navigate('/')}
+                onSuccess={(user, role) => {
+                  handleLoginSuccess(user, role);
+                  navigate('/dashboard');
+                }}
+              />
             )
           }
         />
@@ -334,7 +333,7 @@ export const AppContent: React.FC = () => {
       </Routes>
 
       <CookieConsentModal />
-      {!isDashboardRoute && <Footer />}
+      {!isDashboardRoute && !isLoginRoute && <Footer />}
     </div>
   );
 };

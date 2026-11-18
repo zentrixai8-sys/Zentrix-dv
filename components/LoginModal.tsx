@@ -145,14 +145,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
       {/* Full-view Container */}
       <div className="relative z-10 w-full min-h-screen flex flex-col justify-between p-4 sm:p-8 md:p-12 lg:px-20 max-w-7xl mx-auto">
         {/* TOP BAR */}
-        <header className="flex items-center justify-between w-full pt-1 pb-4">
+        <header className="flex items-center justify-between w-full pt-4 pb-4">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <div className="h-10 px-2 py-1 rounded-xl bg-white/80 border border-[#E8DEC8] flex items-center justify-center shadow-sm">
+            <div className="h-12 px-3 py-1.5 rounded-2xl bg-white/90 border border-[#E8DEC8] flex items-center justify-center shadow-sm">
               <img
                 src={LOGO_FULL_URL}
                 alt="Zentrixs"
-                className="h-7 w-auto object-contain"
+                className="h-8 w-auto object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = LOGO_URL;
                 }}
@@ -279,12 +279,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
             }`}>
               {/* Floating Top Emblem */}
               <div className="flex justify-center -mt-2 mb-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F5673C] to-[#EA552E] flex items-center justify-center text-white shadow-lg shadow-[#EA552E]/35">
-                  {activeTab === 'company' ? (
-                    <Building2 className="w-7 h-7" />
-                  ) : (
-                    <Fingerprint className="w-7 h-7" />
-                  )}
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1C2638] via-[#0E1526] to-[#0A0D14] border border-cyan-500/30 flex items-center justify-center shadow-lg shadow-cyan-500/20 p-2.5">
+                  <img
+                    src={LOGO_URL}
+                    alt="Zentrixs Icon"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
 
