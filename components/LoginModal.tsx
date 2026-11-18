@@ -113,15 +113,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
   const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex flex-col justify-between overflow-x-hidden overflow-y-auto lg:overflow-hidden select-none">
       {/* Background with warm ambient gradients matching the reference mockup */}
       <div 
-        className={`fixed inset-0 transition-colors duration-500 ${
+        className={`fixed inset-0 transition-colors duration-500 pointer-events-none ${
           isLight
             ? 'bg-[#FAF3EA]'
             : 'bg-[#0A0D14]'
         }`}
-        onClick={onClose}
       >
         {/* Soft radial background glow circles */}
         <div className={`absolute top-0 left-0 w-[500px] md:w-[700px] h-[500px] md:h-[700px] rounded-full blur-[120px] pointer-events-none transition-all duration-700 ${
@@ -135,45 +134,38 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
             : 'bg-gradient-to-tl from-cyan-500/10 via-blue-600/10 to-transparent'
         }`} />
         {/* Decorative subtle circular graphic as in reference */}
-        <div className={`hidden md:block absolute bottom-8 left-[38%] w-80 h-80 rounded-full pointer-events-none ${
+        <div className={`hidden md:block absolute -bottom-10 left-[35%] w-96 h-96 rounded-full pointer-events-none ${
           isLight 
             ? 'bg-gradient-to-br from-white/60 to-white/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.8)]' 
             : 'bg-white/[0.02] border border-white/5'
         }`} />
       </div>
 
-      {/* Full-view Container */}
-      <div className="relative z-10 w-full min-h-screen flex flex-col justify-between p-4 sm:p-8 md:p-12 lg:px-20 max-w-7xl mx-auto">
+      {/* Full-view Container strictly fitting 100vh on desktop */}
+      <div className="relative z-10 w-full h-full min-h-screen flex flex-col justify-between px-5 sm:px-10 lg:px-16 py-3 sm:py-5 max-w-7xl mx-auto">
         {/* TOP BAR */}
-        <header className="flex items-center justify-between w-full pt-4 pb-4">
+        <header className="flex items-center justify-between w-full shrink-0">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <div className="h-12 px-3 py-1.5 rounded-2xl bg-white/90 border border-[#E8DEC8] flex items-center justify-center shadow-sm">
-              <img
-                src={LOGO_FULL_URL}
-                alt="Zentrixs"
-                className="h-8 w-auto object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = LOGO_URL;
-                }}
-              />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-base font-black tracking-tight ${isLight ? 'text-[#1D1B18]' : 'text-white'}`}>
-                  Portal
-                </span>
-              </div>
-              <span className={`text-[11px] font-semibold block -mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/zentrixs-logo-full.png"
+              alt="Zentrixs"
+              className="h-7 sm:h-8 w-auto object-contain"
+            />
+            <div className="border-l border-zinc-300/80 dark:border-white/10 pl-2.5 py-0.5">
+              <span className={`text-xs font-black tracking-tight block leading-tight ${isLight ? 'text-[#1D1B18]' : 'text-white'}`}>
+                Portal
+              </span>
+              <span className={`text-[9px] font-semibold block leading-tight ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>
                 Digital Services
               </span>
             </div>
           </div>
 
           {/* Right Status Pill & Theme Selector & Close */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* System Operational pill from reference */}
-            <div className={`hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-md shadow-xs ${
+            <div className={`hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold border backdrop-blur-md shadow-xs ${
               isLight 
                 ? 'bg-white/80 text-[#2C2620] border-[#E8DEC8]' 
                 : 'bg-white/5 text-slate-300 border-white/10'
@@ -193,30 +185,30 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
               <button
                 onClick={onClose}
                 title="Close"
-                className={`p-2 rounded-xl transition-all cursor-pointer ${
+                className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                   isLight 
                     ? 'text-[#8E7E70] hover:text-[#1D1B18] hover:bg-black/5' 
                     : 'text-slate-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
         </header>
 
         {/* MAIN BODY: 2 COLUMNS ON DESKTOP */}
-        <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center my-auto py-6 sm:py-10">
+        <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center my-auto py-2 sm:py-4">
           {/* LEFT HERO COLUMN (DESKTOP) */}
-          <div className="hidden lg:flex lg:col-span-7 flex-col justify-center space-y-7 pr-4">
+          <div className="hidden lg:flex lg:col-span-7 flex-col justify-center space-y-5 xl:space-y-6 pr-4">
             {/* Pill Badge */}
-            <div className="inline-flex items-center self-start gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border backdrop-blur-md shadow-xs bg-white/70 border-[#EADECE] text-[#5A4F44]">
+            <div className="inline-flex items-center self-start gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide border backdrop-blur-md shadow-xs bg-white/70 border-[#EADECE] text-[#5A4F44]">
               <ShieldCheck className="w-3.5 h-3.5 text-[#EA552E]" />
               <span>Authorized Personnel Access</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className={`text-4xl xl:text-5xl font-black tracking-tight leading-[1.15] ${
+            <h1 className={`text-4xl xl:text-5xl font-black tracking-tight leading-[1.12] ${
               isLight ? 'text-[#191512]' : 'text-white'
             }`}>
               A secure gateway to <br />
@@ -224,45 +216,45 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
             </h1>
 
             {/* Subtitle / Paragraph */}
-            <p className={`text-sm xl:text-base leading-relaxed max-w-xl font-normal ${
+            <p className={`text-sm leading-relaxed max-w-lg font-normal ${
               isLight ? 'text-[#6A5E53]' : 'text-slate-400'
             }`}>
               Sign in to manage records, monitor operations, and access classified digital services through a unified enterprise portal built for 2026.
             </p>
 
             {/* 3 Feature Cards */}
-            <div className="grid grid-cols-3 gap-3.5 max-w-lg pt-2">
-              <div className={`p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+            <div className="grid grid-cols-3 gap-3 max-w-lg pt-1">
+              <div className={`p-3.5 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
                 isLight 
                   ? 'bg-white/80 border-[#EADECE] shadow-sm text-[#191512]' 
                   : 'bg-white/5 border-white/10 text-white'
               }`}>
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-3">
-                  <Shield className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-2">
+                  <Shield className="w-3.5 h-3.5" />
                 </div>
                 <div className="text-xs font-bold">Zero Trust</div>
                 <div className={`text-[10px] mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>Protocol</div>
               </div>
 
-              <div className={`p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+              <div className={`p-3.5 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
                 isLight 
                   ? 'bg-white/80 border-[#EADECE] shadow-sm text-[#191512]' 
                   : 'bg-white/5 border-white/10 text-white'
               }`}>
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-3">
-                  <Fingerprint className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-2">
+                  <Fingerprint className="w-3.5 h-3.5" />
                 </div>
                 <div className="text-xs font-bold">Biometric Ready</div>
                 <div className={`text-[10px] mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>Passkey 2FA</div>
               </div>
 
-              <div className={`p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
+              <div className={`p-3.5 rounded-2xl border backdrop-blur-sm transition-all hover:scale-[1.02] ${
                 isLight 
                   ? 'bg-white/80 border-[#EADECE] shadow-sm text-[#191512]' 
                   : 'bg-white/5 border-white/10 text-white'
               }`}>
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-3">
-                  <KeyRound className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 text-[#EA552E] flex items-center justify-center mb-2">
+                  <KeyRound className="w-3.5 h-3.5" />
                 </div>
                 <div className="text-xs font-bold">256-bit TLS</div>
                 <div className={`text-[10px] mt-0.5 ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>Cloudflare D1</div>
@@ -272,14 +264,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
 
           {/* RIGHT COLUMN: FLOATING CLEAN LOGIN CARD */}
           <div className="w-full lg:col-span-5 max-w-md mx-auto">
-            <div className={`relative rounded-[2rem] p-6 sm:p-9 shadow-2xl transition-all duration-300 border ${
+            <div className={`relative rounded-3xl p-6 sm:p-7 shadow-2xl transition-all duration-300 border ${
               isLight 
-                ? 'bg-white/95 backdrop-blur-xl border-white/80 shadow-[0_25px_70px_rgba(234,85,46,0.12)] text-[#191512]' 
-                : 'bg-[#111622]/95 backdrop-blur-xl border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-white'
+                ? 'bg-white/95 backdrop-blur-xl border-white/80 shadow-[0_20px_60px_rgba(234,85,46,0.12)] text-[#191512]' 
+                : 'bg-[#111622]/95 backdrop-blur-xl border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] text-white'
             }`}>
               {/* Floating Top Emblem */}
-              <div className="flex justify-center -mt-2 mb-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1C2638] via-[#0E1526] to-[#0A0D14] border border-cyan-500/30 flex items-center justify-center shadow-lg shadow-cyan-500/20 p-2.5">
+              <div className="flex justify-center -mt-1 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1C2638] via-[#0E1526] to-[#0A0D14] border border-cyan-500/30 flex items-center justify-center shadow-md shadow-cyan-500/20 p-2">
                   <img
                     src={LOGO_URL}
                     alt="Zentrixs Icon"
@@ -289,23 +281,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
               </div>
 
               {/* Title & Subtitle */}
-              <div className="text-center mb-5">
-                <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isLight ? 'text-[#191512]' : 'text-white'}`}>
+              <div className="text-center mb-4">
+                <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-[#191512]' : 'text-white'}`}>
                   {activeTab === 'company' ? 'Enterprise Portal' : 'Admin & Engineer Portal'}
                 </h2>
-                <p className={`text-xs mt-1 font-medium ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>
+                <p className={`text-[11px] mt-0.5 font-medium ${isLight ? 'text-[#8E7E70]' : 'text-slate-400'}`}>
                   Secure Digital Access - Management System
                 </p>
               </div>
 
               {/* Dual Tab Segmented Switcher */}
-              <div className={`p-1 rounded-xl border mb-5 grid grid-cols-2 gap-1 ${
+              <div className={`p-1 rounded-xl border mb-4 grid grid-cols-2 gap-1 ${
                 isLight ? 'bg-[#F5EDE3] border-[#E8DEC8]' : 'bg-black/40 border-white/10'
               }`}>
                 <button
                   type="button"
                   onClick={() => { setActiveTab('company'); setError(''); }}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`py-1.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     activeTab === 'company'
                       ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25'
                       : isLight ? 'text-[#6A5E53] hover:text-[#191512]' : 'text-slate-400 hover:text-white'
@@ -317,7 +309,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
                 <button
                   type="button"
                   onClick={() => { setActiveTab('admin'); setError(''); }}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`py-1.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     activeTab === 'admin'
                       ? 'bg-[#EA552E] text-white shadow-md shadow-[#EA552E]/25'
                       : isLight ? 'text-[#6A5E53] hover:text-[#191512]' : 'text-slate-400 hover:text-white'
@@ -330,7 +322,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
 
               {/* Notice */}
               {notice && (
-                <div className={`mb-4 p-2.5 rounded-xl border text-xs font-medium text-center ${
+                <div className={`mb-3 p-2 rounded-xl border text-xs font-medium text-center ${
                   isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
                 }`}>
                   {notice}
@@ -338,10 +330,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
               )}
 
               {/* FORM: COMPANY OR ADMIN */}
-              <form onSubmit={activeTab === 'company' ? handleCompanySubmit : handleAdminSubmit} className="space-y-4">
+              <form onSubmit={activeTab === 'company' ? handleCompanySubmit : handleAdminSubmit} className="space-y-3">
                 {/* Username / ID Field */}
-                <div className="space-y-1.5">
-                  <label className={`block text-xs font-bold ${isLight ? 'text-[#3E352C]' : 'text-slate-300'}`}>
+                <div className="space-y-1">
+                  <label className={`block text-[11px] font-bold ${isLight ? 'text-[#3E352C]' : 'text-slate-300'}`}>
                     {activeTab === 'company' ? 'Company ID / Code' : 'Mobile Number or Admin ID'}
                   </label>
                   <div className="relative">
@@ -351,7 +343,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
                       value={activeTab === 'company' ? companyName : adminUsername}
                       onChange={(e) => activeTab === 'company' ? setCompanyName(e.target.value) : setAdminUsername(e.target.value)}
                       placeholder={activeTab === 'company' ? 'Enter company code' : 'Enter mobile or admin ID'}
-                      className={`w-full rounded-xl px-4 py-3 text-sm font-medium transition-all outline-none border ${
+                      className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all outline-none border ${
                         isLight 
                           ? 'bg-[#FBF7F2] border-[#E8DEC8] text-[#191512] placeholder:text-[#AFA193] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
                           : 'bg-[#181F30] border-white/10 text-white placeholder:text-slate-500 focus:border-[#EA552E] focus:ring-2 focus:ring-[#EA552E]/20'
@@ -361,8 +353,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
                 </div>
 
                 {/* Password Field */}
-                <div className="space-y-1.5">
-                  <label className={`block text-xs font-bold ${isLight ? 'text-[#3E352C]' : 'text-slate-300'}`}>
+                <div className="space-y-1">
+                  <label className={`block text-[11px] font-bold ${isLight ? 'text-[#3E352C]' : 'text-slate-300'}`}>
                     Password
                   </label>
                   <div className="relative">
@@ -372,7 +364,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
                       value={activeTab === 'company' ? companyPassword : adminPassword}
                       onChange={(e) => activeTab === 'company' ? setCompanyPassword(e.target.value) : setAdminPassword(e.target.value)}
                       placeholder="Enter your password"
-                      className={`w-full rounded-xl pl-4 pr-11 py-3 text-sm font-medium transition-all outline-none border ${
+                      className={`w-full rounded-xl pl-3.5 pr-10 py-2.5 text-xs font-medium transition-all outline-none border ${
                         isLight 
                           ? 'bg-[#FBF7F2] border-[#E8DEC8] text-[#191512] placeholder:text-[#AFA193] focus:border-[#EA552E] focus:bg-white focus:ring-2 focus:ring-[#EA552E]/15' 
                           : 'bg-[#181F30] border-white/10 text-white placeholder:text-slate-500 focus:border-[#EA552E] focus:ring-2 focus:ring-[#EA552E]/20'
@@ -387,40 +379,40 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
                       aria-label="Toggle password visibility"
                     >
                       {(activeTab === 'company' ? showCompanyPassword : showAdminPassword) ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="w-3.5 h-3.5" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       )}
                     </button>
                   </div>
                 </div>
 
                 {/* Remember Me & Forgot Password Row */}
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <label className={`flex items-center gap-2 cursor-pointer select-none ${
+                <div className="flex items-center justify-between text-xs pt-0.5">
+                  <label className={`flex items-center gap-1.5 cursor-pointer select-none ${
                     isLight ? 'text-[#5A4F44]' : 'text-slate-400'
                   }`}>
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#EA552E] focus:ring-[#EA552E] border-gray-300 accent-[#EA552E]"
+                      className="w-3.5 h-3.5 rounded text-[#EA552E] focus:ring-[#EA552E] border-gray-300 accent-[#EA552E]"
                     />
-                    <span className="font-medium">Remember me</span>
+                    <span className="text-[11px] font-medium">Remember me</span>
                   </label>
 
                   <a
                     href="https://wa.me/919754253070?text=Hello%20Zentrixs,%20I%20need%20help%20recovering%20my%20login%20password."
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#EA552E] hover:underline font-semibold"
+                    className="text-[#EA552E] hover:underline text-[11px] font-semibold"
                   >
                     Forgot password?
                   </a>
                 </div>
 
                 {error && (
-                  <div className={`p-3 rounded-xl border text-xs font-semibold text-center ${
+                  <div className={`p-2.5 rounded-xl border text-xs font-semibold text-center ${
                     isLight ? 'bg-red-50 border-red-200 text-red-600' : 'bg-red-500/10 border-red-500/30 text-red-400'
                   }`}>
                     {error}
@@ -431,7 +423,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.99] cursor-pointer disabled:opacity-60 bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30"
+                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.99] cursor-pointer disabled:opacity-60 bg-gradient-to-r from-[#F0653A] to-[#EA552E] hover:from-[#EA552E] hover:to-[#D9481F] shadow-[#EA552E]/30"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -445,25 +437,25 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
               </form>
 
               {/* Security Badges Row below button matching reference */}
-              <div className="flex items-center justify-center gap-4 text-[10px] font-medium pt-4 text-slate-500">
+              <div className="flex items-center justify-center gap-3 text-[10px] font-medium pt-3 text-slate-500">
                 <span className="inline-flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#EA552E]" />
+                  <ShieldCheck className="w-3 h-3 text-[#EA552E]" />
                   <span>Secure Login</span>
                 </span>
                 <span>•</span>
                 <span className="inline-flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5 text-emerald-500" />
+                  <Lock className="w-3 h-3 text-emerald-500" />
                   <span>SSL Protected</span>
                 </span>
                 <span>•</span>
                 <span className="inline-flex items-center gap-1">
-                  <KeyRound className="w-3.5 h-3.5 text-blue-500" />
+                  <KeyRound className="w-3 h-3 text-blue-500" />
                   <span>256-bit</span>
                 </span>
               </div>
 
               {/* Agreement Subtext */}
-              <p className={`text-[10px] text-center mt-4 leading-normal ${
+              <p className={`text-[9px] text-center mt-3 leading-normal ${
                 isLight ? 'text-[#8E7E70]' : 'text-slate-500'
               }`}>
                 By signing in you agree to the Portal's <a href="/privacy-policy" className="underline hover:text-[#EA552E]">Terms & Security Policy</a>
@@ -473,7 +465,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess, notice }) =
         </main>
 
         {/* FOOTER */}
-        <footer className="w-full pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between text-xs font-medium gap-2">
+        <footer className="w-full shrink-0 pt-2 pb-2 flex flex-col sm:flex-row items-center justify-between text-[11px] font-medium gap-1">
           <p className={isLight ? 'text-[#8E7E70]' : 'text-slate-500'}>
             © 2026 Zentrixs Portal. All rights reserved.
           </p>
